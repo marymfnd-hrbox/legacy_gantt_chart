@@ -118,72 +118,93 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
 
   Future<List<LegacyGanttTask>> _fetchTasks(DateTime start, DateTime end) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return [
-      // Development Tasks
-      LegacyGanttTask(
-        id: 'task1',
-        rowId: 'row1',
-        name: 'Implement Feature A',
-        start: _totalStartDate.add(const Duration(days: 1)),
-        end: _totalStartDate.add(const Duration(days: 5)),
-        color: Colors.blue.shade700,
-      ),
-      LegacyGanttTask(
-        id: 'task2',
-        rowId: 'row1',
-        name: 'Implement Feature B',
-        start: _totalStartDate.add(const Duration(days: 6)),
-        end: _totalStartDate.add(const Duration(days: 10)),
-        color: Colors.blue.shade700,
-      ),
-      LegacyGanttTask(
-        id: 'task2.1',
-        rowId: 'row1',
-        name: 'Sub-task of Feature B',
-        start: _totalStartDate.add(const Duration(days: 7)),
-        end: _totalStartDate.add(const Duration(days: 9)),
-        color: Colors.blue.shade400,
-        stackIndex: 1, // Stack on top of Feature B
-      ),
 
-      // QA Tasks
-      LegacyGanttTask(
-        id: 'task3',
-        rowId: 'row2',
-        name: 'Test Feature A',
-        start: _totalStartDate.add(const Duration(days: 5)),
-        end: _totalStartDate.add(const Duration(days: 7)),
-        color: Colors.orange.shade700,
-      ),
+    final summaryTask = LegacyGanttTask(
+      id: 'summary1',
+      rowId: 'row1',
+      name: 'Q1 Release Cycle',
+      start: _totalStartDate,
+      end: _totalStartDate.add(const Duration(days: 12)),
+      isSummary: true,
+    );
 
-      // Summary Task
+    final mainTasks = [
+      summaryTask,
+      // Development Tasks on child row 2
       LegacyGanttTask(
-        id: 'summary1',
-        rowId: 'row3',
-        name: 'Q1 Release Cycle',
-        start: _totalStartDate,
-        end: _totalStartDate.add(const Duration(days: 12)),
-        isSummary: true,
-      ),
+          id: 'task1',
+          rowId: 'row2',
+          name: 'Implement Feature A',
+          start: _totalStartDate.add(const Duration(days: 1)),
+          end: _totalStartDate.add(const Duration(days: 5)),
+          color: Colors.blue.shade700),
+      LegacyGanttTask(
+          id: 'task2',
+          rowId: 'row2',
+          name: 'Implement Feature B',
+          start: _totalStartDate.add(const Duration(days: 6)),
+          end: _totalStartDate.add(const Duration(days: 10)),
+          color: Colors.blue.shade700),
+      LegacyGanttTask(
+          id: 'task2.1',
+          rowId: 'row2',
+          name: 'Sub-task of Feature B',
+          start: _totalStartDate.add(const Duration(days: 7)),
+          end: _totalStartDate.add(const Duration(days: 9)),
+          color: Colors.blue.shade400,
+          stackIndex: 1),
+      // QA Tasks on child row 3
+      LegacyGanttTask(
+          id: 'task3',
+          rowId: 'row3',
+          name: 'Test Feature A',
+          start: _totalStartDate.add(const Duration(days: 5)),
+          end: _totalStartDate.add(const Duration(days: 7)),
+          color: Colors.orange.shade700),
     ];
+
+    // Create a grey background highlight on child rows that spans the duration of the summary task.
+    final childRowIds = ['row2', 'row3'];
+    final summaryHighlights = childRowIds
+        .map((rowId) => LegacyGanttTask(
+              id: 'summary-highlight-$rowId',
+              rowId: rowId,
+              start: summaryTask.start,
+              end: summaryTask.end,
+              isTimeRangeHighlight: true,
+              color: Colors.grey.withValues(alpha:0.2), // The grey background for the summary span
+            ))
+        .toList();
+
+    return [...mainTasks, ...summaryHighlights];
   }
 
   Future<List<LegacyGanttTask>> _fetchHolidays(DateTime start, DateTime end) async {
     await Future.delayed(const Duration(milliseconds: 200));
-    final holidayStart = DateTime(start.year, 1, 1);
-    final holidayEnd = DateTime(start.year, 1, 2);
+    final List<LegacyGanttTask> holidays = [];
+    // Use a distinct color for actual holidays/weekends.
+    final holidayColor = Theme.of(context).colorScheme.primary.withValues(alpha:0.3);
 
-    // The current painter implementation requires highlights to be associated
-    // with a specific row. To create a highlight that spans all rows, we
-    // generate a separate highlight task for each row.
-    return _rows.map((row) => LegacyGanttTask(
-        id: 'holiday-${row.id}',
-        rowId: row.id,
-        name: 'New Year\'s Day',
-        start: holidayStart,
-        end: holidayEnd,
-        isTimeRangeHighlight: true,
-      )).toList();
+    // Generate highlights for weekends within the visible range.
+    for (var day = start; day.isBefore(end); day = day.add(const Duration(days: 1))) {
+      if (day.weekday == DateTime.saturday) {
+        final weekendStart = day;
+        final weekendEnd = day.add(const Duration(days: 2)); // Saturday + Sunday
+
+        // Create a highlight for each row for this weekend.
+        for (final row in _rows) {
+          holidays.add(LegacyGanttTask(
+            id: 'weekend-${row.id}-${day.toIso8601String()}',
+            rowId: row.id,
+            start: weekendStart,
+            end: weekendEnd,
+            isTimeRangeHighlight: true,
+            color: holidayColor,
+          ));
+        }
+      }
+    }
+    return holidays;
   }
 
   void _handleTaskUpdate(LegacyGanttTask task, DateTime newStart, DateTime newEnd) {
@@ -194,7 +215,10 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
     );
     // In a real app, you would update your state and persist the changes.
     setState(() {
-      final index = _tasks.indexWhere((t) => t.id == task.id);
+      // Create a mutable copy of the tasks list to perform updates.
+      final newTasks = List<LegacyGanttTask>.from(_tasks);
+
+      final index = newTasks.indexWhere((t) => t.id == task.id);
       if (index != -1) {
         final updatedTask = LegacyGanttTask(
           id: task.id,
@@ -212,8 +236,27 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
           segments: task.segments,
           cellBuilder: task.cellBuilder,
         );
-        _tasks[index] = updatedTask;
+        newTasks[index] = updatedTask;
+
+        // If the updated task was a summary, find and update its corresponding highlights.
+        if (updatedTask.isSummary) {
+          for (int i = 0; i < newTasks.length; i++) {
+            final currentTask = newTasks[i];
+            // This condition assumes a naming convention for summary highlights.
+            if (currentTask.id.startsWith('summary-highlight-')) {
+              newTasks[i] = LegacyGanttTask(
+                id: currentTask.id,
+                rowId: currentTask.rowId,
+                start: newStart, // Use the new start date from the summary task
+                end: newEnd, // Use the new end date from the summary task
+                isTimeRangeHighlight: true,
+                color: currentTask.color,
+              );
+            }
+          }
+        }
       }
+      _tasks = newTasks;
     });
   }
 

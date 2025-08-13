@@ -1,7 +1,11 @@
+## 0.0.3
+
+* Live update summary child background
+
 ## 0.0.2
 
 * **FEAT**: Added a comprehensive example application to demonstrate features like external scrolling, theming, and custom builders.
-* **FIX**: Corrected rendering failures by replacing a deprecated color method with the correct `withValues(alpha: number)`, resolving unnecessary linter warnings.
+* **FIX**: Corrected rendering failures by replacing an incorrect color method with the correct `withOpacity`, resolving blank screen issues and linter warnings.
 
 ## 0.0.1
 
