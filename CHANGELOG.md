@@ -1,3 +1,7 @@
+## 0.0.8
+
+* Fix if... statements not enclosed in curly braces
+
 ## 0.0.7
 
 * Dart format
