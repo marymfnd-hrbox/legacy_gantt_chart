@@ -7,7 +7,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
 }
 
 class GanttChartDemo extends StatefulWidget {
-  const GanttChartDemo({Key? key}) : super(key: key);
+  const GanttChartDemo({super.key});
 
   @override
   State<GanttChartDemo> createState() => _GanttChartDemoState();
@@ -44,9 +44,9 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
   final ScrollController _horizontalScrollController = ScrollController();
 
   final List<LegacyGanttRow> _rows = [
-    LegacyGanttRow(id: 'row1'),
-    LegacyGanttRow(id: 'row2'),
-    LegacyGanttRow(id: 'row3'),
+    const LegacyGanttRow(id: 'row1'),
+    const LegacyGanttRow(id: 'row2'),
+    const LegacyGanttRow(id: 'row3'),
   ];
 
   final Map<String, int> _rowMaxStackDepth = {
