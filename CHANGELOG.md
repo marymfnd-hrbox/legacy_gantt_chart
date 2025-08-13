@@ -1,3 +1,7 @@
+## 0.0.9
+
+* Add example to github actions
+
 ## 0.0.8
 
 * Fix if... statements not enclosed in curly braces
