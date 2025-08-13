@@ -30,7 +30,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  legacy_gantt_chart: ^0.0.1 # Replace with the latest version
+  legacy_gantt_chart: ^0.0.6 # Replace with the latest version
 ```
 
 Then, you can install the package using the command-line:
@@ -50,6 +50,48 @@ import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 ## Quick Start
 
 Here is a minimal example of how to create a static Gantt chart.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
+
+class MinimalGanttChart extends StatelessWidget {
+  const MinimalGanttChart({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // 1. Define your rows
+    final List<LegacyGanttRow> rows = [
+      LegacyGanttRow(id: 'dev', name: 'Development'),
+      LegacyGanttRow(id: 'design', name: 'Design'),
+    ];
+
+    // 2. Define your tasks and assign them to rows
+    final List<LegacyGanttTask> tasks = [
+      LegacyGanttTask(
+        id: 'task1',
+        rowId: 'dev',
+        name: 'Implement Feature A',
+        startDate: DateTime.now().subtract(const Duration(days: 5)),
+        endDate: DateTime.now().add(const Duration(days: 5)),
+      ),
+      LegacyGanttTask(
+        id: 'task2',
+        rowId: 'design',
+        name: 'Create Mockups',
+        startDate: DateTime.now().subtract(const Duration(days: 8)),
+        endDate: DateTime.now(),
+      ),
+    ];
+
+    // 3. Create the widget
+    return LegacyGanttChartWidget(
+      rows: rows,
+      tasks: tasks,
+    );
+  }
+}
+```
 
 ---
 ## Running the Example

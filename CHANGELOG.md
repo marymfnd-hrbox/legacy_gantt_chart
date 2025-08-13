@@ -1,3 +1,7 @@
+## 0.0.6
+
+* Update README.md to improve clarity
+
 ## 0.0.5
 
 * Update URL of screenshot for compatibility with pub.dev
