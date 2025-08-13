@@ -1,3 +1,7 @@
+## 0.0.5
+
+* Update URL of screenshot for compatibility with pub.dev
+
 ## 0.0.4
 
 * Update README.md to include a screenshot
