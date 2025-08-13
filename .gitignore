@@ -1,0 +1,73 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+/out/
+
+# Visual Studio Code
+.vscode/
+
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+/build/
+pubspec.lock
+
+# Generated files
+*.g.dart
+*.freezed.dart
+
+# Test
+/coverage/
+
+# Android
+/android/app/src/main/assets/flutter_assets/
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/app/build/
+/android/app/intermediates/
+/android/app/outputs/
+/android/app/release/
+/android/app/profile/
+/android/key.properties
+/android/local.properties
+
+# iOS
+/ios/Pods/
+/ios/Flutter/App.framework
+/ios/Flutter/engine
+/ios/Flutter/flutter_assets
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/Debug.xcconfig
+/ios/Flutter/Release.xcconfig
+/ios/Flutter/ephemeral/
+/ios/Flutter/.podspec
+/ios/Runner/GeneratedPluginRegistrant.*
+/ios/Runner.xcworkspace/
+/ios/Runner.xcodeproj/project.xcworkspace/
+/ios/Runner.xcodeproj/xcuserdata/
+/ios/build/
+/ios/.symlinks/
+/ios/DerivedData/
+*.hmap
+
+# Windows, Linux, macOS, and Web platform-specific ignores
+/linux/
+/macos/
+/windows/
+/web/

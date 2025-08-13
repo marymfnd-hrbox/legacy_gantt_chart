@@ -1,0 +1,342 @@
+import 'dart:math';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'models/legacy_gantt_row.dart';
+import 'models/legacy_gantt_task.dart';
+
+enum DragMode { none, move, resizeStart, resizeEnd }
+enum PanType { none, vertical, horizontal }
+enum TaskPart { body, startHandle, endHandle }
+
+class LegacyGanttViewModel extends ChangeNotifier {
+  // Properties from the widget
+  final List<LegacyGanttTask> data;
+  final List<LegacyGanttRow> visibleRows;
+  final Map<String, int> rowMaxStackDepth;
+  final double rowHeight;
+  final double? axisHeight;
+  final double? gridMin;
+  final double? gridMax;
+  final double? totalGridMin;
+  final double? totalGridMax;
+  final bool enableDragAndDrop;
+  final bool enableResize;
+  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
+  final Function(LegacyGanttTask)? onPressTask;
+  final ScrollController? scrollController;
+  final Widget Function(LegacyGanttTask task)? taskBarBuilder;
+  final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
+
+  LegacyGanttViewModel({
+    required this.data,
+    required this.visibleRows,
+    required this.rowMaxStackDepth,
+    required this.rowHeight,
+    this.axisHeight,
+    this.gridMin,
+    this.gridMax,
+    this.totalGridMin,
+    this.totalGridMax,
+    this.enableDragAndDrop = false,
+    this.enableResize = false,
+    this.onTaskUpdate,
+    this.onPressTask,
+    this.scrollController,
+    this.taskBarBuilder,
+    this.onTaskHover,
+  }) {
+    scrollController?.addListener(_onExternalScroll);
+  }
+
+  // Internal State
+  double _height = 0;
+  double _width = 0;
+  double _translateY = 0;
+  double _initialTranslateY = 0;
+  double _initialTouchY = 0;
+  bool _isScrollingInternally = false;
+  String? _lastHoveredTaskId;
+  double Function(DateTime) _totalScale = (DateTime date) => 0.0;
+  double _scrollOffset = 0.0;
+  List<DateTime> _totalDomain = [];
+  List<DateTime> _visibleExtent = [];
+  LegacyGanttTask? _draggedTask;
+  DateTime? _ghostTaskStart;
+  DateTime? _ghostTaskEnd;
+  DragMode _dragMode = DragMode.none;
+  PanType _panType = PanType.none;
+  double _dragStartGlobalX = 0.0;
+  DateTime? _originalTaskStart;
+  DateTime? _originalTaskEnd;
+  MouseCursor _cursor = SystemMouseCursors.basic;
+
+  // Publicly exposed state for the View
+  double get translateY => _translateY;
+  MouseCursor get cursor => _cursor;
+  LegacyGanttTask? get draggedTask => _draggedTask;
+  DateTime? get ghostTaskStart => _ghostTaskStart;
+  DateTime? get ghostTaskEnd => _ghostTaskEnd;
+  double get scrollOffset => _scrollOffset;
+  List<DateTime> get totalDomain => _totalDomain;
+  double Function(DateTime) get totalScale => _totalScale;
+  double get timeAxisHeight => axisHeight ?? _height * 0.1;
+
+  void updateLayout(double width, double height) {
+    if (_width != width || _height != height) {
+      _width = width;
+      _height = height;
+      _calculateDomains();
+    }
+  }
+
+  void setTranslateY(double newTranslateY) {
+    if (_translateY != newTranslateY) {
+      _translateY = newTranslateY;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    scrollController?.removeListener(_onExternalScroll);
+    super.dispose();
+  }
+
+  void _onExternalScroll() {
+    if (_isScrollingInternally) return;
+
+    final newTranslateY = -scrollController!.offset;
+    setTranslateY(newTranslateY);
+  }
+
+  void _calculateDomains() {
+    if (gridMin != null && gridMax != null) {
+      _visibleExtent = [
+        DateTime.fromMillisecondsSinceEpoch(gridMin!.toInt()),
+        DateTime.fromMillisecondsSinceEpoch(gridMax!.toInt()),
+      ];
+    } else {
+      if (data.isEmpty) {
+        final now = DateTime.now();
+        _visibleExtent = [now.subtract(const Duration(days: 30)), now.add(const Duration(days: 30))];
+      } else {
+        final dateTimes = data.expand((task) => [task.start, task.end]).map((d) => d.millisecondsSinceEpoch).toList();
+        _visibleExtent = [
+          DateTime.fromMillisecondsSinceEpoch(dateTimes.reduce(min)),
+          DateTime.fromMillisecondsSinceEpoch(dateTimes.reduce(max)),
+        ];
+      }
+    }
+
+    _totalDomain = [
+      DateTime.fromMillisecondsSinceEpoch(totalGridMin?.toInt() ?? _visibleExtent[0].millisecondsSinceEpoch),
+      DateTime.fromMillisecondsSinceEpoch(totalGridMax?.toInt() ?? _visibleExtent[1].millisecondsSinceEpoch),
+    ];
+
+    final double totalDomainDurationMs = (_totalDomain[1].millisecondsSinceEpoch - _totalDomain[0].millisecondsSinceEpoch).toDouble();
+    final double visibleDomainDurationMs = (_visibleExtent[1].millisecondsSinceEpoch - _visibleExtent[0].millisecondsSinceEpoch).toDouble();
+
+    if (visibleDomainDurationMs > 0) {
+      final double totalContentWidth = _width * (totalDomainDurationMs / visibleDomainDurationMs);
+      _totalScale = (DateTime date) {
+        if (totalDomainDurationMs <= 0) return 0;
+        final double value = (date.millisecondsSinceEpoch - _totalDomain[0].millisecondsSinceEpoch).toDouble();
+        return (value / totalDomainDurationMs) * totalContentWidth;
+      };
+      _scrollOffset = _totalScale(_visibleExtent[0]);
+    } else {
+      _totalScale = (date) => 0.0;
+      _scrollOffset = 0.0;
+    }
+  }
+
+  void onPanStart(DragStartDetails details) {
+    _panType = PanType.none;
+    _initialTranslateY = _translateY;
+    _initialTouchY = details.globalPosition.dy;
+    _dragStartGlobalX = details.globalPosition.dx;
+
+    if (!enableDragAndDrop && !enableResize) return;
+
+    final hit = _getTaskPartAtPosition(details.localPosition);
+    if (hit != null) {
+      _draggedTask = hit.task;
+      _originalTaskStart = hit.task.start;
+      _originalTaskEnd = hit.task.end;
+      switch (hit.part) {
+        case TaskPart.startHandle: _dragMode = DragMode.resizeStart; break;
+        case TaskPart.endHandle: _dragMode = DragMode.resizeEnd; break;
+        case TaskPart.body: _dragMode = DragMode.move; break;
+      }
+      notifyListeners();
+    }
+  }
+
+  void onPanUpdate(DragUpdateDetails details) {
+    if (_panType == PanType.none) {
+      if (_draggedTask != null && details.delta.dx.abs() > details.delta.dy.abs()) {
+        _panType = PanType.horizontal;
+      } else {
+        _panType = PanType.vertical;
+        _draggedTask = null;
+        _dragMode = DragMode.none;
+      }
+    }
+
+    if (_panType == PanType.vertical) {
+      _handleVerticalPan(details);
+    } else if (_panType == PanType.horizontal && _draggedTask != null) {
+      _handleHorizontalPan(details);
+    }
+  }
+
+  void onPanEnd(DragEndDetails details) {
+    if (_panType == PanType.horizontal && _draggedTask != null && _ghostTaskStart != null && _ghostTaskEnd != null) {
+      onTaskUpdate?.call(_draggedTask!, _ghostTaskStart!, _ghostTaskEnd!);
+    }
+    _draggedTask = null;
+    _ghostTaskStart = null;
+    _ghostTaskEnd = null;
+    _dragMode = DragMode.none;
+    _panType = PanType.none;
+    notifyListeners();
+  }
+
+  void onTapUp(TapUpDetails details) {
+    final hit = _getTaskPartAtPosition(details.localPosition);
+    if (hit?.task != null) {
+      onPressTask?.call(hit!.task);
+    }
+  }
+
+  void onHover(PointerHoverEvent details) {
+    final hit = _getTaskPartAtPosition(details.localPosition);
+    final hoveredTask = hit?.task;
+
+    MouseCursor newCursor = SystemMouseCursors.basic;
+    if (hit != null) {
+      switch (hit.part) {
+        case TaskPart.startHandle:
+        case TaskPart.endHandle:
+          if (enableResize) newCursor = SystemMouseCursors.resizeLeftRight;
+          break;
+        case TaskPart.body:
+          if (enableDragAndDrop) newCursor = SystemMouseCursors.move;
+          break;
+      }
+    }
+
+    if (_cursor != newCursor) {
+      _cursor = newCursor;
+      notifyListeners();
+    }
+
+    if (onTaskHover != null) {
+      if (hoveredTask != null) {
+        onTaskHover!(hoveredTask, details.position);
+      } else if (_lastHoveredTaskId != null) {
+        onTaskHover!(null, details.position);
+      }
+      _lastHoveredTaskId = hoveredTask?.id;
+    }
+  }
+
+  void onHoverExit(PointerExitEvent event) {
+    if (_cursor != SystemMouseCursors.basic) {
+      _cursor = SystemMouseCursors.basic;
+      notifyListeners();
+    }
+    if (onTaskHover != null && _lastHoveredTaskId != null) {
+      onTaskHover!(null, event.position);
+      _lastHoveredTaskId = null;
+    }
+  }
+
+  ({LegacyGanttTask task, TaskPart part})? _getTaskPartAtPosition(Offset localPosition) {
+    if (localPosition.dy < timeAxisHeight) return null;
+    final pointerYRelativeToBarsArea = localPosition.dy - timeAxisHeight - _translateY;
+    final pointerXOnTotalContent = localPosition.dx + _scrollOffset;
+
+    double cumulativeHeight = 0;
+    for (final row in visibleRows) {
+      final int stackDepth = rowMaxStackDepth[row.id] ?? 1;
+      final double currentRowHeight = rowHeight * stackDepth;
+      if (pointerYRelativeToBarsArea >= cumulativeHeight && pointerYRelativeToBarsArea < cumulativeHeight + currentRowHeight) {
+        final pointerYWithinRow = pointerYRelativeToBarsArea - cumulativeHeight;
+        final tappedStackIndex = (pointerYWithinRow / rowHeight).floor();
+        final tasksInTappedStack = data.where((task) => task.rowId == row.id && task.stackIndex == tappedStackIndex && !task.isTimeRangeHighlight && !task.isOverlapIndicator).toList().reversed;
+        const double handleWidth = 10.0;
+        for (final task in tasksInTappedStack) {
+          final double barStartX = _totalScale(task.start);
+          final double barEndX = _totalScale(task.end);
+          if (pointerXOnTotalContent >= barStartX && pointerXOnTotalContent <= barEndX) {
+            if (enableResize) {
+              if (pointerXOnTotalContent < barStartX + handleWidth) return (task: task, part: TaskPart.startHandle);
+              if (pointerXOnTotalContent > barEndX - handleWidth) return (task: task, part: TaskPart.endHandle);
+            }
+            return (task: task, part: TaskPart.body);
+          }
+        }
+        return null;
+      }
+      cumulativeHeight += currentRowHeight;
+    }
+    return null;
+  }
+
+  void _handleVerticalPan(DragUpdateDetails details) {
+    final newTranslateY = _initialTranslateY + (details.globalPosition.dy - _initialTouchY);
+    final double contentHeight = visibleRows.fold<double>(0.0, (prev, row) => prev + rowHeight * (rowMaxStackDepth[row.id] ?? 1));
+    final double availableHeightForBars = _height - timeAxisHeight;
+    final double maxNegativeTranslateY = max(0.0, contentHeight - availableHeightForBars);
+    final clampedTranslateY = min(0.0, max(-maxNegativeTranslateY, newTranslateY));
+
+    if (_translateY == clampedTranslateY) return;
+
+    setTranslateY(clampedTranslateY);
+    _isScrollingInternally = true;
+    scrollController?.jumpTo(-clampedTranslateY);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _isScrollingInternally = false);
+  }
+
+  void _handleHorizontalPan(DragUpdateDetails details) {
+    final pixelDelta = details.globalPosition.dx - _dragStartGlobalX;
+    final durationDelta = _pixelToDuration(pixelDelta);
+    DateTime newStart = _originalTaskStart!;
+    DateTime newEnd = _originalTaskEnd!;
+
+    switch (_dragMode) {
+      case DragMode.move:
+        newStart = _originalTaskStart!.add(durationDelta);
+        newEnd = _originalTaskEnd!.add(durationDelta);
+        break;
+      case DragMode.resizeStart:
+        newStart = _originalTaskStart!.add(durationDelta);
+        if (newStart.isAfter(newEnd.subtract(const Duration(minutes: 1)))) {
+          newStart = newEnd.subtract(const Duration(minutes: 1));
+        }
+        break;
+      case DragMode.resizeEnd:
+        newEnd = _originalTaskEnd!.add(durationDelta);
+        if (newEnd.isBefore(newStart.add(const Duration(minutes: 1)))) {
+          newEnd = newStart.add(const Duration(minutes: 1));
+        }
+        break;
+      case DragMode.none:
+        break;
+    }
+    _ghostTaskStart = newStart;
+    _ghostTaskEnd = newEnd;
+    notifyListeners();
+  }
+
+  Duration _pixelToDuration(double pixels) {
+    final double totalDomainDurationMs = (_totalDomain[1].millisecondsSinceEpoch - _totalDomain[0].millisecondsSinceEpoch).toDouble();
+    final double visibleDomainDurationMs = (_visibleExtent[1].millisecondsSinceEpoch - _visibleExtent[0].millisecondsSinceEpoch).toDouble();
+    if (visibleDomainDurationMs <= 0) return Duration.zero;
+    final double totalContentWidth = _width * (totalDomainDurationMs / visibleDomainDurationMs);
+    if (totalContentWidth <= 0) return Duration.zero;
+    final durationMs = (pixels / totalContentWidth) * totalDomainDurationMs;
+    return Duration(milliseconds: durationMs.round());
+  }
+}
