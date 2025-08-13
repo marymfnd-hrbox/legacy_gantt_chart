@@ -212,8 +212,7 @@ class BarsCollectionPainter extends CustomPainter {
     if (draggedTaskId != null &&
         ghostTaskStart != null &&
         ghostTaskEnd != null) {
-      final originalTask = data.firstWhere(
-          (t) => t.id == draggedTaskId,
+      final originalTask = data.firstWhere((t) => t.id == draggedTaskId,
           orElse: () => LegacyGanttTask(
               id: '', rowId: '', start: DateTime.now(), end: DateTime.now()));
       // Should not happen, but a good safeguard.
