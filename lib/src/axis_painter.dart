@@ -29,10 +29,14 @@ class AxisPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (domain.length < 2 || domain[0] == domain[1]) return;
+    if (domain.length < 2 || domain[0] == domain[1]) {
+      return;
+    }
 
     final totalDuration = domain[1].difference(domain[0]).inMilliseconds;
-    if (totalDuration <= 0) return;
+    if (totalDuration <= 0) {
+      return;
+    }
 
     final paint = Paint()..color = theme.gridColor;
     final textStyle = theme.axisTextStyle;

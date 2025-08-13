@@ -159,15 +159,17 @@ class _LegacyGanttTimelineScrubberState
     if (newVisibleStart.isBefore(_effectiveTotalStart)) {
       final correction = _effectiveTotalStart.difference(newVisibleStart);
       newVisibleStart = _effectiveTotalStart;
-      if (_dragType == _DragType.window)
+      if (_dragType == _DragType.window) {
         newVisibleEnd = newVisibleEnd.add(correction);
+      }
     }
 
     if (newVisibleEnd.isAfter(_effectiveTotalEnd)) {
       final correction = _effectiveTotalEnd.difference(newVisibleEnd);
       newVisibleEnd = _effectiveTotalEnd;
-      if (_dragType == _DragType.window)
+      if (_dragType == _DragType.window) {
         newVisibleStart = newVisibleStart.add(correction);
+      }
     }
 
     // Final clamp after adjustments
@@ -177,9 +179,9 @@ class _LegacyGanttTimelineScrubberState
     newVisibleEnd = newVisibleEnd.isAfter(_effectiveTotalEnd)
         ? _effectiveTotalEnd
         : newVisibleEnd;
-    if (newVisibleEnd.isBefore(newVisibleStart))
+    if (newVisibleEnd.isBefore(newVisibleStart)) {
       newVisibleEnd = newVisibleStart.add(minWindowDuration);
-
+    }
     widget.onWindowChanged(newVisibleStart, newVisibleEnd);
   }
 

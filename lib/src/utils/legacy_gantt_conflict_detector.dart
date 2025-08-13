@@ -37,11 +37,15 @@ class LegacyGanttConflictDetector {
     // 2. Find and create indicators for overlaps within each group.
     groupedTasks.forEach((groupId, shifts) {
       final actualShifts = shifts.where((s) => !s.isSummary).toList();
-      if (actualShifts.length < 2) return;
+      if (actualShifts.length < 2) {
+        return;
+      }
 
       // Find raw overlaps between child shifts
       final rawOverlaps = _findRawOverlaps(actualShifts);
-      if (rawOverlaps.isEmpty) return;
+      if (rawOverlaps.isEmpty) {
+        return;
+      }
 
       // Add indicators for the conflicting child tasks
       for (final overlap in rawOverlaps) {
@@ -183,7 +187,9 @@ class LegacyGanttConflictDetector {
 
   List<({DateTime start, DateTime end})> _mergeOverlapIntervals(
       List<({DateTime start, DateTime end})> intervals) {
-    if (intervals.isEmpty) return [];
+    if (intervals.isEmpty) {
+      return [];
+    }
     intervals.sort((a, b) => a.start.compareTo(b.start));
     final List<({DateTime start, DateTime end})> merged = [intervals.first];
     for (int i = 1; i < intervals.length; i++) {

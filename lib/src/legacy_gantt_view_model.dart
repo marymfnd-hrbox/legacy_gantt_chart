@@ -106,7 +106,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
   }
 
   void _onExternalScroll() {
-    if (_isScrollingInternally) return;
+    if (_isScrollingInternally) {
+      return;
+    }
 
     final newTranslateY = -scrollController!.offset;
     setTranslateY(newTranslateY);
@@ -176,7 +178,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
     _initialTouchY = details.globalPosition.dy;
     _dragStartGlobalX = details.globalPosition.dx;
 
-    if (!enableDragAndDrop && !enableResize) return;
+    if (!enableDragAndDrop && !enableResize) {
+      return;
+    }
 
     final hit = _getTaskPartAtPosition(details.localPosition);
     if (hit != null) {
@@ -284,7 +288,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
 
   ({LegacyGanttTask task, TaskPart part})? _getTaskPartAtPosition(
       Offset localPosition) {
-    if (localPosition.dy < timeAxisHeight) return null;
+    if (localPosition.dy < timeAxisHeight) {
+      return null;
+    }
     final pointerYRelativeToBarsArea =
         localPosition.dy - timeAxisHeight - _translateY;
     final pointerXOnTotalContent = localPosition.dx + _scrollOffset;
@@ -312,10 +318,12 @@ class LegacyGanttViewModel extends ChangeNotifier {
           if (pointerXOnTotalContent >= barStartX &&
               pointerXOnTotalContent <= barEndX) {
             if (enableResize) {
-              if (pointerXOnTotalContent < barStartX + handleWidth)
+              if (pointerXOnTotalContent < barStartX + handleWidth) {
                 return (task: task, part: TaskPart.startHandle);
-              if (pointerXOnTotalContent > barEndX - handleWidth)
+              }
+              if (pointerXOnTotalContent > barEndX - handleWidth) {
                 return (task: task, part: TaskPart.endHandle);
+              }
             }
             return (task: task, part: TaskPart.body);
           }
@@ -338,7 +346,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
     final clampedTranslateY =
         min(0.0, max(-maxNegativeTranslateY, newTranslateY));
 
-    if (_translateY == clampedTranslateY) return;
+    if (_translateY == clampedTranslateY) {
+      return;
+    }
 
     setTranslateY(clampedTranslateY);
     _isScrollingInternally = true;
@@ -387,10 +397,14 @@ class LegacyGanttViewModel extends ChangeNotifier {
         (_visibleExtent[1].millisecondsSinceEpoch -
                 _visibleExtent[0].millisecondsSinceEpoch)
             .toDouble();
-    if (visibleDomainDurationMs <= 0) return Duration.zero;
+    if (visibleDomainDurationMs <= 0) {
+      return Duration.zero;
+    }
     final double totalContentWidth =
         _width * (totalDomainDurationMs / visibleDomainDurationMs);
-    if (totalContentWidth <= 0) return Duration.zero;
+    if (totalContentWidth <= 0) {
+      return Duration.zero;
+    }
     final durationMs = (pixels / totalContentWidth) * totalDomainDurationMs;
     return Duration(milliseconds: durationMs.round());
   }

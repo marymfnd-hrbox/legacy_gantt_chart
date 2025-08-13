@@ -383,7 +383,9 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         final endX = vm.totalScale(task.end);
         final width = endX - startX;
 
-        if (width <= 0) continue;
+        if (width <= 0) {
+          continue;
+        }
 
         final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
 

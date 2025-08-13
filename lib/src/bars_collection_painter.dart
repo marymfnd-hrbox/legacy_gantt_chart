@@ -75,7 +75,9 @@ class BarsCollectionPainter extends CustomPainter {
         for (final task in tasksInThisRow
             .where((t) => !t.isTimeRangeHighlight && !t.isOverlapIndicator)) {
           // If a cell builder is provided for this task, the widget will handle rendering it.
-          if (task.cellBuilder != null) continue;
+          if (task.cellBuilder != null) {
+            continue;
+          }
 
           final isBeingDragged = task.id == draggedTaskId;
 
@@ -92,7 +94,9 @@ class BarsCollectionPainter extends CustomPainter {
             for (final segment in task.segments!) {
               final double barStartX = scale(segment.start);
               final double barEndX = scale(segment.end);
-              if (barEndX <= barStartX) continue;
+              if (barEndX <= barStartX) {
+                continue;
+              }
 
               final RRect segmentRRect = RRect.fromRectAndRadius(
                 Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
@@ -109,7 +113,9 @@ class BarsCollectionPainter extends CustomPainter {
             // --- Draw Single Continuous Bar (existing logic) ---
             final double barStartX = scale(task.start);
             final double barEndX = scale(task.end);
-            if (barEndX <= barStartX) continue;
+            if (barEndX <= barStartX) {
+              continue;
+            }
 
             final RRect barRRect = RRect.fromRectAndRadius(
               Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
@@ -206,10 +212,12 @@ class BarsCollectionPainter extends CustomPainter {
     if (draggedTaskId != null &&
         ghostTaskStart != null &&
         ghostTaskEnd != null) {
-      final originalTask = data.firstWhere((t) => t.id == draggedTaskId,
+      final originalTask = data.firstWhere(
+          (t) => t.id == draggedTaskId,
           orElse: () => LegacyGanttTask(
               id: '', rowId: '', start: DateTime.now(), end: DateTime.now()));
-      if (originalTask.id.isEmpty) return; // Should not happen
+      // Should not happen, but a good safeguard.
+      if (originalTask.id.isEmpty) return;
 
       // Find the y-offset for this task's row again.
       double ghostRowTop = 0;

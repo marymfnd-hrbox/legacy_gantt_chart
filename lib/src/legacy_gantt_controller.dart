@@ -176,7 +176,9 @@ class LegacyGanttController extends ChangeNotifier {
     required void Function(bool) setLoading,
     required String errorContext,
   }) async {
-    if (fetcher == null) return;
+    if (fetcher == null) {
+      return;
+    }
 
     setLoading(true);
     // Notify listeners to show a loading indicator, but keep the old data visible.
