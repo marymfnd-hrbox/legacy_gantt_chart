@@ -64,7 +64,7 @@ class BarsCollectionPainter extends CustomPainter {
         final double barWidth = max(0, barEndX - barStartX);
 
         final rect = Rect.fromLTWH(barStartX, cumulativeRowTop, barWidth, dynamicRowHeight);
-        final paint = Paint()..color = task.color ?? Colors.grey.withValues(alpha:0.2);
+        final paint = Paint()..color = task.color ?? Colors.grey.withOpacity(0.2);
         canvas.drawRect(rect, paint);
       }
 
@@ -94,7 +94,7 @@ class BarsCollectionPainter extends CustomPainter {
                 theme.barCornerRadius,
               );
 
-              final barPaint = Paint()..color = (segment.color ?? task.color ?? theme.barColorPrimary).withValues(alpha:isBeingDragged ? 0.3 : 1.0);
+              final barPaint = Paint()..color = (segment.color ?? task.color ?? theme.barColorPrimary).withOpacity(isBeingDragged ? 0.3 : 1.0);
               canvas.drawRRect(segmentRRect, barPaint);
             }
           } else {
@@ -109,7 +109,7 @@ class BarsCollectionPainter extends CustomPainter {
             );
 
             // Draw the bar
-            final barPaint = Paint()..color = (task.color ?? theme.barColorPrimary).withValues(alpha:isBeingDragged ? 0.3 : 1.0);
+            final barPaint = Paint()..color = (task.color ?? theme.barColorPrimary).withOpacity(isBeingDragged ? 0.3 : 1.0);
             canvas.drawRRect(barRRect, barPaint);
 
             // Draw summary pattern if needed
@@ -215,7 +215,7 @@ class BarsCollectionPainter extends CustomPainter {
         );
 
         // Draw the ghost bar
-        final barPaint = Paint()..color = (originalTask.color ?? theme.barColorPrimary).withValues(alpha:0.7);
+        final barPaint = Paint()..color = (originalTask.color ?? theme.barColorPrimary).withOpacity(0.7);
         canvas.drawRRect(barRRect, barPaint);
         // Not drawing text on ghost bar for simplicity
       }
@@ -246,19 +246,18 @@ class BarsCollectionPainter extends CustomPainter {
 
   void _drawOverlapPattern(Canvas canvas, RRect rrect) {
     // To ensure the conflict pattern is clear and not blended with underlying bars,
-    // we first "erase" the area by drawing a solid block of the chart's background color.
-    final eraserPaint = Paint()..color = theme.backgroundColor;
-    canvas.drawRRect(rrect, eraserPaint);
+    // we first "erase" the area by drawing a solid block of the chart's background color. This
+    // ensures that the semi-transparent conflict color is blended with a consistent
+    // background, not the color of the task bar underneath.
+    canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
 
     // Next, draw the semi-transparent red background for the conflict area.
-    // This creates the new "bar" for the conflict.
-    final backgroundPaint = Paint()..color = theme.conflictBarColor.withValues(alpha:0.4);
+    final backgroundPaint = Paint()..color = theme.conflictBarColor.withOpacity(0.4);
     canvas.drawRRect(rrect, backgroundPaint);
 
     // Then, draw the angled lines on top of that new background.
-    // A thin stroke width (1.0) is crucial to keep the pattern precise and contained
-    // within the conflict area, preventing the "bleeding" effect.
-    _drawAngledPattern(canvas, rrect, theme.conflictBarColor, 1.5);
+    // A thin stroke width is crucial to keep the pattern precise, as noted in documentation.
+    _drawAngledPattern(canvas, rrect, theme.conflictBarColor, 1.0);
   }
 
   void _drawSummaryPattern(Canvas canvas, RRect rrect) {

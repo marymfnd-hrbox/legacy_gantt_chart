@@ -48,57 +48,27 @@ import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 
 Here is a minimal example of how to create a static Gantt chart.
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
+---
+## Running the Example
 
-class MyGanttChartPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // 1. Define your rows
-    final rows = [
-      LegacyGanttRow(id: 'row1'),
-      LegacyGanttRow(id: 'row2'),
-    ];
+To see a full-featured demo of the `legacy_gantt_chart` in action, you can run the example application included in the repository.
 
-    // 2. Define your tasks
-    final tasks = [
-      LegacyGanttTask(
-        id: 'task1',
-        rowId: 'row1',
-        name: 'Implement Feature A',
-        start: DateTime.now().subtract(const Duration(days: 5)),
-        end: DateTime.now().add(const Duration(days: 2)),
-      ),
-      LegacyGanttTask(
-        id: 'task2',
-        rowId: 'row1',
-        name: 'Implement Feature B',
-        start: DateTime.now().add(const Duration(days: 3)),
-        end: DateTime.now().add(const Duration(days: 8)),
-      ),
-      LegacyGanttTask(
-        id: 'task3',
-        rowId: 'row2',
-        name: 'Test Feature A',
-        start: DateTime.now().add(const Duration(days: 2)),
-        end: DateTime.now().add(const Duration(days: 4)),
-      ),
-    ];
+1.  **Navigate to the `example` directory:**
+    ```shell
+    cd example
+    ```
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Simple Gantt Chart')),
-      body: LegacyGanttChartWidget(
-        data: tasks,
-        visibleRows: rows,
-        rowMaxStackDepth: const {'row1': 1, 'row2': 1}, // Max overlapping tasks per row
-        gridMin: DateTime.now().subtract(const Duration(days: 10)).millisecondsSinceEpoch.toDouble(),
-        gridMax: DateTime.now().add(const Duration(days: 15)).millisecondsSinceEpoch.toDouble(),
-      ),
-    );
-  }
-}
-```
+2.  **Install dependencies:**
+    ```shell
+    flutter pub get
+    ```
+
+3.  **Run the app:**
+    ```shell
+    flutter run
+    ```
+
+Here is a minimal example of how to create a static Gantt chart.
 
 ---
 

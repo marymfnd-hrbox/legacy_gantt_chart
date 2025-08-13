@@ -132,7 +132,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
               ),
               if (controller.isLoading)
                 Container(
-                  color: effectiveTheme.backgroundColor.withValues(alpha:0.5),
+                  color: effectiveTheme.backgroundColor.withOpacity(0.5),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
             ],
@@ -218,6 +218,12 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
               // The rest of the UI rebuilds automatically when the VM's state changes.
               final double totalContentWidth = vm.totalDomain.isEmpty ? 0 : vm.totalScale(vm.totalDomain.last);
 
+              // Calculate the total height of all rows to provide the correct size to the painter.
+              final double totalContentHeight = widget.visibleRows.fold<double>(
+                0.0,
+                (prev, row) => prev + widget.rowHeight * (widget.rowMaxStackDepth[row.id] ?? 1),
+              );
+
               return MouseRegion(
                 cursor: vm.cursor,
                 onHover: vm.onHover,
@@ -276,7 +282,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                       hasCustomTaskBuilder: widget.taskBarBuilder != null,
                                       hasCustomTaskContentBuilder: widget.taskContentBuilder != null,
                                     ),
-                                    size: Size(totalContentWidth, constraints.maxHeight),
+                                    size: Size(totalContentWidth, totalContentHeight),
                                   ),
                                   if (widget.taskBarBuilder != null)
                                     ..._buildCustomTaskWidgets(vm, tasks, widget.taskBarBuilder!),

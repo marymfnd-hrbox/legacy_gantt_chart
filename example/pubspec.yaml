@@ -1,0 +1,20 @@
+
+name: example
+description: Demonstrates how to use the legacy_gantt_chart plugin.
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  legacy_gantt_chart:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

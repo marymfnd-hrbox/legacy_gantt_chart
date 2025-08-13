@@ -227,7 +227,7 @@ class _ScrubberPainter extends CustomPainter {
     for (final task in nonHighlightTasks) {
       final startX = dateToX(task.start);
       final endX = dateToX(task.end);
-      taskPaint.color = task.color ?? theme.colorScheme.primary.withValues(alpha:0.5);
+      taskPaint.color = task.color ?? theme.colorScheme.primary.withOpacity(0.5);
       canvas.drawRect(Rect.fromLTRB(startX, size.height * 0.25, endX, size.height * 0.75), taskPaint);
     }
 
@@ -235,7 +235,7 @@ class _ScrubberPainter extends CustomPainter {
     final visibleStartX = dateToX(visibleStartDate);
     final visibleEndX = dateToX(visibleEndDate);
 
-    final windowPaint = Paint()..color = theme.colorScheme.primary.withValues(alpha:0.2);
+    final windowPaint = Paint()..color = theme.colorScheme.primary.withOpacity(0.2);
     final borderPaint = Paint()
       ..color = theme.colorScheme.primary
       ..strokeWidth = 1.5
