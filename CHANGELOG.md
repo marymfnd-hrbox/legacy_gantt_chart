@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Update README.md to include a screenshot
+
 ## 0.0.3
 
 * Live update summary child background

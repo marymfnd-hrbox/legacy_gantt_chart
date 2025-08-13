@@ -5,6 +5,8 @@
 
 A flexible and performant Gantt chart widget for Flutter. Supports interactive drag-and-drop, resizing, dynamic data loading, and extensive theming.
 
+![Legacy Gantt Chart Example](assets/example.png)
+
 ---
 
 ## Features
@@ -67,8 +69,6 @@ To see a full-featured demo of the `legacy_gantt_chart` in action, you can run t
     ```shell
     flutter run
     ```
-
-Here is a minimal example of how to create a static Gantt chart.
 
 ---
 

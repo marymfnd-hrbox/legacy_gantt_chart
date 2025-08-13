@@ -1,6 +1,6 @@
 name: legacy_gantt_chart
 description: A flexible and performant Gantt chart widget for Flutter. Supports interactive drag-and-drop, resizing, dynamic data loading, and extensive theming.
-version: 0.0.2
+version: 0.0.4
 homepage: https://github.com/barneysspeedshop/legacy_gantt_chart # TODO: Add your repository URL
 repository: https://github.com/barneysspeedshop/legacy_gantt_chart # TODO: Add your repository URL
 issue_tracker: https://github.com/barneysspeedshop/legacy_gantt_chart/issues # TODO: Add your issue tracker URL
