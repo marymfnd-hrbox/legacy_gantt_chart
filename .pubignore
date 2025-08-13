@@ -1,0 +1,6 @@
+# Exclude files that are not needed in the final published package.
+
+lib/GEMINI.md
+lib/src/GEMINI.md
+lib/src/models/GEMINI.md
+lib/src/utils/GEMINI.md
