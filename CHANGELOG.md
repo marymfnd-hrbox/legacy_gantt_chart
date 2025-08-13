@@ -1,3 +1,8 @@
+## 0.0.7
+
+* Dart format
+* Update `analysis_options.yaml`
+
 ## 0.0.6
 
 * Update README.md to improve clarity

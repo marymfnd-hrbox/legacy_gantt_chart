@@ -170,7 +170,8 @@ class LegacyGanttController extends ChangeNotifier {
 
   /// A generic helper to fetch data (tasks or holidays), handle loading states, and errors.
   Future<void> _fetchData({
-    required Future<List<LegacyGanttTask>> Function(DateTime, DateTime)? fetcher,
+    required Future<List<LegacyGanttTask>> Function(DateTime, DateTime)?
+        fetcher,
     required void Function(List<LegacyGanttTask>) onDataReceived,
     required void Function(bool) setLoading,
     required String errorContext,
@@ -185,8 +186,10 @@ class LegacyGanttController extends ChangeNotifier {
       final data = await fetcher(_visibleStartDate, _visibleEndDate);
       onDataReceived(data);
     } catch (e, s) {
-      debugPrint('Error fetching Gantt $errorContext for range $_visibleStartDate - $_visibleEndDate: $e\n$s');
-      onDataReceived([]); // On error, clear the data to avoid showing stale data.
+      debugPrint(
+          'Error fetching Gantt $errorContext for range $_visibleStartDate - $_visibleEndDate: $e\n$s');
+      onDataReceived(
+          []); // On error, clear the data to avoid showing stale data.
     } finally {
       setLoading(false);
       // Notify again to update the UI with the new data and hide the indicator.

@@ -26,17 +26,22 @@ class LegacyGanttTheme {
     required this.barColorSecondary,
     required this.textColor,
     required this.backgroundColor,
-    this.gridColor = const Color(0x33888888), // Colors.grey.withValues(alpha:0.2)
-    this.summaryBarColor = const Color(0x33000000), // Colors.black.withValues(alpha:0.2)
-    this.conflictBarColor = const Color(0x80F44336), // Colors.red.withValues(alpha:0.5)
-    this.ghostBarColor = const Color(0xB32196F3), // Colors.blue.withValues(alpha:0.7)
+    this.gridColor =
+        const Color(0x33888888), // Colors.grey.withValues(alpha:0.2)
+    this.summaryBarColor =
+        const Color(0x33000000), // Colors.black.withValues(alpha:0.2)
+    this.conflictBarColor =
+        const Color(0x80F44336), // Colors.red.withValues(alpha:0.5)
+    this.ghostBarColor =
+        const Color(0xB32196F3), // Colors.blue.withValues(alpha:0.7)
     TextStyle? axisTextStyle,
     this.taskTextStyle = const TextStyle(fontSize: 12, color: Colors.white),
     this.showRowBorders = false,
     this.rowBorderColor,
     this.barHeightRatio = 0.7,
     this.barCornerRadius = const Radius.circular(4.0),
-  }) : axisTextStyle = axisTextStyle ?? TextStyle(fontSize: 12, color: textColor);
+  }) : axisTextStyle =
+            axisTextStyle ?? TextStyle(fontSize: 12, color: textColor);
 
   LegacyGanttTheme copyWith({
     Color? barColorPrimary,
@@ -79,13 +84,16 @@ class LegacyGanttTheme {
       barColorSecondary: theme.colorScheme.secondary,
       textColor: theme.colorScheme.onSurface,
       backgroundColor: theme.colorScheme.surface,
-      gridColor: theme.colorScheme.onSurface.withValues(alpha:0.2),
-      summaryBarColor: theme.colorScheme.onSurface.withValues(alpha:0.2),
-      conflictBarColor: Colors.red.withValues(alpha:0.5),
-      ghostBarColor: theme.colorScheme.primary.withValues(alpha:0.7),
-      rowBorderColor: theme.colorScheme.onSurface.withValues(alpha:0.2),
-      axisTextStyle: theme.textTheme.bodySmall ?? TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
-      taskTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimary) ?? const TextStyle(fontSize: 12, color: Colors.white),
+      gridColor: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+      summaryBarColor: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+      conflictBarColor: Colors.red.withValues(alpha: 0.5),
+      ghostBarColor: theme.colorScheme.primary.withValues(alpha: 0.7),
+      rowBorderColor: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+      axisTextStyle: theme.textTheme.bodySmall ??
+          TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
+      taskTextStyle: theme.textTheme.bodyMedium
+              ?.copyWith(color: theme.colorScheme.onPrimary) ??
+          const TextStyle(fontSize: 12, color: Colors.white),
     );
   }
 }

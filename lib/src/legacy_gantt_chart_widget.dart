@@ -46,7 +46,8 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// The chart will still draw the bar's background.
   /// This cannot be used simultaneously with [taskBarBuilder].
   final Widget Function(LegacyGanttTask task)? taskContentBuilder;
-  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
+  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)?
+      onTaskUpdate;
 
   const LegacyGanttChartWidget({
     super.key, // Use super.key
@@ -75,7 +76,8 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.onTaskUpdate,
   })  : assert(
             controller != null ||
-                ((data != null && tasksFuture == null) || (data == null && tasksFuture != null)),
+                ((data != null && tasksFuture == null) ||
+                    (data == null && tasksFuture != null)),
             'If a controller is not used, exactly one of tasksFuture or data must be provided.'),
         assert(taskBarBuilder == null || taskContentBuilder == null,
             'Cannot provide both taskBarBuilder and taskContentBuilder. taskBarBuilder replaces the entire bar, while taskContentBuilder only replaces its content.'),
@@ -97,7 +99,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final LegacyGanttTheme effectiveTheme = widget.theme ?? LegacyGanttTheme.fromTheme(theme);
+    final LegacyGanttTheme effectiveTheme =
+        widget.theme ?? LegacyGanttTheme.fromTheme(theme);
 
     if (widget.controller != null) {
       return AnimatedBuilder(
@@ -115,7 +118,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
           if (allItems.isEmpty && !controller.isOverallLoading) {
             return Center(
-              child: Text('No data to display.', style: TextStyle(color: effectiveTheme.textColor)),
+              child: Text('No data to display.',
+                  style: TextStyle(color: effectiveTheme.textColor)),
             );
           }
 
@@ -127,12 +131,14 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                 context,
                 allItems,
                 effectiveTheme,
-                gridMin: controller.visibleStartDate.millisecondsSinceEpoch.toDouble(),
-                gridMax: controller.visibleEndDate.millisecondsSinceEpoch.toDouble(),
+                gridMin: controller.visibleStartDate.millisecondsSinceEpoch
+                    .toDouble(),
+                gridMax:
+                    controller.visibleEndDate.millisecondsSinceEpoch.toDouble(),
               ),
               if (controller.isLoading)
                 Container(
-                  color: effectiveTheme.backgroundColor.withValues(alpha:0.5),
+                  color: effectiveTheme.backgroundColor.withValues(alpha: 0.5),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
             ],
@@ -160,7 +166,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
           if (allItems.isEmpty) {
             return Center(
-              child: Text('No data to display.', style: TextStyle(color: effectiveTheme.textColor)),
+              child: Text('No data to display.',
+                  style: TextStyle(color: effectiveTheme.textColor)),
             );
           }
           return _buildChart(context, allItems, effectiveTheme);
@@ -172,18 +179,22 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       final allItems = [...tasks, ...holidays];
       if (allItems.isEmpty) {
         return Center(
-          child: Text('No data to display.', style: TextStyle(color: effectiveTheme.textColor)),
+          child: Text('No data to display.',
+              style: TextStyle(color: effectiveTheme.textColor)),
         );
       }
       return _buildChart(context, allItems, effectiveTheme);
     }
   }
 
-  Widget _buildChart(BuildContext context, List<LegacyGanttTask> tasks, LegacyGanttTheme effectiveTheme,
+  Widget _buildChart(BuildContext context, List<LegacyGanttTask> tasks,
+      LegacyGanttTheme effectiveTheme,
       {double? gridMin, double? gridMax}) {
     return ChangeNotifierProvider(
       // Use a key to ensure the ViewModel is recreated if the core data changes.
-      key: ValueKey(tasks.hashCode ^ widget.visibleRows.hashCode ^ widget.rowMaxStackDepth.hashCode),
+      key: ValueKey(tasks.hashCode ^
+          widget.visibleRows.hashCode ^
+          widget.rowMaxStackDepth.hashCode),
       create: (_) => LegacyGanttViewModel(
         data: tasks,
         // Pass all other widget properties to the ViewModel
@@ -209,19 +220,24 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           return LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               if (constraints.maxWidth == 0 || constraints.maxHeight == 0) {
-                return const SizedBox.shrink(); // Avoid calculations if we have no space
+                return const SizedBox
+                    .shrink(); // Avoid calculations if we have no space
               }
 
               // Inform the ViewModel of the available layout space.
               vm.updateLayout(constraints.maxWidth, constraints.maxHeight);
 
               // The rest of the UI rebuilds automatically when the VM's state changes.
-              final double totalContentWidth = vm.totalDomain.isEmpty ? 0 : vm.totalScale(vm.totalDomain.last);
+              final double totalContentWidth = vm.totalDomain.isEmpty
+                  ? 0
+                  : vm.totalScale(vm.totalDomain.last);
 
               // Calculate the total height of all rows to provide the correct size to the painter.
               final double totalContentHeight = widget.visibleRows.fold<double>(
                 0.0,
-                (prev, row) => prev + widget.rowHeight * (widget.rowMaxStackDepth[row.id] ?? 1),
+                (prev, row) =>
+                    prev +
+                    widget.rowHeight * (widget.rowMaxStackDepth[row.id] ?? 1),
               );
 
               return MouseRegion(
@@ -250,7 +266,9 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                 scale: vm.totalScale,
                                 domain: vm.totalDomain,
                                 ticks: widget.numberOfTicks,
-                                theme: effectiveTheme.copyWith(axisTextStyle: const TextStyle(color: Colors.transparent)),
+                                theme: effectiveTheme.copyWith(
+                                    axisTextStyle: const TextStyle(
+                                        color: Colors.transparent)),
                               ),
                             ),
                           ),
@@ -279,15 +297,20 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                       ghostTaskStart: vm.ghostTaskStart,
                                       ghostTaskEnd: vm.ghostTaskEnd,
                                       theme: effectiveTheme,
-                                      hasCustomTaskBuilder: widget.taskBarBuilder != null,
-                                      hasCustomTaskContentBuilder: widget.taskContentBuilder != null,
+                                      hasCustomTaskBuilder:
+                                          widget.taskBarBuilder != null,
+                                      hasCustomTaskContentBuilder:
+                                          widget.taskContentBuilder != null,
                                     ),
-                                    size: Size(totalContentWidth, totalContentHeight),
+                                    size: Size(
+                                        totalContentWidth, totalContentHeight),
                                   ),
                                   if (widget.taskBarBuilder != null)
-                                    ..._buildCustomTaskWidgets(vm, tasks, widget.taskBarBuilder!),
+                                    ..._buildCustomTaskWidgets(
+                                        vm, tasks, widget.taskBarBuilder!),
                                   if (widget.taskContentBuilder != null)
-                                    ..._buildCustomTaskWidgets(vm, tasks, widget.taskContentBuilder!),
+                                    ..._buildCustomTaskWidgets(
+                                        vm, tasks, widget.taskContentBuilder!),
                                   ..._buildCustomCellWidgets(vm, tasks),
                                 ],
                               ),
@@ -307,7 +330,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                               child: Transform.translate(
                                 offset: Offset(-vm.scrollOffset, 0),
                                 child: CustomPaint(
-                                  size: Size(totalContentWidth, vm.timeAxisHeight),
+                                  size: Size(
+                                      totalContentWidth, vm.timeAxisHeight),
                                   painter: AxisPainter(
                                     x: 0,
                                     y: vm.timeAxisHeight / 2,
@@ -336,14 +360,18 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
   }
 
   List<Widget> _buildCustomTaskWidgets(
-      LegacyGanttViewModel vm, List<LegacyGanttTask> tasks, Widget Function(LegacyGanttTask task) builder) {
+      LegacyGanttViewModel vm,
+      List<LegacyGanttTask> tasks,
+      Widget Function(LegacyGanttTask task) builder) {
     final List<Widget> customWidgets = [];
     double cumulativeRowTop = 0;
 
     final Map<String, List<LegacyGanttTask>> tasksByRow = {};
     final visibleRowIds = vm.visibleRows.map((r) => r.id).toSet();
     for (final task in tasks) {
-      if (visibleRowIds.contains(task.rowId) && !task.isTimeRangeHighlight && !task.isOverlapIndicator) {
+      if (visibleRowIds.contains(task.rowId) &&
+          !task.isTimeRangeHighlight &&
+          !task.isOverlapIndicator) {
         tasksByRow.putIfAbsent(task.rowId, () => []).add(task);
       }
     }
@@ -359,7 +387,12 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
         final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
 
-        customWidgets.add(Positioned(left: startX, top: top, width: width, height: vm.rowHeight, child: builder(task)));
+        customWidgets.add(Positioned(
+            left: startX,
+            top: top,
+            width: width,
+            height: vm.rowHeight,
+            child: builder(task)));
       }
       final stackDepth = vm.rowMaxStackDepth[rowData.id] ?? 1;
       cumulativeRowTop += vm.rowHeight * stackDepth;
@@ -388,9 +421,11 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         final taskEnd = task.end;
 
         // Iterate through each day the task spans
-        var currentDate = DateTime(taskStart.year, taskStart.month, taskStart.day);
+        var currentDate =
+            DateTime(taskStart.year, taskStart.month, taskStart.day);
         while (currentDate.isBefore(taskEnd)) {
-          final segmentStart = taskStart.isAfter(currentDate) ? taskStart : currentDate;
+          final segmentStart =
+              taskStart.isAfter(currentDate) ? taskStart : currentDate;
           final nextDay = currentDate.add(const Duration(days: 1));
           final segmentEnd = taskEnd.isBefore(nextDay) ? taskEnd : nextDay;
 
@@ -400,7 +435,12 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
           if (width > 0) {
             final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
-            customCells.add(Positioned(left: startX, top: top, width: width, height: vm.rowHeight, child: task.cellBuilder!(currentDate)));
+            customCells.add(Positioned(
+                left: startX,
+                top: top,
+                width: width,
+                height: vm.rowHeight,
+                child: task.cellBuilder!(currentDate)));
           }
           currentDate = nextDay;
         }

@@ -51,11 +51,16 @@ class AxisPainter extends CustomPainter {
 
       // Draw date label
       if (textStyle.color != Colors.transparent) {
-        final textSpan = TextSpan(text: DateFormat('M/d').format(date), style: textStyle);
-        final textPainter = TextPainter(text: textSpan, textAlign: TextAlign.center, textDirection: ui.TextDirection.ltr);
+        final textSpan =
+            TextSpan(text: DateFormat('M/d').format(date), style: textStyle);
+        final textPainter = TextPainter(
+            text: textSpan,
+            textAlign: TextAlign.center,
+            textDirection: ui.TextDirection.ltr);
         textPainter.layout();
         // Center the text on the tick mark
-        textPainter.paint(canvas, Offset(tickX - (textPainter.width / 2), y - textPainter.height));
+        textPainter.paint(canvas,
+            Offset(tickX - (textPainter.width / 2), y - textPainter.height));
       }
     }
   }

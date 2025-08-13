@@ -22,7 +22,8 @@ class LegacyGanttConflictDetector {
     required T? Function(LegacyGanttTask task) taskGrouper,
   }) {
     final List<LegacyGanttTask> conflictIndicators = [];
-    final eventTasksForOverlapDetection = tasks.where((t) => !t.isTimeRangeHighlight).toList();
+    final eventTasksForOverlapDetection =
+        tasks.where((t) => !t.isTimeRangeHighlight).toList();
 
     // 1. Group tasks using the provided grouper function.
     final Map<T, List<LegacyGanttTask>> groupedTasks = {};
@@ -44,15 +45,25 @@ class LegacyGanttConflictDetector {
 
       // Add indicators for the conflicting child tasks
       for (final overlap in rawOverlaps) {
-        conflictIndicators.add(_createIndicator(task: overlap.taskA, start: overlap.start, end: overlap.end, idSuffix: 'a'));
-        conflictIndicators.add(_createIndicator(task: overlap.taskB, start: overlap.start, end: overlap.end, idSuffix: 'b'));
+        conflictIndicators.add(_createIndicator(
+            task: overlap.taskA,
+            start: overlap.start,
+            end: overlap.end,
+            idSuffix: 'a'));
+        conflictIndicators.add(_createIndicator(
+            task: overlap.taskB,
+            start: overlap.start,
+            end: overlap.end,
+            idSuffix: 'b'));
       }
 
       // Merge overlap intervals to handle complex multi-shift conflicts
-      final mergedOverlaps = _mergeOverlapIntervals(rawOverlaps.map((o) => (start: o.start, end: o.end)).toList());
+      final mergedOverlaps = _mergeOverlapIntervals(
+          rawOverlaps.map((o) => (start: o.start, end: o.end)).toList());
 
       // Find all summary tasks within the same group
-      final allParentSummaryTasks = shifts.where((task) => task.isSummary).toList();
+      final allParentSummaryTasks =
+          shifts.where((task) => task.isSummary).toList();
 
       // For each distinct conflict period, create an indicator on the parent summary bar
       for (int i = 0; i < mergedOverlaps.length; i++) {
@@ -60,13 +71,19 @@ class LegacyGanttConflictDetector {
 
         // Find parent summary bars that intersect with this conflict period
         final involvedParentSummaryTasks = allParentSummaryTasks.where(
-          (summaryTask) => summaryTask.start.isBefore(mergedOverlap.end) && summaryTask.end.isAfter(mergedOverlap.start),
+          (summaryTask) =>
+              summaryTask.start.isBefore(mergedOverlap.end) &&
+              summaryTask.end.isAfter(mergedOverlap.start),
         );
 
         for (final summaryTask in involvedParentSummaryTasks) {
           // The indicator should only cover the intersection of the summary bar and the conflict
-          final indicatorStart = summaryTask.start.isAfter(mergedOverlap.start) ? summaryTask.start : mergedOverlap.start;
-          final indicatorEnd = summaryTask.end.isBefore(mergedOverlap.end) ? summaryTask.end : mergedOverlap.end;
+          final indicatorStart = summaryTask.start.isAfter(mergedOverlap.start)
+              ? summaryTask.start
+              : mergedOverlap.start;
+          final indicatorEnd = summaryTask.end.isBefore(mergedOverlap.end)
+              ? summaryTask.end
+              : mergedOverlap.end;
 
           if (indicatorEnd.isAfter(indicatorStart)) {
             conflictIndicators.add(LegacyGanttTask(
@@ -88,15 +105,28 @@ class LegacyGanttConflictDetector {
   /// Gets the actual work intervals for a task.
   /// If the task has segments, it returns the start/end of each segment.
   /// Otherwise, it returns the overall start/end of the task.
-  List<({DateTime start, DateTime end})> _getWorkIntervals(LegacyGanttTask task) {
+  List<({DateTime start, DateTime end})> _getWorkIntervals(
+      LegacyGanttTask task) {
     if (task.segments != null && task.segments!.isNotEmpty) {
       return task.segments!.map((s) => (start: s.start, end: s.end)).toList();
     }
     return [(start: task.start, end: task.end)];
   }
 
-  List<({LegacyGanttTask taskA, LegacyGanttTask taskB, DateTime start, DateTime end})> _findRawOverlaps(List<LegacyGanttTask> shifts) {
-    final List<({LegacyGanttTask taskA, LegacyGanttTask taskB, DateTime start, DateTime end})> overlaps = [];
+  List<
+      ({
+        LegacyGanttTask taskA,
+        LegacyGanttTask taskB,
+        DateTime start,
+        DateTime end
+      })> _findRawOverlaps(List<LegacyGanttTask> shifts) {
+    final List<
+        ({
+          LegacyGanttTask taskA,
+          LegacyGanttTask taskB,
+          DateTime start,
+          DateTime end
+        })> overlaps = [];
     for (int i = 0; i < shifts.length; i++) {
       for (int j = i + 1; j < shifts.length; j++) {
         final taskA = shifts[i];
@@ -110,14 +140,24 @@ class LegacyGanttConflictDetector {
         for (final intervalA in intervalsA) {
           for (final intervalB in intervalsB) {
             // Check for a time overlap between the two intervals
-            if (intervalA.start.isBefore(intervalB.end) && intervalA.end.isAfter(intervalB.start)) {
+            if (intervalA.start.isBefore(intervalB.end) &&
+                intervalA.end.isAfter(intervalB.start)) {
               // Calculate the exact start and end of the overlap
-              final overlapStart = intervalA.start.isAfter(intervalB.start) ? intervalA.start : intervalB.start;
-              final overlapEnd = intervalA.end.isBefore(intervalB.end) ? intervalA.end : intervalB.end;
+              final overlapStart = intervalA.start.isAfter(intervalB.start)
+                  ? intervalA.start
+                  : intervalB.start;
+              final overlapEnd = intervalA.end.isBefore(intervalB.end)
+                  ? intervalA.end
+                  : intervalB.end;
 
               // If the overlap has a positive duration, record it
               if (overlapEnd.isAfter(overlapStart)) {
-                overlaps.add((taskA: taskA, taskB: taskB, start: overlapStart, end: overlapEnd));
+                overlaps.add((
+                  taskA: taskA,
+                  taskB: taskB,
+                  start: overlapStart,
+                  end: overlapEnd
+                ));
               }
             }
           }
@@ -127,19 +167,32 @@ class LegacyGanttConflictDetector {
     return overlaps;
   }
 
-  LegacyGanttTask _createIndicator({required LegacyGanttTask task, required DateTime start, required DateTime end, required String idSuffix}) {
-    return LegacyGanttTask(id: 'overlap-${task.id}-$idSuffix', rowId: task.rowId, start: start, end: end, stackIndex: task.stackIndex, isOverlapIndicator: true);
+  LegacyGanttTask _createIndicator(
+      {required LegacyGanttTask task,
+      required DateTime start,
+      required DateTime end,
+      required String idSuffix}) {
+    return LegacyGanttTask(
+        id: 'overlap-${task.id}-$idSuffix',
+        rowId: task.rowId,
+        start: start,
+        end: end,
+        stackIndex: task.stackIndex,
+        isOverlapIndicator: true);
   }
 
-  List<({DateTime start, DateTime end})> _mergeOverlapIntervals(List<({DateTime start, DateTime end})> intervals) {
+  List<({DateTime start, DateTime end})> _mergeOverlapIntervals(
+      List<({DateTime start, DateTime end})> intervals) {
     if (intervals.isEmpty) return [];
     intervals.sort((a, b) => a.start.compareTo(b.start));
     final List<({DateTime start, DateTime end})> merged = [intervals.first];
     for (int i = 1; i < intervals.length; i++) {
       final current = intervals[i];
       final lastMerged = merged.last;
-      if (current.start.isBefore(lastMerged.end) || current.start == lastMerged.end) {
-        final newEnd = current.end.isAfter(lastMerged.end) ? current.end : lastMerged.end;
+      if (current.start.isBefore(lastMerged.end) ||
+          current.start == lastMerged.end) {
+        final newEnd =
+            current.end.isAfter(lastMerged.end) ? current.end : lastMerged.end;
         merged[merged.length - 1] = (start: lastMerged.start, end: newEnd);
       } else {
         merged.add(current);

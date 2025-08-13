@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 
@@ -10,22 +9,20 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Legacy Gantt Chart Demo',
-      theme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
+  Widget build(BuildContext context) => MaterialApp(
+        title: 'Legacy Gantt Chart Demo',
+        theme: ThemeData.from(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+            brightness: Brightness.light,
+          ),
         ),
-      ),
-      darkTheme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
-      ),
-      themeMode: ThemeMode.system,
-      home: const GanttChartDemo(),
-    );
-  }
+        darkTheme: ThemeData.from(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
+        ),
+        themeMode: ThemeMode.system,
+        home: const GanttChartDemo(),
+      );
 }
 
 class GanttChartDemo extends StatefulWidget {
@@ -78,6 +75,7 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
     setState(() => _isLoading = true);
     final tasks = await _fetchTasks(_totalStartDate, _totalEndDate);
     final holidays = await _fetchHolidays(_totalStartDate, _totalEndDate);
+    if (!mounted) return;
     setState(() {
       _tasks = [...tasks, ...holidays];
       _isLoading = false;
@@ -172,7 +170,7 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
               start: summaryTask.start,
               end: summaryTask.end,
               isTimeRangeHighlight: true,
-              color: Colors.grey.withValues(alpha:0.2), // The grey background for the summary span
+              color: Colors.grey.withValues(alpha: 0.2), // The grey background for the summary span
             ))
         .toList();
 
@@ -181,9 +179,10 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
 
   Future<List<LegacyGanttTask>> _fetchHolidays(DateTime start, DateTime end) async {
     await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return [];
     final List<LegacyGanttTask> holidays = [];
     // Use a distinct color for actual holidays/weekends.
-    final holidayColor = Theme.of(context).colorScheme.primary.withValues(alpha:0.3);
+    final holidayColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.3);
 
     // Generate highlights for weekends within the visible range.
     for (var day = start; day.isBefore(end); day = day.add(const Duration(days: 1))) {
@@ -323,7 +322,9 @@ class _GanttChartDemoState extends State<GanttChartDemo> {
                       taskContentBuilder: (task) {
                         // Determine text color based on the bar's background color for high contrast.
                         final barColor = task.color ?? ganttTheme.barColorPrimary;
-                        final textColor = ThemeData.estimateBrightnessForColor(barColor) == Brightness.dark ? Colors.white : Colors.black;
+                        final textColor = ThemeData.estimateBrightnessForColor(barColor) == Brightness.dark
+                            ? Colors.white
+                            : Colors.black;
                         final textStyle = ganttTheme.taskTextStyle.copyWith(color: textColor);
 
                         return Padding(
