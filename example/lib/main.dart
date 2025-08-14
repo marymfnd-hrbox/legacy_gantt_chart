@@ -98,6 +98,7 @@ class _GanttViewState extends State<GanttView> {
     _ganttHorizontalScrollController.dispose();
     super.dispose();
   }
+
   Future<void> _fetchScheduleData() async {
     setState(() {
       _ganttTasks = [];
@@ -110,7 +111,7 @@ class _GanttViewState extends State<GanttView> {
     });
 
     try {
-      final weekendColor = Theme.of(context).colorScheme.primary.withValues(alpha:0.1);
+      final weekendColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.1);
       final processedData = await _scheduleService.fetchAndProcessSchedule(
         startDate: _startDate,
         range: _range,
@@ -364,7 +365,8 @@ class _GanttViewState extends State<GanttView> {
   void _handleTaskUpdate(LegacyGanttTask task, DateTime newStart, DateTime newEnd) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Updated ${task.name}: ${DateFormat.yMd().format(newStart)} - ${DateFormat.yMd().format(newEnd)}'),
+        content:
+            Text('Updated ${task.name}: ${DateFormat.yMd().format(newStart)} - ${DateFormat.yMd().format(newEnd)}'),
       ),
     );
 
@@ -394,9 +396,7 @@ class _GanttViewState extends State<GanttView> {
     // We only care about actual event tasks, not background highlights.
     final activeRowIdsInView = _ganttTasks
         .where((task) =>
-            !task.isTimeRangeHighlight &&
-            task.start.isBefore(_visibleEndDate!) &&
-            task.end.isAfter(_visibleStartDate!))
+            !task.isTimeRangeHighlight && task.start.isBefore(_visibleEndDate!) && task.end.isAfter(_visibleStartDate!))
         .map((task) => task.rowId)
         .toSet();
 
@@ -441,7 +441,10 @@ class _GanttViewState extends State<GanttView> {
   }
 
   double _calculateGanttWidth(double screenWidth) {
-    if (_effectiveTotalStartDate == null || _effectiveTotalEndDate == null || _visibleStartDate == null || _visibleEndDate == null) {
+    if (_effectiveTotalStartDate == null ||
+        _effectiveTotalEndDate == null ||
+        _visibleStartDate == null ||
+        _visibleEndDate == null) {
       return screenWidth;
     }
     final totalDuration = _effectiveTotalEndDate!.difference(_effectiveTotalStartDate!).inMilliseconds;
@@ -549,7 +552,8 @@ class _GanttViewState extends State<GanttView> {
                                     setState(() {
                                       _hoveredTaskId = task?.id;
                                       _removeTooltip();
-                                      if (task != null && !task.isTimeRangeHighlight) { // Don't show tooltip for highlights
+                                      if (task != null && !task.isTimeRangeHighlight) {
+                                        // Don't show tooltip for highlights
                                         _showTooltip(context, task, globalPosition);
                                       }
                                     });
@@ -561,7 +565,8 @@ class _GanttViewState extends State<GanttView> {
                                   },
                                   theme: ganttTheme,
                                   taskContentBuilder: (task) {
-                                    if (task.isTimeRangeHighlight) return const SizedBox.shrink(); // Hide content for highlights
+                                    if (task.isTimeRangeHighlight)
+                                      return const SizedBox.shrink(); // Hide content for highlights
 
                                     final barColor = task.color ?? ganttTheme.barColorPrimary;
                                     final textColor = ThemeData.estimateBrightnessForColor(barColor) == Brightness.dark
@@ -580,8 +585,8 @@ class _GanttViewState extends State<GanttView> {
 
                                         // Determine what can be shown based on available width
                                         final bool canShowIcon = constraints.maxWidth > iconSize + padding * 2;
-                                        final bool canShowText =
-                                            constraints.maxWidth > iconSize + spacing + padding * 2 + 10; // +10 for some text
+                                        final bool canShowText = constraints.maxWidth >
+                                            iconSize + spacing + padding * 2 + 10; // +10 for some text
 
                                         return Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: padding),
@@ -607,7 +612,7 @@ class _GanttViewState extends State<GanttView> {
                                                 ),
                                               ]
                                             ],
-                                              ),
+                                          ),
                                         );
                                       }),
                                     );
@@ -619,7 +624,10 @@ class _GanttViewState extends State<GanttView> {
                         ),
                       ),
                       // --- Timeline Scrubber ---
-                      if (_totalStartDate != null && _totalEndDate != null && _visibleStartDate != null && _visibleEndDate != null)
+                      if (_totalStartDate != null &&
+                          _totalEndDate != null &&
+                          _visibleStartDate != null &&
+                          _visibleEndDate != null)
                         Container(
                           height: 40,
                           padding: const EdgeInsets.symmetric(vertical: 8.0),

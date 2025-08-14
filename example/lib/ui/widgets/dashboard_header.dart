@@ -42,8 +42,7 @@ class DashboardHeader extends StatelessWidget {
               onTap: () => onSelectDate(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: _datePickerContainerPaddingHorizontal,
-                    vertical: _datePickerContainerPaddingVertical),
+                    horizontal: _datePickerContainerPaddingHorizontal, vertical: _datePickerContainerPaddingVertical),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(3),

@@ -21,20 +21,21 @@ extension LegacyGanttTaskCopyWith on LegacyGanttTask {
     bool? isOverlapIndicator,
     List<LegacyGanttTaskSegment>? segments,
     LegacyGanttTaskCellBuilder? cellBuilder,
-  }) => LegacyGanttTask(
-    id: id ?? this.id,
-    rowId: rowId ?? this.rowId,
-    name: name ?? this.name,
-    start: start ?? this.start,
-    end: end ?? this.end,
-    color: color ?? this.color,
-    textColor: textColor ?? this.textColor,
-    stackIndex: stackIndex ?? this.stackIndex,
-    originalId: originalId ?? this.originalId,
-    isSummary: isSummary ?? this.isSummary,
-    isTimeRangeHighlight: isTimeRangeHighlight ?? this.isTimeRangeHighlight,
-    isOverlapIndicator: isOverlapIndicator ?? this.isOverlapIndicator,
-    segments: segments ?? this.segments,
-    cellBuilder: this.cellBuilder,
-  );
+  }) =>
+      LegacyGanttTask(
+        id: id ?? this.id,
+        rowId: rowId ?? this.rowId,
+        name: name ?? this.name,
+        start: start ?? this.start,
+        end: end ?? this.end,
+        color: color ?? this.color,
+        textColor: textColor ?? this.textColor,
+        stackIndex: stackIndex ?? this.stackIndex,
+        originalId: originalId ?? this.originalId,
+        isSummary: isSummary ?? this.isSummary,
+        isTimeRangeHighlight: isTimeRangeHighlight ?? this.isTimeRangeHighlight,
+        isOverlapIndicator: isOverlapIndicator ?? this.isOverlapIndicator,
+        segments: segments ?? this.segments,
+        cellBuilder: this.cellBuilder,
+      );
 }

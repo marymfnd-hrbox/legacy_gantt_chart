@@ -24,44 +24,44 @@ class GanttGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        color: isDarkMode ? Colors.grey[850] : Colors.white,
-      ),
-      child: Column(
-        children: [
-          _buildGridHeader(isDarkMode),
-          Expanded(
-            child: ListView.builder(
-              controller: scrollController,
-              itemCount: visibleGanttRows.length,
-              itemBuilder: (context, index) {
-                final rowId = visibleGanttRows[index].id;
-                GanttGridData? data;
-                for (final parent in gridData) {
-                  if (parent.id == rowId) {
-                    data = parent;
-                    break;
-                  }
-                  for (final child in parent.children) {
-                    if (child.id == rowId) {
-                      data = child;
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade400),
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
+        ),
+        child: Column(
+          children: [
+            _buildGridHeader(isDarkMode),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: visibleGanttRows.length,
+                itemBuilder: (context, index) {
+                  final rowId = visibleGanttRows[index].id;
+                  GanttGridData? data;
+                  for (final parent in gridData) {
+                    if (parent.id == rowId) {
+                      data = parent;
                       break;
                     }
+                    for (final child in parent.children) {
+                      if (child.id == rowId) {
+                        data = child;
+                        break;
+                      }
+                    }
+                    if (data != null) break;
                   }
-                  if (data != null) break;
-                }
 
-                if (data == null) {
-                  return const SizedBox.shrink();
-                }
-                return _buildGridRow(data, isDarkMode);
-              },
+                  if (data == null) {
+                    return const SizedBox.shrink();
+                  }
+                  return _buildGridRow(data, isDarkMode);
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
 
   Widget _buildGridHeader(bool isDarkMode) => Container(
         height: _rowHeight,
@@ -128,8 +128,7 @@ class GanttGrid extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                if (data.isParent)
-                  Icon(data.isExpanded ? Icons.expand_more : Icons.chevron_right, size: 20),
+                if (data.isParent) Icon(data.isExpanded ? Icons.expand_more : Icons.chevron_right, size: 20),
                 if (data.isParent) const SizedBox(width: 4),
                 Expanded(
                   child: Text(

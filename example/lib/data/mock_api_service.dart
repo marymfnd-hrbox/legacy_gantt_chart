@@ -3,7 +3,6 @@ import 'models.dart';
 // --- Mock API Service ---
 class MockApiService {
   Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? params}) async {
-
     // Determine the date range for mock data generation
     DateTime startDate = DateTime.now();
     // int rangeDays = 14; // Removed: Unused local variable
@@ -22,8 +21,20 @@ class MockApiService {
         name: 'John Doe',
         taskName: 'Team Lead',
         children: [
-          GanttJobData(id: 'job-1-1', name: 'Pilot A1', taskName: 'Pilot', status: 'Active', taskColor: '4CAF50', completion: 1.0), // 100%
-          GanttJobData(id: 'job-1-2', name: 'Co-Pilot A1', taskName: 'Co-Pilot', status: 'Vacation', taskColor: 'FFC107', completion: 0.5), // 50%
+          GanttJobData(
+              id: 'job-1-1',
+              name: 'Pilot A1',
+              taskName: 'Pilot',
+              status: 'Active',
+              taskColor: '4CAF50',
+              completion: 1.0), // 100%
+          GanttJobData(
+              id: 'job-1-2',
+              name: 'Co-Pilot A1',
+              taskName: 'Co-Pilot',
+              status: 'Vacation',
+              taskColor: 'FFC107',
+              completion: 0.5), // 50%
         ],
       ),
       GanttResourceData(
@@ -31,7 +42,13 @@ class MockApiService {
         name: 'Jane Smith',
         taskName: 'Team Member',
         children: [
-          GanttJobData(id: 'job-2-1', name: 'Flight Attendant A', taskName: 'Flight Attendant', status: 'Training', taskColor: '2196F3', completion: 0.25), // 25%
+          GanttJobData(
+              id: 'job-2-1',
+              name: 'Flight Attendant A',
+              taskName: 'Flight Attendant',
+              status: 'Training',
+              taskColor: '2196F3',
+              completion: 0.25), // 25%
         ],
       ),
       GanttResourceData(
@@ -39,7 +56,13 @@ class MockApiService {
         name: 'Bob Johnson',
         taskName: 'Mechanic',
         children: [
-          GanttJobData(id: 'job-3-1', name: 'Aero Mechanic 1', taskName: 'Lead Mechanic', status: 'Available', taskColor: '9E9E9E', completion: 0.75), // 75%
+          GanttJobData(
+              id: 'job-3-1',
+              name: 'Aero Mechanic 1',
+              taskName: 'Lead Mechanic',
+              status: 'Available',
+              taskColor: '9E9E9E',
+              completion: 0.75), // 75%
         ],
       ),
     ];

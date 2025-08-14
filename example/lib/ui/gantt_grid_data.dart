@@ -21,10 +21,10 @@ class GanttGridData {
   });
 
   factory GanttGridData.fromJob(GanttJobData job) => GanttGridData(
-      id: job.id,
-      name: job.name,
-      isParent: false,
-      taskName: job.taskName,
-      completion: job.completion,
-    );
+        id: job.id,
+        name: job.name,
+        isParent: false,
+        taskName: job.taskName,
+        completion: job.completion,
+      );
 }
