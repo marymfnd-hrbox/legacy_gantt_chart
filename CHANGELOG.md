@@ -1,3 +1,7 @@
+## 0.0.10
+
+* Improve example quality
+
 ## 0.0.9
 
 * Add example to github actions
