@@ -318,7 +318,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
       if (pointerYRelativeToBarsArea >= cumulativeHeight &&
           pointerYRelativeToBarsArea < cumulativeHeight + currentRowHeight) {
         final pointerYWithinRow = pointerYRelativeToBarsArea - cumulativeHeight;
-        final tappedStackIndex = max(0, (pointerYWithinRow / rowHeight).floor());
+        final tappedStackIndex =
+            max(0, (pointerYWithinRow / rowHeight).floor());
         final tasksInTappedStack = data
             .where((task) =>
                 task.rowId == row.id &&

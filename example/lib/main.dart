@@ -619,7 +619,7 @@ class _GanttViewState extends State<GanttView> {
                                                     Expanded(
                                                       child: Text(
                                                         task.name ?? '',
-                         style: textStyle,
+                                                        style: textStyle,
                                                         overflow: TextOverflow.ellipsis,
                                                         softWrap: false,
                                                       ),

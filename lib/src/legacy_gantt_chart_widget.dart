@@ -203,8 +203,11 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
   Widget _buildChart(BuildContext context, List<LegacyGanttTask> tasks,
       LegacyGanttTheme effectiveTheme,
       {double? gridMin, double? gridMax}) {
-    return ChangeNotifierProvider( // Use a key to ensure the ViewModel is recreated if the core data changes.
-      key: ValueKey(tasks.hashCode ^ widget.visibleRows.hashCode ^ widget.rowMaxStackDepth.hashCode),
+    return ChangeNotifierProvider(
+      // Use a key to ensure the ViewModel is recreated if the core data changes.
+      key: ValueKey(tasks.hashCode ^
+          widget.visibleRows.hashCode ^
+          widget.rowMaxStackDepth.hashCode),
       create: (_) => LegacyGanttViewModel(
         data: tasks,
         // Pass all other widget properties to the ViewModel
@@ -231,7 +234,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           // Update the ViewModel with the latest properties from the widget. This
           // is the correct way to pass updated values to a long-lived ViewModel
           // that is not recreated on every build.
-          vm.updateVisibleRange(gridMin ?? widget.gridMin, gridMax ?? widget.gridMax);
+          vm.updateVisibleRange(
+              gridMin ?? widget.gridMin, gridMax ?? widget.gridMax);
 
           return LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
@@ -340,8 +344,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                           child: Container(
                             color: effectiveTheme.backgroundColor,
                             child: CustomPaint(
-                              size:
-                                  Size(totalContentWidth, vm.timeAxisHeight),
+                              size: Size(totalContentWidth, vm.timeAxisHeight),
                               painter: AxisPainter(
                                 x: 0,
                                 y: vm.timeAxisHeight / 2,
@@ -351,10 +354,10 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                 domain: vm.totalDomain,
                                 visibleDomain: vm.visibleExtent,
                                 theme: effectiveTheme,
-                                ),
                               ),
                             ),
                           ),
+                        ),
 
                         // Layer 4: Resize Tooltip.
                         if (vm.showResizeTooltip)
