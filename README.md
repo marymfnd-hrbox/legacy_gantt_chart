@@ -31,7 +31,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  legacy_gantt_chart: ^0.0.6 # Replace with the latest version
+  legacy_gantt_chart: ^0.1.0 # Replace with the latest version
 ```
 
 Then, you can install the package using the command-line:
