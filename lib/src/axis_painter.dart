@@ -1,8 +1,8 @@
 // packages/gantt_chart/lib/src/axis_painter.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
 import 'package:flutter/foundation.dart' show listEquals;
-import 'dart:ui' as ui; // Import for TextDirection
+import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
 
 import 'models/legacy_gantt_theme.dart';
 
@@ -12,8 +12,8 @@ class AxisPainter extends CustomPainter {
   final double width;
   final double height;
   final double Function(DateTime) scale;
-  final int ticks;
   final List<DateTime> domain;
+  final List<DateTime> visibleDomain;
   final LegacyGanttTheme theme;
 
   AxisPainter({
@@ -22,62 +22,128 @@ class AxisPainter extends CustomPainter {
     required this.width,
     required this.height,
     required this.scale,
-    required this.ticks,
     required this.domain,
+    required this.visibleDomain,
     required this.theme,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (domain.length < 2 || domain[0] == domain[1]) {
-      return;
+    final paint = Paint()
+      ..color = theme.gridColor
+      ..strokeWidth = 1.0;
+
+    if (domain.isEmpty || visibleDomain.isEmpty) return;
+
+    final visibleDuration = visibleDomain.last.difference(visibleDomain.first);
+
+    Duration tickInterval;
+    String Function(DateTime) labelFormat;
+
+    if (visibleDuration.inDays > 60) {
+      tickInterval = const Duration(days: 7);
+      labelFormat = (dt) => 'Week ${_weekNumber(dt)}';
+    } else if (visibleDuration.inDays > 14) {
+      tickInterval = const Duration(days: 2);
+      labelFormat = (dt) => DateFormat('d MMM').format(dt);
+    } else if (visibleDuration.inDays > 3) {
+      tickInterval = const Duration(days: 1);
+      labelFormat = (dt) => DateFormat('EEE d').format(dt);
+    } else if (visibleDuration.inHours > 48) {
+      tickInterval = const Duration(hours: 12);
+      labelFormat = (dt) => DateFormat('ha').format(dt);
+    } else if (visibleDuration.inHours > 24) {
+      tickInterval = const Duration(hours: 6);
+      labelFormat = (dt) => DateFormat('ha').format(dt);
+    } else if (visibleDuration.inHours > 12) {
+      tickInterval = const Duration(hours: 2);
+      labelFormat = (dt) => DateFormat('h a').format(dt);
+    } else if (visibleDuration.inHours > 6) {
+      tickInterval = const Duration(hours: 1);
+      labelFormat = (dt) => DateFormat('h:mm a').format(dt);
+    } else if (visibleDuration.inHours > 3) {
+      tickInterval = const Duration(minutes: 30);
+      labelFormat = (dt) => DateFormat('h:mm a').format(dt);
+    } else if (visibleDuration.inMinutes > 90) {
+      tickInterval = const Duration(minutes: 15);
+      labelFormat = (dt) => DateFormat('h:mm a').format(dt);
+    } else if (visibleDuration.inMinutes > 30) {
+      tickInterval = const Duration(minutes: 5);
+      labelFormat = (dt) => DateFormat('h:mm').format(dt);
+    } else {
+      tickInterval = const Duration(minutes: 1);
+      labelFormat = (dt) => DateFormat('h:mm:ss').format(dt);
     }
 
-    final totalDuration = domain[1].difference(domain[0]).inMilliseconds;
-    if (totalDuration <= 0) {
-      return;
-    }
+    final List<MapEntry<double, DateTime>> tickPositions = [];
 
-    final paint = Paint()..color = theme.gridColor;
-    final textStyle = theme.axisTextStyle;
-
-    for (int i = 0; i <= ticks; i++) {
-      final tickDuration = (totalDuration / ticks) * i;
-      final date = domain[0].add(Duration(milliseconds: tickDuration.round()));
-
-      // Use the scale function to get the correct x position for both lines and text.
-      final double tickX = scale(date);
-
-      // Draw vertical grid line
-      if (height > 0) {
-        canvas.drawLine(Offset(tickX, y), Offset(tickX, y + height), paint);
+    // Find the first tick position that is on or after the start of the total domain.
+    // Round down to the nearest interval, then add intervals until we are in view.
+    if (domain.first.isBefore(domain.last)) {
+      DateTime currentTick = _roundDownTo(domain.first, tickInterval);
+      if (currentTick.isBefore(domain.first)) {
+        currentTick = currentTick.add(tickInterval);
       }
 
-      // Draw date label
+      // Generate ticks across the entire domain to ensure they are present when scrolling.
+      while (currentTick.isBefore(domain.last)) {
+        tickPositions.add(MapEntry(scale(currentTick), currentTick));
+        currentTick = currentTick.add(tickInterval);
+      }
+    }
+
+    for (final entry in tickPositions) {
+      final tickX = entry.key;
+      final tickTime = entry.value;
+      final label = labelFormat(tickTime);
+
+      canvas.drawLine(
+        Offset(tickX, y),
+        Offset(tickX, y + height),
+        paint,
+      );
+
+      final textStyle = theme.axisTextStyle;
       if (textStyle.color != Colors.transparent) {
-        final textSpan =
-            TextSpan(text: DateFormat('M/d').format(date), style: textStyle);
+        final textSpan = TextSpan(text: label, style: textStyle);
         final textPainter = TextPainter(
-            text: textSpan,
-            textAlign: TextAlign.center,
-            textDirection: ui.TextDirection.ltr);
+          text: textSpan,
+          textAlign: TextAlign.center,
+          textDirection: ui.TextDirection.ltr,
+        );
         textPainter.layout();
-        // Center the text on the tick mark
-        textPainter.paint(canvas,
-            Offset(tickX - (textPainter.width / 2), y - textPainter.height));
+        textPainter.paint(
+          canvas,
+          Offset(tickX - (textPainter.width / 2), y - textPainter.height),
+        );
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    if (oldDelegate is AxisPainter) {
-      // Repaint if any of the critical properties change.
-      return oldDelegate.width != width ||
-          oldDelegate.height != height ||
-          !listEquals(oldDelegate.domain, domain) ||
-          oldDelegate.ticks != ticks;
-    }
-    return true;
+  bool shouldRepaint(covariant AxisPainter oldDelegate) {
+    return oldDelegate.theme != theme ||
+        oldDelegate.scale != scale ||
+        !listEquals(oldDelegate.visibleDomain, visibleDomain) ||
+        oldDelegate.width != width ||
+        oldDelegate.height != height;
+  }
+
+  DateTime _roundDownTo(DateTime dt, Duration delta) {
+    final ms = dt.millisecondsSinceEpoch;
+    final deltaMs = delta.inMilliseconds;
+    return DateTime.fromMillisecondsSinceEpoch(
+      (ms ~/ deltaMs) * deltaMs,
+      isUtc: dt.isUtc,
+    );
+  }
+
+  int _weekNumber(DateTime date) {
+    // A simple week number calculation.
+    final dayOfYear = int.parse(DateFormat("D").format(date));
+    final woy = ((dayOfYear - date.weekday + 10) / 7).floor();
+    if (woy < 1) return 52; // Fallback for early days in the year.
+    if (woy > 52) return 52; // Fallback for late days in the year.
+    return woy;
   }
 }

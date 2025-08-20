@@ -147,7 +147,7 @@ class _LegacyGanttTimelineScrubberState
     }
 
     // Clamp values to stay within bounds and maintain minimum duration
-    final minWindowDuration = const Duration(days: 1);
+    final minWindowDuration = const Duration(hours: 1);
     if (newVisibleEnd.difference(newVisibleStart) < minWindowDuration) {
       if (_dragType == _DragType.leftHandle) {
         newVisibleStart = newVisibleEnd.subtract(minWindowDuration);

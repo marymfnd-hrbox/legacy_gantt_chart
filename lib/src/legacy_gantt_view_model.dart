@@ -17,8 +17,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
   final Map<String, int> rowMaxStackDepth;
   final double rowHeight;
   final double? axisHeight;
-  final double? gridMin;
-  final double? gridMax;
+  double? gridMin;
+  double? gridMax;
   final double? totalGridMin;
   final double? totalGridMax;
   final bool enableDragAndDrop;
@@ -63,7 +63,6 @@ class LegacyGanttViewModel extends ChangeNotifier {
   bool _isScrollingInternally = false;
   String? _lastHoveredTaskId;
   double Function(DateTime) _totalScale = (DateTime date) => 0.0;
-  double _scrollOffset = 0.0;
   List<DateTime> _totalDomain = [];
   List<DateTime> _visibleExtent = [];
   LegacyGanttTask? _draggedTask;
@@ -86,8 +85,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
   LegacyGanttTask? get draggedTask => _draggedTask;
   DateTime? get ghostTaskStart => _ghostTaskStart;
   DateTime? get ghostTaskEnd => _ghostTaskEnd;
-  double get scrollOffset => _scrollOffset;
   List<DateTime> get totalDomain => _totalDomain;
+  List<DateTime> get visibleExtent => _visibleExtent;
   double Function(DateTime) get totalScale => _totalScale;
   double get timeAxisHeight => axisHeight ?? _height * 0.1;
   bool get showResizeTooltip => _showResizeTooltip;
@@ -105,6 +104,17 @@ class LegacyGanttViewModel extends ChangeNotifier {
   void setTranslateY(double newTranslateY) {
     if (_translateY != newTranslateY) {
       _translateY = newTranslateY;
+      notifyListeners();
+    }
+  }
+
+  void updateVisibleRange(double? newGridMin, double? newGridMax) {
+    final bool changed = gridMin != newGridMin || gridMax != newGridMax;
+    if (changed) {
+      gridMin = newGridMin;
+      gridMax = newGridMax;
+      // Recalculate domains and scales based on the new visible range.
+      _calculateDomains();
       notifyListeners();
     }
   }
@@ -160,25 +170,20 @@ class LegacyGanttViewModel extends ChangeNotifier {
         (_totalDomain[1].millisecondsSinceEpoch -
                 _totalDomain[0].millisecondsSinceEpoch)
             .toDouble();
-    final double visibleDomainDurationMs =
-        (_visibleExtent[1].millisecondsSinceEpoch -
-                _visibleExtent[0].millisecondsSinceEpoch)
-            .toDouble();
 
-    if (visibleDomainDurationMs > 0) {
-      final double totalContentWidth =
-          _width * (totalDomainDurationMs / visibleDomainDurationMs);
+    // The width provided to the ViewModel is the total width of the scrollable area,
+    // as calculated by the parent widget (e.g., the example app's `_calculateGanttWidth`).
+    final double totalContentWidth = _width;
+
+    if (totalDomainDurationMs > 0) {
       _totalScale = (DateTime date) {
-        if (totalDomainDurationMs <= 0) return 0;
         final double value = (date.millisecondsSinceEpoch -
                 _totalDomain[0].millisecondsSinceEpoch)
             .toDouble();
         return (value / totalDomainDurationMs) * totalContentWidth;
       };
-      _scrollOffset = _totalScale(_visibleExtent[0]);
     } else {
       _totalScale = (date) => 0.0;
-      _scrollOffset = 0.0;
     }
   }
 
@@ -304,7 +309,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
     final pointerYRelativeToBarsArea =
         localPosition.dy - timeAxisHeight - _translateY;
-    final pointerXOnTotalContent = localPosition.dx + _scrollOffset;
+    final pointerXOnTotalContent = localPosition.dx;
 
     double cumulativeHeight = 0;
     for (final row in visibleRows) {
@@ -313,7 +318,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
       if (pointerYRelativeToBarsArea >= cumulativeHeight &&
           pointerYRelativeToBarsArea < cumulativeHeight + currentRowHeight) {
         final pointerYWithinRow = pointerYRelativeToBarsArea - cumulativeHeight;
-        final tappedStackIndex = (pointerYWithinRow / rowHeight).floor();
+        final tappedStackIndex = max(0, (pointerYWithinRow / rowHeight).floor());
         final tasksInTappedStack = data
             .where((task) =>
                 task.rowId == row.id &&
@@ -436,22 +441,13 @@ class LegacyGanttViewModel extends ChangeNotifier {
   }
 
   Duration _pixelToDuration(double pixels) {
-    final double totalDomainDurationMs =
-        (_totalDomain[1].millisecondsSinceEpoch -
-                _totalDomain[0].millisecondsSinceEpoch)
-            .toDouble();
-    final double visibleDomainDurationMs =
-        (_visibleExtent[1].millisecondsSinceEpoch -
-                _visibleExtent[0].millisecondsSinceEpoch)
-            .toDouble();
-    if (visibleDomainDurationMs <= 0) {
-      return Duration.zero;
-    }
-    final double totalContentWidth =
-        _width * (totalDomainDurationMs / visibleDomainDurationMs);
+    final double totalContentWidth = _width;
     if (totalContentWidth <= 0) {
       return Duration.zero;
     }
+    final totalDomainDurationMs = (_totalDomain.last.millisecondsSinceEpoch -
+            _totalDomain.first.millisecondsSinceEpoch)
+        .toDouble();
     final durationMs = (pixels / totalContentWidth) * totalDomainDurationMs;
     return Duration(milliseconds: durationMs.round());
   }

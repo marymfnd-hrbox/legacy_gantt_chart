@@ -1,3 +1,8 @@
+## 0.2.0
+
+* **FEAT**: Implemented dynamic time axis graduations that adjust based on the zoom level, from weeks down to minutes.
+* **FEAT**: Added a resizable divider to the example app, allowing users to adjust the width of the data grid.
+
 ## 0.1.0
 
 * **FEAT**: Added a tooltip to show start and end dates when dragging a task.

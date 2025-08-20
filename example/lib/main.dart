@@ -74,6 +74,7 @@ class _GanttViewState extends State<GanttView> {
   GanttResponse? _apiResponse;
 
   bool _isInitialLoad = true;
+  double? _gridWidth;
 
   @override
   void initState() {
@@ -469,15 +470,6 @@ class _GanttViewState extends State<GanttView> {
     final colorScheme = Theme.of(context).colorScheme;
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    int numberOfTicks;
-    if (_effectiveTotalStartDate != null && _effectiveTotalEndDate != null) {
-      final totalDays = _effectiveTotalEndDate!.difference(_effectiveTotalStartDate!).inDays;
-      // Aim for a tick density that looks good, e.g., one tick per day for up to ~60 days.
-      numberOfTicks = totalDays > 0 ? (totalDays / 2).ceil().clamp(7, 30) : 7; // At least 7 ticks
-    } else {
-      numberOfTicks = 7; // Default
-    }
-
     final ganttTheme = LegacyGanttTheme.fromTheme(Theme.of(context)).copyWith(
       barColorPrimary: Colors.blue[800],
       barColorSecondary: Colors.blue[600],
@@ -497,160 +489,180 @@ class _GanttViewState extends State<GanttView> {
             onRangeChange: _onRangeChange,
           ),
           Expanded(
-            child: Row(
-              children: [
-                // Gantt Grid (Left Side)
-                Expanded(
-                  flex: 2,
-                  child: GanttGrid(
-                    gridData: _visibleGridData,
-                    visibleGanttRows: _visibleGanttRows,
-                    rowMaxStackDepth: _rowMaxStackDepth,
-                    scrollController: _scrollController,
-                    onToggleExpansion: _toggleExpansion,
-                    isDarkMode: isDarkMode,
-                  ),
-                ),
-                // Gantt Chart (Right Side)
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            // If data is still loading or not set, show a progress indicator
-                            if (_ganttTasks.isEmpty && _gridData.isEmpty) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _gridWidth ??= constraints.maxWidth * 0.4;
 
-                            final ganttWidth = _calculateGanttWidth(constraints.maxWidth);
-
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              controller: _ganttHorizontalScrollController,
-                              child: SizedBox(
-                                width: ganttWidth,
-                                height: constraints.maxHeight, // Constraints from LayoutBuilder
-                                child: LegacyGanttChartWidget(
-                                  scrollController: _scrollController, // Link to grid scroll controller
-                                  data: _ganttTasks,
-                                  visibleRows: _visibleGanttRows,
-                                  rowHeight: _rowHeight,
-                                  rowMaxStackDepth: _rowMaxStackDepth,
-                                  axisHeight: _rowHeight, // Match grid header height
-                                  gridMin: _effectiveTotalStartDate?.millisecondsSinceEpoch.toDouble(),
-                                  gridMax: _effectiveTotalEndDate?.millisecondsSinceEpoch.toDouble(),
-                                  totalGridMin: _effectiveTotalStartDate?.millisecondsSinceEpoch.toDouble(),
-                                  totalGridMax: _effectiveTotalEndDate?.millisecondsSinceEpoch.toDouble(),
-                                  numberOfTicks: numberOfTicks,
-                                  enableDragAndDrop: true, // Enable drag and drop
-                                  enableResize: true, // Enable resizing
-                                  onTaskUpdate: _handleTaskUpdate, // Handle updates from drag/resize
-                                  resizeTooltipDateFormat: (date) => DateFormat('MMM d, h:mm a').format(date.toLocal()),
-                                  resizeTooltipBackgroundColor: Colors.purple,
-                                  resizeTooltipFontColor: Colors.white,
-                                  onTaskHover: (task, globalPosition) {
-                                    if (_hoveredTaskId == task?.id) return;
-                                    setState(() {
-                                      _hoveredTaskId = task?.id;
-                                      _removeTooltip();
-                                      if (task != null && !task.isTimeRangeHighlight) {
-                                        // Don't show tooltip for highlights
-                                        _showTooltip(context, task, globalPosition);
-                                      }
-                                    });
-                                  },
-                                  onPressTask: (task) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Tapped on task: ${task.name}')),
-                                    );
-                                  },
-                                  theme: ganttTheme,
-                                  taskContentBuilder: (task) {
-                                    if (task.isTimeRangeHighlight) {
-                                      return const SizedBox.shrink(); // Hide content for highlights
-                                    }
-
-                                    final barColor = task.color ?? ganttTheme.barColorPrimary;
-                                    final textColor = ThemeData.estimateBrightnessForColor(barColor) == Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black;
-                                    final textStyle = ganttTheme.taskTextStyle.copyWith(color: textColor);
-
-                                    // Use a ClipRect to ensure that the content, including padding,
-                                    // never overflows the bounds of the task bar, especially when the
-                                    // bar is very narrow.
-                                    return ClipRect(
-                                      child: LayoutBuilder(builder: (context, constraints) {
-                                        const double iconSize = 16.0;
-                                        const double padding = 4.0;
-                                        const double spacing = 4.0;
-
-                                        // Determine what can be shown based on available width
-                                        final bool canShowIcon = constraints.maxWidth > iconSize + padding * 2;
-                                        final bool canShowText = constraints.maxWidth >
-                                            iconSize + spacing + padding * 2 + 10; // +10 for some text
-
-                                        return Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: padding),
-                                          child: Row(
-                                            children: [
-                                              if (canShowIcon) ...[
-                                                if (task.isSummary)
-                                                  Icon(Icons.summarize, color: textColor, size: iconSize)
-                                                else if (task.isOverlapIndicator)
-                                                  const Icon(Icons.warning, color: Colors.yellow, size: iconSize)
-                                                else // Regular task
-                                                  Icon(Icons.task, color: textColor, size: iconSize),
-                                              ],
-                                              if (canShowText) ...[
-                                                const SizedBox(width: spacing),
-                                                Expanded(
-                                                  child: Text(
-                                                    task.name ?? '',
-                                                    style: textStyle,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    softWrap: false,
-                                                  ),
-                                                ),
-                                              ]
-                                            ],
-                                          ),
-                                        );
-                                      }),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+                return Row(
+                  children: [
+                    // Gantt Grid (Left Side)
+                    SizedBox(
+                      width: _gridWidth,
+                      child: GanttGrid(
+                        gridData: _visibleGridData,
+                        visibleGanttRows: _visibleGanttRows,
+                        rowMaxStackDepth: _rowMaxStackDepth,
+                        scrollController: _scrollController,
+                        onToggleExpansion: _toggleExpansion,
+                        isDarkMode: isDarkMode,
+                      ),
+                    ),
+                    // Draggable Divider
+                    GestureDetector(
+                      onHorizontalDragUpdate: (details) {
+                        setState(() {
+                          final newWidth = _gridWidth! + details.delta.dx;
+                          // Clamp width to reasonable bounds
+                          _gridWidth = newWidth.clamp(150.0, constraints.maxWidth - 150.0);
+                        });
+                      },
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        child: VerticalDivider(
+                          width: 8,
+                          thickness: 1,
+                          color: Theme.of(context).dividerColor,
                         ),
                       ),
-                      // --- Timeline Scrubber ---
-                      if (_totalStartDate != null &&
-                          _totalEndDate != null &&
-                          _visibleStartDate != null &&
-                          _visibleEndDate != null)
-                        Container(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          color: Theme.of(context).cardColor,
-                          child: LegacyGanttTimelineScrubber(
-                            totalStartDate: _totalStartDate!,
-                            totalEndDate: _totalEndDate!,
-                            visibleStartDate: _visibleStartDate!,
-                            visibleEndDate: _visibleEndDate!,
-                            onWindowChanged: _onScrubberWindowChanged,
-                            tasks: _ganttTasks,
-                            startPadding: _ganttStartPadding,
-                            endPadding: _ganttEndPadding,
+                    ),
+                    // Gantt Chart (Right Side)
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, chartConstraints) {
+                                // If data is still loading or not set, show a progress indicator
+                                if (_ganttTasks.isEmpty && _gridData.isEmpty) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+
+                                final ganttWidth = _calculateGanttWidth(chartConstraints.maxWidth);
+
+                                return SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  controller: _ganttHorizontalScrollController,
+                                  child: SizedBox(
+                                    width: ganttWidth,
+                                    height: chartConstraints.maxHeight, // Constraints from LayoutBuilder
+                                    child: LegacyGanttChartWidget(
+                                      scrollController: _scrollController, // Link to grid scroll controller
+                                      data: _ganttTasks,
+                                      visibleRows: _visibleGanttRows,
+                                      rowHeight: _rowHeight,
+                                      rowMaxStackDepth: _rowMaxStackDepth,
+                                      axisHeight: _rowHeight, // Match grid header height
+                                      gridMin: _visibleStartDate?.millisecondsSinceEpoch.toDouble(),
+                                      gridMax: _visibleEndDate?.millisecondsSinceEpoch.toDouble(),
+                                      totalGridMin: _effectiveTotalStartDate?.millisecondsSinceEpoch.toDouble(),
+                                      totalGridMax: _effectiveTotalEndDate?.millisecondsSinceEpoch.toDouble(),
+                                      enableDragAndDrop: true, // Enable drag and drop
+                                      enableResize: true, // Enable resizing
+                                      onTaskUpdate: _handleTaskUpdate, // Handle updates from drag/resize
+                                      resizeTooltipDateFormat: (date) =>
+                                          DateFormat('MMM d, h:mm a').format(date.toLocal()),
+                                      resizeTooltipBackgroundColor: Colors.purple,
+                                      resizeTooltipFontColor: Colors.white,
+                                      onTaskHover: (task, globalPosition) {
+                                        if (_hoveredTaskId == task?.id) return;
+                                        setState(() {
+                                          _hoveredTaskId = task?.id;
+                                          _removeTooltip();
+                                          if (task != null && !task.isTimeRangeHighlight) {
+                                            // Don't show tooltip for highlights
+                                            _showTooltip(context, task, globalPosition);
+                                          }
+                                        });
+                                      },
+                                      onPressTask: (task) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Tapped on task: ${task.name}')),
+                                        );
+                                      },
+                                      theme: ganttTheme,
+                                      taskContentBuilder: (task) {
+                                        if (task.isTimeRangeHighlight) {
+                                          return const SizedBox.shrink(); // Hide content for highlights
+                                        }
+
+                                        final barColor = task.color ?? ganttTheme.barColorPrimary;
+                                        final textColor =
+                                            ThemeData.estimateBrightnessForColor(barColor) == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black;
+                                        final textStyle = ganttTheme.taskTextStyle.copyWith(color: textColor);
+
+                                        return ClipRect(
+                                          child: LayoutBuilder(builder: (context, constraints) {
+                                            const double iconSize = 16.0;
+                                            const double padding = 4.0;
+                                            const double spacing = 4.0;
+
+                                            final bool canShowIcon = constraints.maxWidth > iconSize + padding * 2;
+                                            final bool canShowText = constraints.maxWidth >
+                                                iconSize + spacing + padding * 2 + 10; // +10 for some text
+
+                                            return Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: padding),
+                                              child: Row(
+                                                children: [
+                                                  if (canShowIcon) ...[
+                                                    if (task.isSummary)
+                                                      Icon(Icons.summarize, color: textColor, size: iconSize)
+                                                    else if (task.isOverlapIndicator)
+                                                      const Icon(Icons.warning, color: Colors.yellow, size: iconSize)
+                                                    else // Regular task
+                                                      Icon(Icons.task, color: textColor, size: iconSize),
+                                                  ],
+                                                  if (canShowText) ...[
+                                                    const SizedBox(width: spacing),
+                                                    Expanded(
+                                                      child: Text(
+                                                        task.name ?? '',
+                         style: textStyle,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        softWrap: false,
+                                                      ),
+                                                    ),
+                                                  ]
+                                                ],
+                                              ),
+                                            );
+                                          }),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                )
-              ],
+                          // --- Timeline Scrubber ---
+                          if (_totalStartDate != null &&
+                              _totalEndDate != null &&
+                              _visibleStartDate != null &&
+                              _visibleEndDate != null)
+                            Container(
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              color: Theme.of(context).cardColor,
+                              child: LegacyGanttTimelineScrubber(
+                                totalStartDate: _totalStartDate!,
+                                totalEndDate: _totalEndDate!,
+                                visibleStartDate: _visibleStartDate!,
+                                visibleEndDate: _visibleEndDate!,
+                                onWindowChanged: _onScrubberWindowChanged,
+                                tasks: _ganttTasks,
+                                startPadding: _ganttStartPadding,
+                                endPadding: _ganttEndPadding,
+                              ),
+                            ),
+                        ],
+                      ),
+                    )
+                  ],
+                );
+              },
             ),
           ),
         ],

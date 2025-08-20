@@ -17,8 +17,6 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// This is ignored if a [controller] is provided.
   final List<LegacyGanttTask>? holidays;
   final List<LegacyGanttRow> visibleRows;
-  final int numberOfTicks;
-  final Function(LegacyGanttTask)? onPressTask; //
   final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
   final ScrollController? scrollController;
   final double? axisHeight;
@@ -29,6 +27,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
   final double? gridMax; // Unix timestamp or milliseconds since epoch
   final double? totalGridMin; // The start of the entire dataset's time range
   final double? totalGridMax; // The end of the entire dataset's time range
+  final Function(LegacyGanttTask)? onPressTask;
   final bool enableDragAndDrop;
   final bool enableResize;
 
@@ -67,7 +66,6 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.holidays,
     required this.visibleRows,
     required this.rowMaxStackDepth,
-    this.numberOfTicks = 4,
     this.onTaskHover,
     this.scrollController,
     this.axisHeight,
@@ -205,11 +203,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
   Widget _buildChart(BuildContext context, List<LegacyGanttTask> tasks,
       LegacyGanttTheme effectiveTheme,
       {double? gridMin, double? gridMax}) {
-    return ChangeNotifierProvider(
-      // Use a key to ensure the ViewModel is recreated if the core data changes.
-      key: ValueKey(tasks.hashCode ^
-          widget.visibleRows.hashCode ^
-          widget.rowMaxStackDepth.hashCode),
+    return ChangeNotifierProvider( // Use a key to ensure the ViewModel is recreated if the core data changes.
+      key: ValueKey(tasks.hashCode ^ widget.visibleRows.hashCode ^ widget.rowMaxStackDepth.hashCode),
       create: (_) => LegacyGanttViewModel(
         data: tasks,
         // Pass all other widget properties to the ViewModel
@@ -233,6 +228,11 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       ),
       child: Consumer<LegacyGanttViewModel>(
         builder: (context, vm, child) {
+          // Update the ViewModel with the latest properties from the widget. This
+          // is the correct way to pass updated values to a long-lived ViewModel
+          // that is not recreated on every build.
+          vm.updateVisibleRange(gridMin ?? widget.gridMin, gridMax ?? widget.gridMax);
+
           return LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               if (constraints.maxWidth == 0 || constraints.maxHeight == 0) {
@@ -271,21 +271,18 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                       children: [
                         // Layer 1: Background Grid Lines.
                         Positioned.fill(
-                          child: Transform.translate(
-                            offset: Offset(-vm.scrollOffset, 0),
-                            child: CustomPaint(
-                              painter: AxisPainter(
-                                x: 0,
-                                y: vm.timeAxisHeight,
-                                width: totalContentWidth,
-                                height: constraints.maxHeight,
-                                scale: vm.totalScale,
-                                domain: vm.totalDomain,
-                                ticks: widget.numberOfTicks,
-                                theme: effectiveTheme.copyWith(
-                                    axisTextStyle: const TextStyle(
-                                        color: Colors.transparent)),
-                              ),
+                          child: CustomPaint(
+                            painter: AxisPainter(
+                              x: 0,
+                              y: vm.timeAxisHeight,
+                              width: totalContentWidth,
+                              height: constraints.maxHeight,
+                              scale: vm.totalScale,
+                              domain: vm.totalDomain,
+                              visibleDomain: vm.visibleExtent,
+                              theme: effectiveTheme.copyWith(
+                                  axisTextStyle: const TextStyle(
+                                      color: Colors.transparent)),
                             ),
                           ),
                         ),
@@ -298,7 +295,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                           height: constraints.maxHeight - vm.timeAxisHeight,
                           child: ClipRect(
                             child: Transform.translate(
-                              offset: Offset(-vm.scrollOffset, vm.translateY),
+                              offset: Offset(0, vm.translateY),
                               child: Stack(
                                 children: [
                                   CustomPaint(
@@ -342,27 +339,22 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                           height: vm.timeAxisHeight,
                           child: Container(
                             color: effectiveTheme.backgroundColor,
-                            child: ClipRect(
-                              child: Transform.translate(
-                                offset: Offset(-vm.scrollOffset, 0),
-                                child: CustomPaint(
-                                  size: Size(
-                                      totalContentWidth, vm.timeAxisHeight),
-                                  painter: AxisPainter(
-                                    x: 0,
-                                    y: vm.timeAxisHeight / 2,
-                                    width: totalContentWidth,
-                                    height: 0,
-                                    scale: vm.totalScale,
-                                    domain: vm.totalDomain,
-                                    ticks: widget.numberOfTicks,
-                                    theme: effectiveTheme,
-                                  ),
+                            child: CustomPaint(
+                              size:
+                                  Size(totalContentWidth, vm.timeAxisHeight),
+                              painter: AxisPainter(
+                                x: 0,
+                                y: vm.timeAxisHeight / 2,
+                                width: totalContentWidth,
+                                height: 0,
+                                scale: vm.totalScale,
+                                domain: vm.totalDomain,
+                                visibleDomain: vm.visibleExtent,
+                                theme: effectiveTheme,
                                 ),
                               ),
                             ),
                           ),
-                        ),
 
                         // Layer 4: Resize Tooltip.
                         if (vm.showResizeTooltip)
