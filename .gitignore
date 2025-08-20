@@ -65,9 +65,3 @@ pubspec.lock
 /ios/.symlinks/
 /ios/DerivedData/
 *.hmap
-
-# Windows, Linux, macOS, and Web platform-specific ignores
-/linux/
-/macos/
-/windows/
-/web/
