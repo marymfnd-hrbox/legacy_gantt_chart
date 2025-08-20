@@ -547,6 +547,9 @@ class _GanttViewState extends State<GanttView> {
                                   enableDragAndDrop: true, // Enable drag and drop
                                   enableResize: true, // Enable resizing
                                   onTaskUpdate: _handleTaskUpdate, // Handle updates from drag/resize
+                                  resizeTooltipDateFormat: (date) => DateFormat('MMM d, h:mm a').format(date.toLocal()),
+                                  resizeTooltipBackgroundColor: Colors.purple,
+                                  resizeTooltipFontColor: Colors.white,
                                   onTaskHover: (task, globalPosition) {
                                     if (_hoveredTaskId == task?.id) return;
                                     setState(() {
@@ -565,8 +568,9 @@ class _GanttViewState extends State<GanttView> {
                                   },
                                   theme: ganttTheme,
                                   taskContentBuilder: (task) {
-                                    if (task.isTimeRangeHighlight)
+                                    if (task.isTimeRangeHighlight) {
                                       return const SizedBox.shrink(); // Hide content for highlights
+                                    }
 
                                     final barColor = task.color ?? ganttTheme.barColorPrimary;
                                     final textColor = ThemeData.estimateBrightnessForColor(barColor) == Brightness.dark

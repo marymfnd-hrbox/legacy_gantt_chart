@@ -27,6 +27,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
       onTaskUpdate;
   final Function(LegacyGanttTask)? onPressTask;
   final ScrollController? scrollController;
+  final String Function(DateTime)? resizeTooltipDateFormat;
+
   final Widget Function(LegacyGanttTask task)? taskBarBuilder;
   final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
 
@@ -46,6 +48,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     this.onPressTask,
     this.scrollController,
     this.taskBarBuilder,
+    this.resizeTooltipDateFormat,
     this.onTaskHover,
   }) {
     scrollController?.addListener(_onExternalScroll);
@@ -72,6 +75,10 @@ class LegacyGanttViewModel extends ChangeNotifier {
   DateTime? _originalTaskStart;
   DateTime? _originalTaskEnd;
   MouseCursor _cursor = SystemMouseCursors.basic;
+  // New state for resize tooltip
+  bool _showResizeTooltip = false;
+  String _resizeTooltipText = '';
+  Offset _resizeTooltipPosition = Offset.zero;
 
   // Publicly exposed state for the View
   double get translateY => _translateY;
@@ -83,6 +90,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
   List<DateTime> get totalDomain => _totalDomain;
   double Function(DateTime) get totalScale => _totalScale;
   double get timeAxisHeight => axisHeight ?? _height * 0.1;
+  bool get showResizeTooltip => _showResizeTooltip;
+  String get resizeTooltipText => _resizeTooltipText;
+  Offset get resizeTooltipPosition => _resizeTooltipPosition;
 
   void updateLayout(double width, double height) {
     if (_width != width || _height != height) {
@@ -233,6 +243,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     _ghostTaskEnd = null;
     _dragMode = DragMode.none;
     _panType = PanType.none;
+    _showResizeTooltip = false;
     notifyListeners();
   }
 
@@ -362,29 +373,65 @@ class LegacyGanttViewModel extends ChangeNotifier {
     final durationDelta = _pixelToDuration(pixelDelta);
     DateTime newStart = _originalTaskStart!;
     DateTime newEnd = _originalTaskEnd!;
+    String tooltipText = '';
+    bool showTooltip = false;
 
     switch (_dragMode) {
       case DragMode.move:
         newStart = _originalTaskStart!.add(durationDelta);
         newEnd = _originalTaskEnd!.add(durationDelta);
+        if (resizeTooltipDateFormat != null) {
+          final startStr =
+              resizeTooltipDateFormat!(newStart).replaceAll(' ', '\u00A0');
+          final endStr =
+              resizeTooltipDateFormat!(newEnd).replaceAll(' ', '\u00A0');
+          tooltipText = 'Start:\u00A0$startStr\nEnd:\u00A0$endStr';
+        } else {
+          tooltipText =
+              'Start:\u00A0${newStart.toLocal().toIso8601String().substring(0, 16)}\nEnd:\u00A0${newEnd.toLocal().toIso8601String().substring(0, 16)}';
+        }
+        showTooltip = true;
         break;
       case DragMode.resizeStart:
         newStart = _originalTaskStart!.add(durationDelta);
         if (newStart.isAfter(newEnd.subtract(const Duration(minutes: 1)))) {
           newStart = newEnd.subtract(const Duration(minutes: 1));
         }
+        tooltipText = (resizeTooltipDateFormat != null
+                ? resizeTooltipDateFormat!(newStart)
+                : newStart.toLocal().toIso8601String().substring(0, 16))
+            .replaceAll(' ', '\u00A0');
+        showTooltip = true;
         break;
       case DragMode.resizeEnd:
         newEnd = _originalTaskEnd!.add(durationDelta);
         if (newEnd.isBefore(newStart.add(const Duration(minutes: 1)))) {
           newEnd = newStart.add(const Duration(minutes: 1));
         }
+        tooltipText = (resizeTooltipDateFormat != null
+                ? resizeTooltipDateFormat!(newEnd)
+                : newEnd.toLocal().toIso8601String().substring(0, 16))
+            .replaceAll(' ', '\u00A0');
+        showTooltip = true;
         break;
       case DragMode.none:
         break;
     }
     _ghostTaskStart = newStart;
     _ghostTaskEnd = newEnd;
+    _resizeTooltipText = tooltipText;
+    _showResizeTooltip = showTooltip;
+    if (showTooltip) {
+      // Offset the tooltip to appear slightly above the cursor.
+      if (_dragMode == DragMode.move) {
+        // For move operations, position the tooltip higher to be distinct
+        // from the resize tooltips and less likely to obscure other bars.
+        _resizeTooltipPosition = details.localPosition.translate(0, -60);
+      } else {
+        // For resize operations.
+        _resizeTooltipPosition = details.localPosition.translate(0, -40);
+      }
+    }
     notifyListeners();
   }
 

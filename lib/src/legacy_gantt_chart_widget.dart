@@ -49,6 +49,18 @@ class LegacyGanttChartWidget extends StatefulWidget {
   final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)?
       onTaskUpdate;
 
+  /// A function to format the date/time shown in the tooltip when resizing a task.
+  final String Function(DateTime)? resizeTooltipDateFormat;
+
+  /// The background color of the tooltip that appears during drag or resize operations.
+  /// If not provided, it defaults to the theme's `barColorPrimary`.
+  final Color? resizeTooltipBackgroundColor;
+
+  /// The font color of the tooltip that appears during drag or resize operations.
+  /// If not provided, it's automatically determined for contrast against the
+  /// tooltip's background color.
+  final Color? resizeTooltipFontColor;
+
   const LegacyGanttChartWidget({
     super.key, // Use super.key
     this.data,
@@ -74,6 +86,9 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.taskBarBuilder,
     this.taskContentBuilder,
     this.onTaskUpdate,
+    this.resizeTooltipDateFormat,
+    this.resizeTooltipBackgroundColor,
+    this.resizeTooltipFontColor,
   })  : assert(
             controller != null ||
                 ((data != null && tasksFuture == null) ||
@@ -212,6 +227,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         onPressTask: widget.onPressTask,
         onTaskHover: widget.onTaskHover,
         taskBarBuilder: widget.taskBarBuilder,
+        resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
         scrollController: widget.scrollController,
         // taskContentBuilder is handled directly in the widget's build method.
       ),
@@ -347,6 +363,15 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                             ),
                           ),
                         ),
+
+                        // Layer 4: Resize Tooltip.
+                        if (vm.showResizeTooltip)
+                          Positioned(
+                            left: vm.resizeTooltipPosition.dx + 15,
+                            top: vm.resizeTooltipPosition.dy + 15,
+                            child: _buildResizeTooltip(
+                                context, vm.resizeTooltipText, effectiveTheme),
+                          ),
                       ],
                     ),
                   ),
@@ -355,6 +380,33 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildResizeTooltip(
+      BuildContext context, String text, LegacyGanttTheme theme) {
+    final tooltipBackgroundColor =
+        widget.resizeTooltipBackgroundColor ?? theme.barColorPrimary;
+    final tooltipFontColor = widget.resizeTooltipFontColor ??
+        (ThemeData.estimateBrightnessForColor(tooltipBackgroundColor) ==
+                Brightness.dark
+            ? Colors.white
+            : Colors.black);
+
+    return Material(
+      elevation: 4.0,
+      borderRadius: BorderRadius.circular(4),
+      color: Colors.transparent, // Let Container handle color
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+        decoration: BoxDecoration(
+            color: tooltipBackgroundColor,
+            borderRadius: BorderRadius.circular(4)),
+        child: Text(
+          text,
+          style: theme.axisTextStyle.copyWith(color: tooltipFontColor),
+        ),
       ),
     );
   }

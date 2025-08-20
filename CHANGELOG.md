@@ -1,3 +1,8 @@
+## 0.1.0
+
+* **FEAT**: Added a tooltip to show start and end dates when dragging a task.
+* **FEAT**: Added `resizeTooltipBackgroundColor` and `resizeTooltipFontColor` to allow customization of the drag/resize tooltip.
+
 ## 0.0.10
 
 * Improve example quality
