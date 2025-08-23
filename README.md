@@ -21,7 +21,10 @@ A flexible and performant Gantt chart widget for Flutter. Supports interactive d
     -   Extensive theming support via `LegacyGanttTheme`.
     -   Use custom builders (`taskBarBuilder`, `taskContentBuilder`) to render completely unique task widgets.
 -   **Timeline Navigation:** Includes a `LegacyGanttTimelineScrubber` widget for an intuitive overview and navigation of the entire timeline.
--   **Special Task Types:** Support for summary bars, background highlights (e.g., for holidays), and conflict indicators.
+-   **Special Task Types & Visual Cues:** The chart uses specific visual patterns to convey important information at a glance:
+    -   **Summary Bars (Angled Pattern):** A summary bar depicts a resource's overall time allocation (e.g., a developer's work week). The angled pattern signifies it's a container for other tasks. Child rows underneath show the specific tasks that consume this allocated time, making it easy to see how the resource's time is being used and whether they have availability.
+    -   **Conflict Indicators (Red Angled Pattern):** This pattern is used to raise awareness of contemporaneous activity that exceeds capacity. It typically appears when more tasks are scheduled in a row than the `rowMaxStackDepth` allows, highlighting over-allocation or scheduling issues.
+    -   **Background Highlights:** Simple colored rectangles used to denote special time ranges like weekends, holidays, or periods of unavailability for a specific resource.
 
 ---
 
