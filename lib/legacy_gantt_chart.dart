@@ -8,4 +8,5 @@ export 'src/models/legacy_gantt_row.dart';
 export 'src/legacy_gantt_timeline_scrubber.dart';
 export 'src/utils/legacy_gantt_conflict_detector.dart';
 export 'src/legacy_gantt_view_model.dart';
+export 'src/models/legacy_gantt_dependency.dart';
 export 'src/legacy_gantt_controller.dart';

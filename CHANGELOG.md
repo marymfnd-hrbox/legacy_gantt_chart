@@ -1,3 +1,14 @@
+## 0.3.0
+
+* **EXAMPLE BREAKING**: The example application has been significantly refactored to use an MVVM pattern with a `GanttViewModel`. State management logic has been moved out of the `_GanttViewState`, and the `GanttGrid` widget has been updated. Users who based their implementation on the previous example will need to adapt to this new architecture.
+
+* **FEAT**: Added support for task dependencies (finish-to-start, contained).
+* **FEAT**: Added ability to create new tasks by clicking on empty space in the chart.
+* **FEAT**: Added an options menu to task bars for actions like copy and delete.
+* **FEAT**: Added theming options for dependency lines and other new UI elements.
+* **FEAT**: Refactored the example application to use the MVVM pattern for better state management.
+* **FEAT**: Added the ability to dynamically add new resources and line items in the example app.
+
 ## 0.2.0
 
 * **FEAT**: Implemented dynamic time axis graduations that adjust based on the zoom level, from weeks down to minutes.

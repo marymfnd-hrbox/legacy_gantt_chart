@@ -35,6 +35,20 @@ Represents a horizontal lane in the Gantt chart where tasks are placed.
 
 -   **`id`**: A unique identifier for the row. This is used by `LegacyGanttTask.rowId` to associate tasks with a row.
 
+## `LegacyGanttTaskDependency`
+
+Defines a relationship between two tasks.
+
+-   **`predecessorTaskId`**: The ID of the task that must come first.
+-   **`successorTaskId`**: The ID of the task that depends on the predecessor.
+-   **`type`**: A `DependencyType` enum (`finishToStart`, `contained`) that defines the relationship's behavior and visual representation.
+
+## `LegacyGanttRow`
+
+Represents a horizontal lane in the Gantt chart where tasks are placed.
+
+-   **`id`**: A unique identifier for the row. This is used by `LegacyGanttTask.rowId` to associate tasks with a row.
+
 ## `LegacyGanttTheme`
 
 A comprehensive class for styling the entire Gantt chart. It allows for customization of colors, text styles, and other visual properties.
@@ -44,6 +58,10 @@ A comprehensive class for styling the entire Gantt chart. It allows for customiz
 -   **`gridColor`**: The color of the vertical grid lines.
 -   **`conflictBarColor`**: The color used for conflict indicators.
 -   **`summaryBarColor`**: The color used for the summary task pattern.
+-   **`dependencyLineColor`**: The color of the lines connecting dependent tasks.
+-   **`containedDependencyBackgroundColor`**: The background color for a task that is "contained" within a summary task.
+-   **`timeRangeHighlightColor`**: The default color for background highlights (e.g., weekends).
+-   **`emptySpaceHighlightColor`**: The color of the highlight shown when hovering over empty space to create a new task.
 -   **`axisTextStyle`**: The `TextStyle` for the date labels in the header.
 -   **`taskTextStyle`**: The `TextStyle` for the name labels on task bars.
 -   **`barHeightRatio`**: The ratio of the bar's height to the total row height (e.g., 0.7 for 70%).

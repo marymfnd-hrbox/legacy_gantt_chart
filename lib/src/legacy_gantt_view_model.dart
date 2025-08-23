@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'models/legacy_gantt_dependency.dart';
 import 'models/legacy_gantt_row.dart';
 import 'models/legacy_gantt_task.dart';
 
@@ -13,6 +14,7 @@ enum TaskPart { body, startHandle, endHandle }
 class LegacyGanttViewModel extends ChangeNotifier {
   // Properties from the widget
   final List<LegacyGanttTask> data;
+  final List<LegacyGanttTaskDependency> dependencies;
   final List<LegacyGanttRow> visibleRows;
   final Map<String, int> rowMaxStackDepth;
   final double rowHeight;
@@ -27,6 +29,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
       onTaskUpdate;
   final Function(LegacyGanttTask)? onPressTask;
   final ScrollController? scrollController;
+  final Function(String rowId, DateTime time)? onEmptySpaceClick;
+
   final String Function(DateTime)? resizeTooltipDateFormat;
 
   final Widget Function(LegacyGanttTask task)? taskBarBuilder;
@@ -34,6 +38,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
 
   LegacyGanttViewModel({
     required this.data,
+    required this.dependencies,
     required this.visibleRows,
     required this.rowMaxStackDepth,
     required this.rowHeight,
@@ -45,6 +50,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     this.enableDragAndDrop = false,
     this.enableResize = false,
     this.onTaskUpdate,
+    this.onEmptySpaceClick,
     this.onPressTask,
     this.scrollController,
     this.taskBarBuilder,
@@ -78,6 +84,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
   bool _showResizeTooltip = false;
   String _resizeTooltipText = '';
   Offset _resizeTooltipPosition = Offset.zero;
+  String? _hoveredRowId;
+  DateTime? _hoveredDate;
 
   // Publicly exposed state for the View
   double get translateY => _translateY;
@@ -92,6 +100,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
   bool get showResizeTooltip => _showResizeTooltip;
   String get resizeTooltipText => _resizeTooltipText;
   Offset get resizeTooltipPosition => _resizeTooltipPosition;
+  String? get hoveredRowId => _hoveredRowId;
+  DateTime? get hoveredDate => _hoveredDate;
 
   void updateLayout(double width, double height) {
     if (_width != width || _height != height) {
@@ -254,11 +264,21 @@ class LegacyGanttViewModel extends ChangeNotifier {
 
   void onTapUp(TapUpDetails details) {
     final hit = _getTaskPartAtPosition(details.localPosition);
-    if (hit?.task != null) {
-      onPressTask?.call(hit!.task);
+    if (hit != null) {
+      onPressTask?.call(hit.task);
+      return; // Don't process empty space click if a task was hit
+    }
+
+    if (onEmptySpaceClick != null) {
+      final (rowId, time) = _getRowAndTimeAtPosition(details.localPosition);
+      if (rowId != null && time != null) {
+        onEmptySpaceClick!(rowId, time);
+      }
     }
   }
 
+  /// Converts a pixel offset on the canvas to a row ID and a precise DateTime.
+  /// Returns `(null, null)` if the position is outside the valid row area.
   void onHover(PointerHoverEvent details) {
     final hit = _getTaskPartAtPosition(details.localPosition);
     final hoveredTask = hit?.task;
@@ -274,6 +294,25 @@ class LegacyGanttViewModel extends ChangeNotifier {
           if (enableDragAndDrop) newCursor = SystemMouseCursors.move;
           break;
       }
+    } else if (onEmptySpaceClick != null) {
+      // No task was hit, check for empty space.
+      final (rowId, time) = _getRowAndTimeAtPosition(details.localPosition);
+
+      if (rowId != null && time != null) {
+        // Snap time to the start of the day for the highlight box
+        final day = DateTime(time.year, time.month, time.day);
+        if (_hoveredRowId != rowId || _hoveredDate != day) {
+          _hoveredRowId = rowId;
+          _hoveredDate = day;
+          newCursor = SystemMouseCursors.click;
+          notifyListeners();
+        }
+      } else {
+        // Hovering over dead space or feature is disabled
+        _clearEmptySpaceHover();
+      }
+    } else {
+      _clearEmptySpaceHover();
     }
 
     if (_cursor != newCursor) {
@@ -292,6 +331,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
   }
 
   void onHoverExit(PointerExitEvent event) {
+    _clearEmptySpaceHover();
     if (_cursor != SystemMouseCursors.basic) {
       _cursor = SystemMouseCursors.basic;
       notifyListeners();
@@ -300,6 +340,51 @@ class LegacyGanttViewModel extends ChangeNotifier {
       onTaskHover!(null, event.position);
       _lastHoveredTaskId = null;
     }
+  }
+
+  void _clearEmptySpaceHover() {
+    if (_hoveredRowId != null || _hoveredDate != null) {
+      _hoveredRowId = null;
+      _hoveredDate = null;
+      notifyListeners();
+    }
+  }
+
+  (String?, DateTime?) _getRowAndTimeAtPosition(Offset localPosition) {
+    if (localPosition.dy < timeAxisHeight) {
+      return (null, null);
+    }
+    final pointerYRelativeToBarsArea =
+        localPosition.dy - timeAxisHeight - _translateY;
+
+    // Find row
+    String? rowId;
+    double cumulativeHeight = 0;
+    for (final row in visibleRows) {
+      final int stackDepth = rowMaxStackDepth[row.id] ?? 1;
+      final double currentRowHeight = rowHeight * stackDepth;
+      if (pointerYRelativeToBarsArea >= cumulativeHeight &&
+          pointerYRelativeToBarsArea < cumulativeHeight + currentRowHeight) {
+        rowId = row.id;
+        break;
+      }
+      cumulativeHeight += currentRowHeight;
+    }
+
+    if (rowId == null) return (null, null);
+
+    // Find time by inverting the scale function
+    final totalDomainDurationMs = (_totalDomain.last.millisecondsSinceEpoch -
+            _totalDomain.first.millisecondsSinceEpoch)
+        .toDouble();
+    if (totalDomainDurationMs <= 0 || _width <= 0) return (rowId, null);
+
+    final timeRatio = localPosition.dx / _width;
+    final timeMs = _totalDomain.first.millisecondsSinceEpoch +
+        (totalDomainDurationMs * timeRatio);
+    final time = DateTime.fromMillisecondsSinceEpoch(timeMs.round());
+
+    return (rowId, time);
   }
 
   ({LegacyGanttTask task, TaskPart part})? _getTaskPartAtPosition(

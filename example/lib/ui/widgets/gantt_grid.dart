@@ -9,6 +9,10 @@ class GanttGrid extends StatelessWidget {
   final ScrollController scrollController;
   final Function(String) onToggleExpansion;
   final bool isDarkMode;
+  final VoidCallback onAddContact;
+  final Function(String parentId) onAddLineItem;
+  final Function(String parentId, bool isSummary) onSetParentTaskType;
+  final List<LegacyGanttTask> ganttTasks;
 
   const GanttGrid({
     super.key,
@@ -18,50 +22,52 @@ class GanttGrid extends StatelessWidget {
     required this.scrollController,
     required this.onToggleExpansion,
     required this.isDarkMode,
+    required this.onAddContact,
+    required this.onAddLineItem,
+    required this.onSetParentTaskType,
+    required this.ganttTasks,
   });
 
   static const double _rowHeight = 27.0;
 
   @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade400),
-          color: isDarkMode ? Colors.grey[850] : Colors.white,
-        ),
-        child: Column(
-          children: [
-            _buildGridHeader(isDarkMode),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: visibleGanttRows.length,
-                itemBuilder: (context, index) {
-                  final rowId = visibleGanttRows[index].id;
-                  GanttGridData? data;
-                  for (final parent in gridData) {
-                    if (parent.id == rowId) {
-                      data = parent;
-                      break;
-                    }
-                    for (final child in parent.children) {
-                      if (child.id == rowId) {
-                        data = child;
-                        break;
-                      }
-                    }
-                    if (data != null) break;
-                  }
+  Widget build(BuildContext context) {
+    // For performance, create a lookup map to quickly find grid data by ID.
+    // This avoids searching the list inside the ListView.builder.
+    final Map<String, GanttGridData> dataMap = {};
+    for (final parent in gridData) {
+      dataMap[parent.id] = parent;
+      for (final child in parent.children) {
+        dataMap[child.id] = child;
+      }
+    }
 
-                  if (data == null) {
-                    return const SizedBox.shrink();
-                  }
-                  return _buildGridRow(data, isDarkMode);
-                },
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+        color: isDarkMode ? Colors.grey[850] : Colors.white,
+      ),
+      child: Column(
+        children: [
+          _buildGridHeader(isDarkMode),
+          Expanded(
+            child: ListView.builder(
+              controller: scrollController,
+              itemCount: visibleGanttRows.length,
+              itemBuilder: (context, index) {
+                final data = dataMap[visibleGanttRows[index].id];
+
+                if (data == null) {
+                  return const SizedBox.shrink();
+                }
+                return _buildGridRow(data, isDarkMode);
+              },
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildGridHeader(bool isDarkMode) => Container(
         height: _rowHeight,
@@ -73,6 +79,20 @@ class GanttGrid extends StatelessWidget {
           children: [
             Expanded(flex: 2, child: _buildHeaderCell('Name')),
             Expanded(flex: 1, child: _buildHeaderCell('Completed %')),
+            SizedBox(
+              width: 48 + 48, // Space for two icons to align with parent rows
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: const Icon(Icons.person_add),
+                  tooltip: 'Add Contact',
+                  onPressed: onAddContact,
+                  iconSize: 20,
+                  splashRadius: 20,
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -98,6 +118,44 @@ class GanttGrid extends StatelessWidget {
           Expanded(
             flex: 1,
             child: _buildCompletionCell(data.completion),
+          ),
+          SizedBox(
+            width: 48,
+            child: data.isParent
+                ? IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    tooltip: 'Add Line Item',
+                    onPressed: () => onAddLineItem(data.id),
+                    iconSize: 18,
+                    splashRadius: 18,
+                    color: Colors.grey.shade600)
+                : null,
+          ),
+          SizedBox(
+            width: 48,
+            child: data.isParent
+                ? PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 20),
+                    tooltip: 'Options',
+                    onSelected: (value) {
+                      if (value == 'make_summary') {
+                        onSetParentTaskType(data.id, true);
+                      } else if (value == 'make_regular') {
+                        onSetParentTaskType(data.id, false);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      final bool isCurrentlySummary = ganttTasks.any((t) => t.rowId == data.id && t.isSummary);
+                      return <PopupMenuEntry<String>>[
+                        if (!isCurrentlySummary)
+                          const PopupMenuItem<String>(value: 'make_summary', child: Text('Make Summary'))
+                        else
+                          const PopupMenuItem<String>(value: 'make_regular', child: Text('Make Regular')),
+                      ];
+                    },
+                    splashRadius: 20,
+                  )
+                : null,
           ),
         ],
       ),

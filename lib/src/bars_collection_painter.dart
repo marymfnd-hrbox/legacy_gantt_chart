@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'models/legacy_gantt_row.dart';
 import 'models/legacy_gantt_task.dart';
+import 'models/legacy_gantt_dependency.dart';
 import 'models/legacy_gantt_theme.dart';
 
 // Helper painter to draw all bars as a single CustomPaint operation
@@ -19,6 +20,9 @@ class BarsCollectionPainter extends CustomPainter {
   final DateTime? ghostTaskStart;
   final DateTime? ghostTaskEnd;
   final LegacyGanttTheme theme;
+  final List<LegacyGanttTaskDependency> dependencies;
+  final String? hoveredRowId;
+  final DateTime? hoveredDate;
   final bool hasCustomTaskBuilder;
   final bool hasCustomTaskContentBuilder;
 
@@ -33,6 +37,9 @@ class BarsCollectionPainter extends CustomPainter {
     this.ghostTaskStart,
     this.ghostTaskEnd,
     required this.theme,
+    this.hoveredRowId,
+    this.hoveredDate,
+    this.dependencies = const [],
     this.hasCustomTaskBuilder = false,
     this.hasCustomTaskContentBuilder = false,
   });
@@ -40,6 +47,12 @@ class BarsCollectionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     double cumulativeRowTop = 0;
+
+    // Draw dependency backgrounds first, so they appear behind task bars.
+    _drawDependencyBackgrounds(canvas, size);
+
+    // Draw the empty space highlight for creating new tasks.
+    _drawEmptySpaceHighlight(canvas, size);
 
     // Create a map for quick lookup of tasks by rowId for visible rows.
     // This is more efficient than filtering the entire dataset multiple times.
@@ -61,12 +74,18 @@ class BarsCollectionPainter extends CustomPainter {
       for (final task in tasksInThisRow.where((t) => t.isTimeRangeHighlight)) {
         final double barStartX = scale(task.start);
         final double barEndX = scale(task.end);
+
+        // Performance optimization: only draw if the bar is visible on screen.
+        if (barEndX < 0 || barStartX > size.width) {
+          continue;
+        }
+
         final double barWidth = max(0, barEndX - barStartX);
 
         final rect = Rect.fromLTWH(
             barStartX, cumulativeRowTop, barWidth, dynamicRowHeight);
         final paint = Paint()
-          ..color = task.color ?? Colors.grey.withValues(alpha: 0.2);
+          ..color = task.color ?? theme.timeRangeHighlightColor;
         canvas.drawRect(rect, paint);
       }
 
@@ -76,6 +95,15 @@ class BarsCollectionPainter extends CustomPainter {
             .where((t) => !t.isTimeRangeHighlight && !t.isOverlapIndicator)) {
           // If a cell builder is provided for this task, the widget will handle rendering it.
           if (task.cellBuilder != null) {
+            continue;
+          }
+
+          // Performance optimization: Check if the task's overall time range is
+          // visible at all. If not, we can skip all drawing for this task,
+          // including segments and text.
+          final double taskStartX = scale(task.start);
+          final double taskEndX = scale(task.end);
+          if (taskEndX < 0 || taskStartX > size.width) {
             continue;
           }
 
@@ -98,6 +126,12 @@ class BarsCollectionPainter extends CustomPainter {
                 continue;
               }
 
+              // A segment-level check is still useful as the overall task might
+              // be visible, but this specific segment may not be.
+              if (barEndX < 0 || barStartX > size.width) {
+                continue;
+              }
+
               final RRect segmentRRect = RRect.fromRectAndRadius(
                 Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
                     barEndX - barStartX, barHeight),
@@ -111,15 +145,14 @@ class BarsCollectionPainter extends CustomPainter {
             }
           } else {
             // --- Draw Single Continuous Bar (existing logic) ---
-            final double barStartX = scale(task.start);
-            final double barEndX = scale(task.end);
-            if (barEndX <= barStartX) {
+            // We can reuse the start/end coordinates calculated earlier.
+            if (taskEndX <= taskStartX) {
               continue;
             }
 
             final RRect barRRect = RRect.fromRectAndRadius(
-              Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
-                  barEndX - barStartX, barHeight),
+              Rect.fromLTWH(taskStartX, barTop + barVerticalCenterOffset,
+                  taskEndX - taskStartX, barHeight),
               theme.barCornerRadius,
             );
 
@@ -140,9 +173,8 @@ class BarsCollectionPainter extends CustomPainter {
               task.name!.isNotEmpty &&
               !hasCustomTaskBuilder &&
               !hasCustomTaskContentBuilder) {
-            final double overallStartX = scale(task.start);
-            final double overallEndX = scale(task.end);
-            final double overallWidth = max(0, overallEndX - overallStartX);
+            // We can reuse the start/end coordinates calculated earlier.
+            final double overallWidth = max(0, taskEndX - taskStartX);
 
             final textSpan = TextSpan(
               text: task.name!,
@@ -160,14 +192,14 @@ class BarsCollectionPainter extends CustomPainter {
                 maxWidth: max(0, overallWidth - 8)); // 4px padding on each side
 
             final textOffset = Offset(
-              overallStartX + 4,
+              taskStartX + 4,
               barTop + (rowHeight - textPainter.height) / 2,
             );
 
             // Clip text to the bar's overall rectangle to prevent overflow.
             canvas.save();
             canvas.clipRect(
-                Rect.fromLTWH(overallStartX, barTop, overallWidth, rowHeight));
+                Rect.fromLTWH(taskStartX, barTop, overallWidth, rowHeight));
             textPainter.paint(canvas, textOffset);
             canvas.restore();
           }
@@ -178,6 +210,12 @@ class BarsCollectionPainter extends CustomPainter {
       for (final task in tasksInThisRow.where((t) => t.isOverlapIndicator)) {
         final double barStartX = scale(task.start);
         final double barEndX = scale(task.end);
+
+        // Performance optimization: only draw if the bar is visible on screen.
+        if (barEndX < 0 || barStartX > size.width) {
+          continue;
+        }
+
         final double barWidth = max(0, barEndX - barStartX);
 
         final double barHeight =
@@ -207,6 +245,9 @@ class BarsCollectionPainter extends CustomPainter {
 
       cumulativeRowTop += dynamicRowHeight;
     }
+
+    // Draw dependency lines on top of tasks.
+    _drawDependencyLines(canvas, size);
 
     // 4. Draw ghost bar on top of everything if a task is being dragged
     if (draggedTaskId != null &&
@@ -248,7 +289,7 @@ class BarsCollectionPainter extends CustomPainter {
 
         // Draw the ghost bar
         final barPaint = Paint()
-          ..color = (originalTask.color ?? theme.barColorPrimary)
+          ..color = (originalTask.color ?? theme.ghostBarColor)
               .withValues(alpha: 0.7);
         canvas.drawRRect(barRRect, barPaint);
         // Not drawing text on ghost bar for simplicity
@@ -281,7 +322,7 @@ class BarsCollectionPainter extends CustomPainter {
 
   void _drawOverlapPattern(Canvas canvas, RRect rrect) {
     // To ensure the conflict pattern is clear and not blended with underlying bars,
-    // we first "erase" the area by drawing a solid block of the chart's background color. This
+    // we first "erase" the area by drawing a solid block of the chart's background color. This,
     // ensures that the semi-transparent conflict color is blended with a consistent
     // background, not the color of the task bar underneath.
     canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
@@ -301,6 +342,193 @@ class BarsCollectionPainter extends CustomPainter {
     _drawAngledPattern(canvas, rrect, theme.summaryBarColor, 1.5);
   }
 
+  void _drawDependencyBackgrounds(Canvas canvas, Size size) {
+    if (dependencies.isEmpty) return;
+    for (final dependency in dependencies) {
+      if (dependency.type == DependencyType.contained) {
+        _drawContainedDependency(canvas, dependency);
+      }
+    }
+  }
+
+  void _drawDependencyLines(Canvas canvas, Size size) {
+    if (dependencies.isEmpty) return;
+    for (final dependency in dependencies) {
+      if (dependency.type == DependencyType.finishToStart) {
+        _drawFinishToStartDependency(canvas, dependency);
+      }
+    }
+  }
+
+  void _drawFinishToStartDependency(
+      Canvas canvas, LegacyGanttTaskDependency dependency) {
+    final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
+    final successorRect = _findTaskRect(dependency.successorTaskId);
+
+    if (predecessorRect == null || successorRect == null) return;
+
+    final startX = predecessorRect.right;
+    final startY = predecessorRect.center.dy;
+    final endX = successorRect.left;
+    final endY = successorRect.center.dy;
+
+    final paint = Paint()
+      ..color = theme.dependencyLineColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    path.moveTo(startX, startY);
+
+    // Add a small horizontal segment before turning
+    final controlXOffset =
+        (endX - startX).abs() > 20 ? 10.0 : (endX - startX) / 2;
+    final controlX1 = startX + controlXOffset;
+    final controlX2 = endX - controlXOffset;
+
+    // Simple S-curve for vertical connections
+    path.cubicTo(controlX1, startY, controlX2, endY, endX, endY);
+
+    canvas.drawPath(path, paint);
+
+    // Draw arrowhead
+    final arrowPath = Path();
+    const arrowSize = 5.0;
+    arrowPath.moveTo(endX - arrowSize, endY - arrowSize / 2);
+    arrowPath.lineTo(endX, endY);
+    arrowPath.lineTo(endX - arrowSize, endY + arrowSize / 2);
+    canvas.drawPath(arrowPath, paint);
+  }
+
+  void _drawContainedDependency(
+      Canvas canvas, LegacyGanttTaskDependency dependency) {
+    // This logic finds the full vertical span of a summary task's group.
+    // It assumes child rows immediately follow their parent in `visibleRows`
+    // and a new group is denoted by the next summary task.
+    final predecessorTask = _findTaskById(dependency.predecessorTaskId);
+    if (predecessorTask == null || !predecessorTask.isSummary) {
+      return;
+    }
+
+    double? groupStartY;
+    double? groupEndY;
+
+    double currentY = 0;
+    bool inGroup = false;
+
+    for (final rowData in visibleRows) {
+      final int stackDepth = rowMaxStackDepth[rowData.id] ?? 1;
+      final double rowHeightWithStack = rowHeight * stackDepth;
+
+      if (inGroup) {
+        // Check if the current row starts a new summary group.
+        final bool isNewGroup =
+            data.any((task) => task.rowId == rowData.id && task.isSummary);
+        if (isNewGroup) {
+          inGroup = false; // The current group has ended.
+        } else {
+          // This is a child row, so extend the group's bottom boundary.
+          groupEndY = currentY + rowHeightWithStack;
+        }
+      }
+
+      if (rowData.id == predecessorTask.rowId) {
+        inGroup = true;
+        groupStartY = currentY;
+        groupEndY = currentY + rowHeightWithStack;
+      }
+
+      currentY += rowHeightWithStack;
+    }
+
+    if (groupStartY == null || groupEndY == null) return;
+
+    final predecessorStartX = scale(predecessorTask.start);
+    final predecessorEndX = scale(predecessorTask.end);
+
+    final backgroundRect = Rect.fromLTRB(
+        predecessorStartX, groupStartY, predecessorEndX, groupEndY);
+    final paint = Paint()..color = theme.containedDependencyBackgroundColor;
+    canvas.drawRect(backgroundRect, paint);
+  }
+
+  void _drawEmptySpaceHighlight(Canvas canvas, Size size) {
+    if (hoveredRowId == null || hoveredDate == null) {
+      return;
+    }
+
+    // Find the Y position of the hovered row.
+    double? rowTop;
+    double cumulativeRowTop = 0;
+    for (final rowData in visibleRows) {
+      if (rowData.id == hoveredRowId) {
+        rowTop = cumulativeRowTop;
+        break;
+      }
+      final int stackDepth = rowMaxStackDepth[rowData.id] ?? 1;
+      cumulativeRowTop += rowHeight * stackDepth;
+    }
+
+    if (rowTop == null) return;
+
+    // Calculate the start and end of the day.
+    final dayStart =
+        DateTime(hoveredDate!.year, hoveredDate!.month, hoveredDate!.day);
+    final dayEnd = dayStart.add(const Duration(days: 1));
+
+    final startX = scale(dayStart);
+    final endX = scale(dayEnd);
+
+    final highlightRect =
+        Rect.fromLTWH(startX, rowTop, endX - startX, rowHeight);
+
+    // Draw the highlight box.
+    final highlightPaint = Paint()..color = theme.emptySpaceHighlightColor;
+    canvas.drawRect(highlightRect, highlightPaint);
+
+    // Draw the plus icon in the center.
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '+',
+        style: TextStyle(color: theme.emptySpaceAddIconColor, fontSize: 20),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    final iconOffset = Offset(highlightRect.center.dx - textPainter.width / 2,
+        highlightRect.center.dy - textPainter.height / 2);
+    textPainter.paint(canvas, iconOffset);
+  }
+
+  LegacyGanttTask? _findTaskById(String taskId) {
+    try {
+      return data.firstWhere((task) => task.id == taskId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Rect? _findTaskRect(String taskId) {
+    final task = _findTaskById(taskId);
+    if (task == null) return null;
+
+    double cumulativeRowTop = 0;
+    for (var rowData in visibleRows) {
+      if (rowData.id == task.rowId) {
+        final double barTop = cumulativeRowTop + (task.stackIndex * rowHeight);
+        final double barHeight = rowHeight * theme.barHeightRatio;
+        final double barVerticalCenterOffset = (rowHeight - barHeight) / 2;
+        final double barStartX = scale(task.start);
+        final double barEndX = scale(task.end);
+        return Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
+            barEndX - barStartX, barHeight);
+      }
+      final int stackDepth = rowMaxStackDepth[rowData.id] ?? 1;
+      cumulativeRowTop += rowHeight * stackDepth;
+    }
+    return null;
+  }
+
   @override
   bool shouldRepaint(covariant BarsCollectionPainter oldDelegate) {
     // Use listEquals and mapEquals for proper comparison of collections.
@@ -308,6 +536,9 @@ class BarsCollectionPainter extends CustomPainter {
     return !listEquals(oldDelegate.data, data) ||
         !listEquals(oldDelegate.visibleRows, visibleRows) ||
         !mapEquals(oldDelegate.rowMaxStackDepth, rowMaxStackDepth) ||
+        !listEquals(oldDelegate.dependencies, dependencies) ||
+        oldDelegate.hoveredRowId != hoveredRowId ||
+        oldDelegate.hoveredDate != hoveredDate ||
         !listEquals(oldDelegate.domain, domain) ||
         oldDelegate.rowHeight != rowHeight ||
         oldDelegate.draggedTaskId != draggedTaskId ||

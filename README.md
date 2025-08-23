@@ -6,7 +6,6 @@
 
 A flexible and performant Gantt chart widget for Flutter. Supports interactive drag-and-drop, resizing, dynamic data loading, and extensive theming.
 
-<!-- You will need to replace YOUR_USERNAME with your GitHub username and ensure 'main' is your default branch -->
 [![Legacy Gantt Chart Example](https://github.com/barneysspeedshop/legacy_gantt_chart/raw/main/assets/example.png)](https://barneysspeedshop.github.io/legacy_gantt_chart/)
 
 ---
@@ -16,6 +15,7 @@ A flexible and performant Gantt chart widget for Flutter. Supports interactive d
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
 -   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.
+-   **Task Dependencies:** Define and visualize relationships between tasks (e.g., finish-to-start).
 -   **Task Stacking:** Automatically stacks overlapping tasks within the same row.
 -   **Customization:**
     -   Extensive theming support via `LegacyGanttTheme`.
@@ -31,7 +31,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  legacy_gantt_chart: ^0.1.0 # Replace with the latest version
+  legacy_gantt_chart: ^0.3.0 # Replace with the latest version
 ```
 
 Then, you can install the package using the command-line:
@@ -61,34 +61,37 @@ class MinimalGanttChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Define your rows
-    final List<LegacyGanttRow> rows = [
-      LegacyGanttRow(id: 'dev', name: 'Development'),
-      LegacyGanttRow(id: 'design', name: 'Design'),
+    // 1. Define rows for your chart
+    final rows = [
+      LegacyGanttRow(id: 'row1', name: 'Development'),
+      LegacyGanttRow(id: 'row2', name: 'QA'),
     ];
 
-    // 2. Define your tasks and assign them to rows
-    final List<LegacyGanttTask> tasks = [
+    // 2. Define tasks and assign them to rows
+    final tasks = [
       LegacyGanttTask(
         id: 'task1',
-        rowId: 'dev',
+        rowId: 'row1',
         name: 'Implement Feature A',
-        startDate: DateTime.now().subtract(const Duration(days: 5)),
-        endDate: DateTime.now().add(const Duration(days: 5)),
+        start: DateTime.now().subtract(const Duration(days: 5)),
+        end: DateTime.now().add(const Duration(days: 2)),
       ),
       LegacyGanttTask(
         id: 'task2',
-        rowId: 'design',
-        name: 'Create Mockups',
-        startDate: DateTime.now().subtract(const Duration(days: 8)),
-        endDate: DateTime.now(),
+        rowId: 'row2',
+        name: 'Test Feature A',
+        start: DateTime.now().add(const Duration(days: 2)),
+        end: DateTime.now().add(const Duration(days: 4)),
       ),
     ];
 
     // 3. Create the widget
     return LegacyGanttChartWidget(
-      rows: rows,
-      tasks: tasks,
+      data: tasks,
+      visibleRows: rows,
+      rowMaxStackDepth: const {'row1': 1, 'row2': 1},
+      gridMin: DateTime.now().subtract(const Duration(days: 10)).millisecondsSinceEpoch.toDouble(),
+      gridMax: DateTime.now().add(const Duration(days: 15)).millisecondsSinceEpoch.toDouble(),
     );
   }
 }

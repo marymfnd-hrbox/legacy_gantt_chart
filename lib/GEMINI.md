@@ -70,6 +70,12 @@ class MyGanttChartPage extends StatelessWidget {
 }
 ```
 
+## Stop creating linter warnings
+```'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss.\nTry replacing the use of the deprecated member with the replacement."
+We want to use withValues(aplha: ##) instead, in all cases. withOpacity should NEVER be used.
+We must also never use block function bodies unnecessarily. We should use expression body instead.
+```
+
 ## Advanced Usage
 
 ### Dynamic Data Loading with `LegacyGanttController`

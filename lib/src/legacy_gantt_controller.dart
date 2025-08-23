@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'models/legacy_gantt_task.dart';
+import 'models/legacy_gantt_dependency.dart';
 
 /// A controller to programmatically manage a [LegacyGanttChartWidget].
 ///
@@ -11,6 +12,7 @@ class LegacyGanttController extends ChangeNotifier {
   DateTime _visibleEndDate;
   List<LegacyGanttTask> _tasks;
   List<LegacyGanttTask> _holidays;
+  List<LegacyGanttTaskDependency> _dependencies;
   final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)?
       tasksAsync;
   final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)?
@@ -33,6 +35,9 @@ class LegacyGanttController extends ChangeNotifier {
   /// `isTimeRangeHighlight` set to `true` to render them as background highlights.
   List<LegacyGanttTask> get holidays => _holidays;
 
+  /// The list of dependencies currently managed by the controller.
+  List<LegacyGanttTaskDependency> get dependencies => _dependencies;
+
   /// Whether the controller is currently fetching new tasks via `tasksAsync`.
   bool get isLoading => _isLoading;
 
@@ -47,12 +52,14 @@ class LegacyGanttController extends ChangeNotifier {
     required DateTime initialVisibleEndDate,
     List<LegacyGanttTask>? initialTasks,
     List<LegacyGanttTask>? initialHolidays,
+    List<LegacyGanttTaskDependency>? initialDependencies,
     this.tasksAsync,
     this.holidaysAsync,
   })  : _visibleStartDate = initialVisibleStartDate,
         _visibleEndDate = initialVisibleEndDate,
         _tasks = initialTasks ?? const [],
-        _holidays = initialHolidays ?? const [] {
+        _holidays = initialHolidays ?? const [],
+        _dependencies = initialDependencies ?? const [] {
     if (tasksAsync != null) {
       if (initialTasks != null && initialTasks.isNotEmpty) {
         debugPrint(
@@ -127,19 +134,22 @@ class LegacyGanttController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Replaces the current list of dependencies with a new list and notifies listeners.
+  void setDependencies(List<LegacyGanttTaskDependency> newDependencies) {
+    // Dependencies are not typically fetched async, so no check is needed here.
+    _dependencies = newDependencies;
+    notifyListeners();
+  }
+
   /// Moves the timeline forward by the given [duration], maintaining the
   /// same window size.
-  void next({Duration duration = const Duration(days: 7)}) {
-    setVisibleRange(
-        _visibleStartDate.add(duration), _visibleEndDate.add(duration));
-  }
+  void next({Duration duration = const Duration(days: 7)}) => setVisibleRange(
+      _visibleStartDate.add(duration), _visibleEndDate.add(duration));
 
   /// Moves the timeline backward by the given [duration], maintaining the
   /// same window size.
-  void prev({Duration duration = const Duration(days: 7)}) {
-    setVisibleRange(_visibleStartDate.subtract(duration),
-        _visibleEndDate.subtract(duration));
-  }
+  void prev({Duration duration = const Duration(days: 7)}) => setVisibleRange(
+      _visibleStartDate.subtract(duration), _visibleEndDate.subtract(duration));
 
   /// Fetches tasks for the current visible date range using the `tasksAsync`
   /// callback.

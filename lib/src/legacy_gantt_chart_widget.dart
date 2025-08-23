@@ -1,5 +1,6 @@
 // packages/gantt_chart/lib/src/gantt_chart_widget.dart
 import 'package:flutter/material.dart';
+import 'package:legacy_gantt_chart/src/models/legacy_gantt_dependency.dart';
 import 'package:provider/provider.dart';
 import 'models/legacy_gantt_task.dart';
 import 'models/legacy_gantt_theme.dart';
@@ -11,6 +12,9 @@ import 'bars_collection_painter.dart';
 
 class LegacyGanttChartWidget extends StatefulWidget {
   final List<LegacyGanttTask>? data;
+
+  /// A list of dependencies to draw between tasks.
+  final List<LegacyGanttTaskDependency>? dependencies;
 
   /// A list of tasks to be rendered as background highlights, such as holidays
   /// or weekends. These tasks should have `isTimeRangeHighlight` set to `true`.
@@ -51,6 +55,10 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// A function to format the date/time shown in the tooltip when resizing a task.
   final String Function(DateTime)? resizeTooltipDateFormat;
 
+  /// A callback that is triggered when a user clicks on an empty space in the
+  /// chart. This can be used to initiate the creation of a new task.
+  final Function(String rowId, DateTime time)? onEmptySpaceClick;
+
   /// The background color of the tooltip that appears during drag or resize operations.
   /// If not provided, it defaults to the theme's `barColorPrimary`.
   final Color? resizeTooltipBackgroundColor;
@@ -63,6 +71,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
   const LegacyGanttChartWidget({
     super.key, // Use super.key
     this.data,
+    this.dependencies,
     this.holidays,
     required this.visibleRows,
     required this.rowMaxStackDepth,
@@ -85,6 +94,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.taskContentBuilder,
     this.onTaskUpdate,
     this.resizeTooltipDateFormat,
+    this.onEmptySpaceClick,
     this.resizeTooltipBackgroundColor,
     this.resizeTooltipFontColor,
   })  : assert(
@@ -92,6 +102,8 @@ class LegacyGanttChartWidget extends StatefulWidget {
                 ((data != null && tasksFuture == null) ||
                     (data == null && tasksFuture != null)),
             'If a controller is not used, exactly one of tasksFuture or data must be provided.'),
+        assert(controller == null || dependencies == null,
+            'Cannot provide both a controller and a dependencies list. Dependencies are managed by the controller.'),
         assert(taskBarBuilder == null || taskContentBuilder == null,
             'Cannot provide both taskBarBuilder and taskContentBuilder. taskBarBuilder replaces the entire bar, while taskContentBuilder only replaces its content.'),
         assert(
@@ -122,6 +134,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           final controller = widget.controller!;
           final tasks = controller.tasks;
           final holidays = controller.holidays;
+          final dependencies = controller.dependencies;
           final allItems = [...tasks, ...holidays];
 
           // Handle initial loading state when there are no tasks yet.
@@ -143,6 +156,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
               _buildChart(
                 context,
                 allItems,
+                dependencies,
                 effectiveTheme,
                 gridMin: controller.visibleStartDate.millisecondsSinceEpoch
                     .toDouble(),
@@ -183,7 +197,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                   style: TextStyle(color: effectiveTheme.textColor)),
             );
           }
-          return _buildChart(context, allItems, effectiveTheme);
+          return _buildChart(
+              context, allItems, widget.dependencies ?? [], effectiveTheme);
         },
       );
     } else {
@@ -196,20 +211,27 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
               style: TextStyle(color: effectiveTheme.textColor)),
         );
       }
-      return _buildChart(context, allItems, effectiveTheme);
+      return _buildChart(
+          context, allItems, widget.dependencies ?? [], effectiveTheme);
     }
   }
 
-  Widget _buildChart(BuildContext context, List<LegacyGanttTask> tasks,
+  Widget _buildChart(
+      BuildContext context,
+      List<LegacyGanttTask> tasks,
+      List<LegacyGanttTaskDependency> dependencies,
       LegacyGanttTheme effectiveTheme,
-      {double? gridMin, double? gridMax}) {
+      {double? gridMin,
+      double? gridMax}) {
     return ChangeNotifierProvider(
       // Use a key to ensure the ViewModel is recreated if the core data changes.
       key: ValueKey(tasks.hashCode ^
+          dependencies.hashCode ^
           widget.visibleRows.hashCode ^
           widget.rowMaxStackDepth.hashCode),
       create: (_) => LegacyGanttViewModel(
         data: tasks,
+        dependencies: dependencies,
         // Pass all other widget properties to the ViewModel
         visibleRows: widget.visibleRows,
         rowMaxStackDepth: widget.rowMaxStackDepth,
@@ -222,6 +244,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         enableDragAndDrop: widget.enableDragAndDrop,
         enableResize: widget.enableResize,
         onTaskUpdate: widget.onTaskUpdate,
+        onEmptySpaceClick: widget.onEmptySpaceClick,
         onPressTask: widget.onPressTask,
         onTaskHover: widget.onTaskHover,
         taskBarBuilder: widget.taskBarBuilder,
@@ -304,6 +327,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                 children: [
                                   CustomPaint(
                                     painter: BarsCollectionPainter(
+                                      dependencies: vm.dependencies,
                                       data: tasks,
                                       domain: vm.totalDomain,
                                       visibleRows: widget.visibleRows,
@@ -314,6 +338,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                       ghostTaskStart: vm.ghostTaskStart,
                                       ghostTaskEnd: vm.ghostTaskEnd,
                                       theme: effectiveTheme,
+                                      hoveredRowId: vm.hoveredRowId,
+                                      hoveredDate: vm.hoveredDate,
                                       hasCustomTaskBuilder:
                                           widget.taskBarBuilder != null,
                                       hasCustomTaskContentBuilder:

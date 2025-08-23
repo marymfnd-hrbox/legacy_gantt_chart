@@ -29,7 +29,6 @@ class GanttScheduleService {
   Future<ProcessedScheduleData> fetchAndProcessSchedule({
     required DateTime startDate,
     required int range,
-    required Color weekendColor,
   }) async {
     final formattedStartDate = _formatDateToISO(startDate);
     final formattedEndDate = _formatDateToISO(startDate.add(Duration(days: range)));
@@ -140,7 +139,6 @@ class GanttScheduleService {
           rowId: timeRange.resourceId,
           start: DateTime.parse(timeRange.utcStartDate),
           end: DateTime.parse(timeRange.utcEndDate),
-          color: Colors.grey.withValues(alpha: 0.3),
           isTimeRangeHighlight: true,
         ));
       }
@@ -158,7 +156,6 @@ class GanttScheduleService {
           rowId: resource.id,
           start: DateTime.parse(summaryEvent.utcStartDate!),
           end: DateTime.parse(summaryEvent.utcEndDate!),
-          color: Colors.grey.withValues(alpha: 0.3),
           isTimeRangeHighlight: true,
         ));
       }
@@ -166,8 +163,7 @@ class GanttScheduleService {
 
     // Add weekend highlights
     final allRows = processedGridData.expand((e) => [e, ...e.children]).map((e) => LegacyGanttRow(id: e.id)).toList();
-    fetchedTasks
-        .addAll(_generateWeekendHighlights(allRows, startDate, startDate.add(Duration(days: range)), weekendColor));
+    fetchedTasks.addAll(_generateWeekendHighlights(allRows, startDate, startDate.add(Duration(days: range))));
 
     // 6. Calculate task stacking and conflicts
     final (stackedTasks, maxDepthPerRow) = publicCalculateTaskStacking(fetchedTasks, apiResponse);
@@ -198,8 +194,7 @@ class GanttScheduleService {
     return defaultColor;
   }
 
-  List<LegacyGanttTask> _generateWeekendHighlights(
-      List<LegacyGanttRow> rows, DateTime start, DateTime end, Color color) {
+  List<LegacyGanttTask> _generateWeekendHighlights(List<LegacyGanttRow> rows, DateTime start, DateTime end) {
     final List<LegacyGanttTask> holidays = [];
     for (var day = start; day.isBefore(end); day = day.add(const Duration(days: 1))) {
       if (day.weekday == DateTime.saturday) {
@@ -212,7 +207,6 @@ class GanttScheduleService {
             start: weekendStart,
             end: weekendEnd,
             isTimeRangeHighlight: true,
-            color: color,
           ));
         }
       }

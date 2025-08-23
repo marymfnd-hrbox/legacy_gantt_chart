@@ -12,6 +12,7 @@ dependencies:
   intl: ^0.20.2
   legacy_gantt_chart:
     path: ../
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:

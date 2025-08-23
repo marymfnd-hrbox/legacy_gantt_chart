@@ -14,6 +14,10 @@ class MockApiService {
       // rangeDays = endDate.difference(startDate).inDays; // Removed: Unused local variable
     }
 
+    // --- 1. Resources ---
+    // Resources define the rows in the Gantt chart's grid. They can be hierarchical.
+    // A top-level `GanttResourceData` is a parent row (e.g., a person).
+    // Its `children` (a list of `GanttJobData`) are the child rows.
     // Generate mock data based on the requested range
     final mockResources = [
       GanttResourceData(
@@ -23,14 +27,14 @@ class MockApiService {
         children: [
           GanttJobData(
               id: 'job-1-1',
-              name: 'Pilot A1',
+              name: 'Personal',
               taskName: 'Pilot',
               status: 'Active',
               taskColor: '4CAF50',
               completion: 1.0), // 100%
           GanttJobData(
               id: 'job-1-2',
-              name: 'Co-Pilot A1',
+              name: 'Personal',
               taskName: 'Co-Pilot',
               status: 'Vacation',
               taskColor: 'FFC107',
@@ -71,21 +75,31 @@ class MockApiService {
     final List<Map<String, dynamic>> mockAssignments = [];
     final List<Map<String, dynamic>> mockResourceTimeRanges = [];
 
+    // --- 2. Events and Assignments ---
+    // Events define the actual tasks (bars) that will be drawn on the chart.
+    // They have a start date, end date, name, and other metadata.
+    //
+    // Assignments link an Event to a Resource. This is how the chart knows
+    // which row to draw a task in.
+
+    // --- Summary Tasks ---
+    // A summary task is typically assigned to a parent resource (e.g., 'person-1').
+    // It often represents the overall duration of all child tasks.
     // Base mock events for each person (summary events)
     final person1SummaryStart = startDate.add(const Duration(days: 1));
     final person1SummaryEnd = startDate.add(const Duration(days: 5));
     mockEvents.add({
       'id': 'event-person-1-summary',
-      'name': 'Flight Duty Cycle - John',
+      'name': 'John Doe - PTO',
       'utcStartDate': person1SummaryStart.toIso8601String(),
       'utcEndDate': person1SummaryEnd.toIso8601String(),
-      'elementId': null,
+      'elementId': null, // A null elementId indicates a top-level event.
       'referenceData': {'taskName': 'On Duty', 'taskColor': '00BCD4'}, // Cyan
     });
     mockAssignments.add({
       'id': 'assignment-person-1-summary',
       'event': 'event-person-1-summary',
-      'resource': 'person-1',
+      'resource': 'person-1', // Assigns this event to the 'John Doe' row.
     });
 
     final person2SummaryStart = startDate.add(const Duration(days: 3));
@@ -101,10 +115,14 @@ class MockApiService {
     mockAssignments.add({
       'id': 'assignment-person-2-summary',
       'event': 'event-person-2-summary',
-      'resource': 'person-2',
+      'resource': 'person-2', // Assigns this event to the 'Jane Smith' row.
     });
 
-    // Generate specific job events within the person's summary
+    // --- Regular Tasks (Child Tasks) ---
+    // These are assigned to child resources (jobs) and are visually nested under their parent.
+    // The `elementId` links a child event to its parent summary event. This is useful
+    // for logic like calculating "Day X of Y" in tooltips.
+
     // Job 1-1: Pilot A1's flight
     mockEvents.add({
       'id': 'event-job-1-1-flight',
@@ -117,13 +135,13 @@ class MockApiService {
     mockAssignments.add({
       'id': 'assignment-job-1-1-flight',
       'event': 'event-job-1-1-flight',
-      'resource': 'job-1-1',
+      'resource': 'job-1-1', // Assigns to the 'Pilot' job row.
     });
 
     // Job 1-2: Co-Pilot A1's vacation
     mockEvents.add({
       'id': 'event-job-1-2-vacation',
-      'name': 'Vacation Leave',
+      'name': 'Pick Up Kids',
       'utcStartDate': startDate.add(const Duration(days: 2)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 4)).toIso8601String(),
       'elementId': 'event-person-1-summary',
@@ -132,9 +150,12 @@ class MockApiService {
     mockAssignments.add({
       'id': 'assignment-job-1-2-vacation',
       'event': 'event-job-1-2-vacation',
-      'resource': 'job-1-2',
+      'resource': 'job-1-2', // Assigns to the 'Co-Pilot' job row.
     });
 
+    // --- Overlapping Tasks ---
+    // To demonstrate task stacking, we can add multiple events for the same resource
+    // that have overlapping time ranges. The Gantt chart will automatically stack them.
     // Job 2-1: Flight Attendant A's training (overlapping)
     mockEvents.add({
       'id': 'event-job-2-1-training-1',
@@ -164,11 +185,15 @@ class MockApiService {
       'resource': 'job-2-1',
     });
 
-    // Resource Time Ranges (background highlights)
+    // --- 3. Resource Time Ranges (Background Highlights) ---
+    // These are used to draw background highlights for a specific resource (row).
+    // They are useful for indicating things like unavailability, maintenance, or holidays.
+    // They are converted into `LegacyGanttTask`s with `isTimeRangeHighlight = true`.
+
     // John Doe's unavailable time
     mockResourceTimeRanges.add({
       'id': 'time-range-person-1-unavailable',
-      'resourceId': 'person-1',
+      'resourceId': 'person-1', // Applies to the 'John Doe' row.
       'utcStartDate': startDate.add(const Duration(days: 10)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 12)).toIso8601String(),
     });
@@ -176,7 +201,7 @@ class MockApiService {
     // Pilot A1's maintenance window
     mockResourceTimeRanges.add({
       'id': 'time-range-job-1-1-maintenance',
-      'resourceId': 'job-1-1',
+      'resourceId': 'job-1-1', // Applies to the 'Pilot' job row.
       'utcStartDate': startDate.add(const Duration(days: 7)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 9)).toIso8601String(),
     });
