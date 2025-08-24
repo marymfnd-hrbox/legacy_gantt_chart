@@ -225,10 +225,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       double? gridMax}) {
     return ChangeNotifierProvider(
       // Use a key to ensure the ViewModel is recreated if the core data changes.
-      key: ValueKey(tasks.hashCode ^
-          dependencies.hashCode ^
-          widget.visibleRows.hashCode ^
-          widget.rowMaxStackDepth.hashCode),
+      key: ValueKey(Object.hash(
+          tasks, dependencies, widget.visibleRows, widget.rowMaxStackDepth)),
       create: (_) => LegacyGanttViewModel(
         data: tasks,
         dependencies: dependencies,

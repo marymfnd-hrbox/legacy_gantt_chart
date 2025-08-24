@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:legacy_context_menu/legacy_context_menu.dart';
 
 import 'ui/widgets/gantt_grid.dart';
 import 'ui/widgets/dashboard_header.dart';
@@ -108,6 +109,30 @@ class _GanttViewState extends State<GanttView> {
     _showSnackbar('Deleted task: ${task.name}');
   }
 
+  void _handleClearDependencies(LegacyGanttTask task) {
+    _viewModel.clearDependenciesForTask(task);
+    _showSnackbar('Cleared all dependencies for ${task.name}');
+  }
+
+  Future<void> _showDependencyRemover(BuildContext context, LegacyGanttTask task) async {
+    final dependencies = _viewModel.getDependenciesForTask(task);
+
+    final dependencyToRemove = await showDialog<LegacyGanttTaskDependency>(
+      context: context,
+      builder: (context) => _DependencyManagerDialog(
+        title: 'Remove Dependency for "${task.name}"',
+        dependencies: dependencies,
+        tasks: _viewModel.ganttTasks,
+        sourceTask: task,
+      ),
+    );
+
+    if (dependencyToRemove != null) {
+      _viewModel.removeDependency(dependencyToRemove);
+      _showSnackbar('Removed dependency');
+    }
+  }
+
   void _showSnackbar(String message) => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
       );
@@ -172,6 +197,16 @@ class _GanttViewState extends State<GanttView> {
                             Switch(
                               value: vm.createTasksEnabled,
                               onChanged: vm.setCreateTasksEnabled,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Create Dependencies'),
+                            Switch(
+                              value: vm.dependencyCreationEnabled,
+                              onChanged: vm.setDependencyCreationEnabled,
                             ),
                           ],
                         ),
@@ -285,80 +320,139 @@ class _GanttViewState extends State<GanttView> {
                                                         ? Colors.white
                                                         : Colors.black;
                                                 final textStyle = ganttTheme.taskTextStyle.copyWith(color: textColor);
-                                                return LayoutBuilder(
-                                                  builder: (context, constraints) {
-                                                    // Only show the icon and text if there's enough space.
-                                                    // A threshold of 48px is a reasonable minimum to show the icon and some text.
-                                                    final bool showContent = constraints.maxWidth > 48;
-                                                    return Stack(
-                                                      alignment: Alignment.center,
-                                                      children: [
-                                                        if (showContent)
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(
-                                                                right: 24.0), // Space for the button
-                                                            child: Row(
-                                                              children: [
-                                                                const SizedBox(width: 4),
-                                                                Icon(
-                                                                  task.isSummary
-                                                                      ? Icons.summarize_outlined
-                                                                      : Icons.task_alt,
-                                                                  color: textColor,
-                                                                  size: 16,
-                                                                ),
-                                                                const SizedBox(width: 4),
-                                                                Expanded(
-                                                                  child: Text(
-                                                                    task.name ?? '',
-                                                                    style: textStyle,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    softWrap: false,
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        Align(
-                                                          alignment: Alignment.centerRight,
-                                                          child: PopupMenuButton<String>(
-                                                            icon: Icon(Icons.more_vert, color: textColor, size: 18),
-                                                            padding: EdgeInsets.zero,
-                                                            tooltip: 'Task Options',
-                                                            onSelected: (value) {
-                                                              switch (value) {
-                                                                case 'copy':
-                                                                  _handleCopyTask(task);
-                                                                  break;
-                                                                case 'delete':
-                                                                  _handleDeleteTask(task);
-                                                                  break;
-                                                                case 'add_predecessor':
-                                                                  _showSnackbar(
-                                                                      'Selected "Add Predecessor" for ${task.name}');
-                                                                  break;
-                                                                case 'add_successor':
-                                                                  _showSnackbar(
-                                                                      'Selected "Add Successor" for ${task.name}');
-                                                                  break;
-                                                              }
+
+                                                // Define menu items for the context menu
+                                                final dependencies = vm.getDependenciesForTask(task);
+                                                final availableTasks = vm.getValidDependencyTasks(task);
+                                                final hasDependencies = dependencies.isNotEmpty;
+
+                                                final menuItems = <ContextMenuItem>[
+                                                  ContextMenuItem(
+                                                    caption: 'Copy',
+                                                    onTap: () => _handleCopyTask(task),
+                                                  ),
+                                                  ContextMenuItem(
+                                                    caption: 'Delete',
+                                                    onTap: () => _handleDeleteTask(task),
+                                                  ),
+                                                  if (vm.dependencyCreationEnabled) ContextMenuItem.divider,
+                                                  if (vm.dependencyCreationEnabled)
+                                                    ContextMenuItem(
+                                                      caption: 'Add Predecessor',
+                                                      submenuBuilder: (context) async {
+                                                        if (availableTasks.isEmpty) {
+                                                          return [const ContextMenuItem(caption: 'No valid tasks')];
+                                                        }
+                                                        return availableTasks.map((otherTask) {
+                                                          return ContextMenuItem(
+                                                            caption: otherTask.name ?? 'Unnamed Task',
+                                                            onTap: () {
+                                                              _viewModel.addDependency(otherTask.id, task.id);
+                                                              _showSnackbar('Added dependency for ${task.name}');
                                                             },
-                                                            itemBuilder: (context) => [
-                                                              const PopupMenuItem(value: 'copy', child: Text('Copy')),
-                                                              const PopupMenuItem(
-                                                                  value: 'delete', child: Text('Delete')),
-                                                              const PopupMenuDivider(),
-                                                              const PopupMenuItem(
-                                                                  value: 'add_predecessor',
-                                                                  child: Text('Add Predecessor')),
-                                                              const PopupMenuItem(
-                                                                  value: 'add_successor', child: Text('Add Successor')),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
+                                                          );
+                                                        }).toList();
+                                                      },
+                                                    ),
+                                                  if (vm.dependencyCreationEnabled)
+                                                    ContextMenuItem(
+                                                      caption: 'Add Successor',
+                                                      submenuBuilder: (context) async {
+                                                        if (availableTasks.isEmpty) {
+                                                          return [const ContextMenuItem(caption: 'No valid tasks')];
+                                                        }
+                                                        return availableTasks.map((otherTask) {
+                                                          return ContextMenuItem(
+                                                            caption: otherTask.name ?? 'Unnamed Task',
+                                                            onTap: () {
+                                                              _viewModel.addDependency(task.id, otherTask.id);
+                                                              _showSnackbar('Added dependency for ${task.name}');
+                                                            },
+                                                          );
+                                                        }).toList();
+                                                      },
+                                                    ),
+                                                  if (vm.dependencyCreationEnabled && hasDependencies)
+                                                    ContextMenuItem.divider,
+                                                  if (vm.dependencyCreationEnabled && hasDependencies)
+                                                    ContextMenuItem(
+                                                      caption: 'Remove Dependency...',
+                                                      onTap: () => _showDependencyRemover(context, task),
+                                                    ),
+                                                  if (vm.dependencyCreationEnabled && hasDependencies)
+                                                    ContextMenuItem(
+                                                      caption: 'Clear All Dependencies',
+                                                      onTap: () => _handleClearDependencies(task),
+                                                    ),
+                                                ];
+
+                                                return GestureDetector(
+                                                  onSecondaryTapUp: (details) {
+                                                    showContextMenu(
+                                                      context: context,
+                                                      menuItems: menuItems,
+                                                      tapPosition: details.globalPosition,
                                                     );
                                                   },
+                                                  child: Stack(
+                                                    children: [
+                                                      LayoutBuilder(
+                                                        builder: (context, constraints) {
+                                                          final bool showContent = constraints.maxWidth > 66;
+                                                          return Padding(
+                                                            padding: const EdgeInsets.only(right: 18.0),
+                                                            child: Row(
+                                                              children: [
+                                                                if (showContent) ...[
+                                                                  const SizedBox(width: 4),
+                                                                  Icon(
+                                                                    task.isSummary
+                                                                        ? Icons.summarize_outlined
+                                                                        : Icons.task_alt,
+                                                                    color: textColor,
+                                                                    size: 16,
+                                                                  ),
+                                                                  const SizedBox(width: 4),
+                                                                  Expanded(
+                                                                    child: Text(
+                                                                      task.name ?? '',
+                                                                      style: textStyle,
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                      softWrap: false,
+                                                                    ),
+                                                                  ),
+                                                                ]
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                      Align(
+                                                        alignment: Alignment.centerRight,
+                                                        child: Builder(
+                                                          builder: (context) {
+                                                            return IconButton(
+                                                              padding: EdgeInsets.zero,
+                                                              icon: Icon(Icons.more_vert, color: textColor, size: 18),
+                                                              tooltip: 'Task Options',
+                                                              onPressed: () {
+                                                                final RenderBox button =
+                                                                    context.findRenderObject() as RenderBox;
+                                                                final Offset offset = button.localToGlobal(Offset.zero);
+                                                                final tapPosition =
+                                                                    offset.translate(button.size.width, 0);
+                                                                showContextMenu(
+                                                                  context: context,
+                                                                  menuItems: menuItems,
+                                                                  tapPosition: tapPosition,
+                                                                );
+                                                              },
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 );
                                               },
                                             ),
@@ -401,6 +495,67 @@ class _GanttViewState extends State<GanttView> {
           ),
         ),
       );
+}
+
+/// A dialog to manage (remove) dependencies for a task.
+class _DependencyManagerDialog extends StatelessWidget {
+  final String title;
+  final List<LegacyGanttTaskDependency> dependencies;
+  final List<LegacyGanttTask> tasks;
+  final LegacyGanttTask sourceTask;
+
+  const _DependencyManagerDialog({
+    required this.title,
+    required this.dependencies,
+    required this.tasks,
+    required this.sourceTask,
+  });
+
+  String _dependencyText(LegacyGanttTaskDependency dep) {
+    final bool isPredecessor = dep.predecessorTaskId == sourceTask.id;
+    final otherTaskId = isPredecessor ? dep.successorTaskId : dep.predecessorTaskId;
+    final otherTaskResult = tasks.where((t) => t.id == otherTaskId);
+    final otherTaskName = otherTaskResult.isEmpty ? 'Unknown Task' : (otherTaskResult.first.name ?? 'Unknown Task');
+
+    final relationship =
+        isPredecessor ? '${sourceTask.name} -> $otherTaskName' : '$otherTaskName -> ${sourceTask.name}';
+
+    // Make type name more readable
+    final typeName = dep.type.name.replaceAllMapped(RegExp(r'[A-Z]'), (match) => ' ${match.group(0)}').capitalize();
+
+    return '($typeName) $relationship';
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: dependencies.isEmpty
+              ? const Text('No dependencies to remove.')
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: dependencies.length,
+                  itemBuilder: (context, index) {
+                    final dep = dependencies[index];
+                    return ListTile(
+                      title: Text(_dependencyText(dep)),
+                      onTap: () => Navigator.of(context).pop(dep),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        ],
+      );
+}
+
+extension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return '${this[0].toUpperCase()}${substring(1)}';
+  }
 }
 
 /// A stateful widget for the "Create Task" dialog.

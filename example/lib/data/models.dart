@@ -112,7 +112,7 @@ class GanttEventData {
   final String? utcStartDate;
   final String? utcEndDate;
   final GanttReferenceData? referenceData;
-  final String? elementId; // Used to link a child event to its parent summary event
+  final String? resourceId; // Used to link a child event to its parent summary event
 
   GanttEventData({
     required this.id,
@@ -120,7 +120,7 @@ class GanttEventData {
     this.utcStartDate,
     this.utcEndDate,
     this.referenceData,
-    this.elementId,
+    this.resourceId,
   });
 
   static GanttEventData fromJson(Map<String, dynamic> json) => GanttEventData(
@@ -131,7 +131,7 @@ class GanttEventData {
         referenceData: json['referenceData'] != null
             ? GanttReferenceData.fromJson(json['referenceData'] as Map<String, dynamic>)
             : null,
-        elementId: json['elementId'] as String?,
+        resourceId: json['resourceId'] as String?,
       );
 }
 

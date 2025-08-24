@@ -23,6 +23,7 @@ class GanttViewModel extends ChangeNotifier {
   bool _dragAndDropEnabled = true;
   bool _resizeEnabled = true;
   bool _createTasksEnabled = true;
+  bool _dependencyCreationEnabled = true;
   DateTime _startDate = DateTime.now();
   final TimeOfDay _defaultStartTime = const TimeOfDay(hour: 9, minute: 0);
   final TimeOfDay _defaultEndTime = const TimeOfDay(hour: 17, minute: 0);
@@ -60,6 +61,7 @@ class GanttViewModel extends ChangeNotifier {
   bool get dragAndDropEnabled => _dragAndDropEnabled;
   bool get resizeEnabled => _resizeEnabled;
   bool get createTasksEnabled => _createTasksEnabled;
+  bool get dependencyCreationEnabled => _dependencyCreationEnabled;
   DateTime get startDate => _startDate;
   TimeOfDay get defaultStartTime => _defaultStartTime;
   TimeOfDay get defaultEndTime => _defaultEndTime;
@@ -124,6 +126,11 @@ class GanttViewModel extends ChangeNotifier {
 
   void setCreateTasksEnabled(bool value) {
     _createTasksEnabled = value;
+    notifyListeners();
+  }
+
+  void setDependencyCreationEnabled(bool value) {
+    _dependencyCreationEnabled = value;
     notifyListeners();
   }
 
@@ -341,8 +348,8 @@ class GanttViewModel extends ChangeNotifier {
     // "Day X" is only for child shifts, not summary bars.
     if (!task.isSummary && task.originalId != null) {
       final childEvent = _eventMap[task.originalId];
-      if (childEvent?.elementId != null) {
-        final parentEvent = _eventMap[childEvent!.elementId];
+      if (childEvent?.resourceId != null) {
+        final parentEvent = _eventMap[childEvent!.resourceId];
         if (parentEvent?.utcStartDate != null) {
           final parentStartDate = DateTime.tryParse(parentEvent!.utcStartDate!);
           if (parentStartDate != null) {
@@ -561,70 +568,76 @@ class GanttViewModel extends ChangeNotifier {
   void setParentTaskType(String parentId, bool isSummary) {
     if (_apiResponse == null) return;
 
-    // Find the main task for the parent.
-    final parentTaskIndex = _ganttTasks.indexWhere(
+    List<LegacyGanttTask> nextTasks = _ganttTasks;
+    List<LegacyGanttTaskDependency> nextDependencies = _dependencies;
+
+    final parentTaskIndex = nextTasks.indexWhere(
       (t) => t.rowId == parentId && !t.isTimeRangeHighlight,
     );
 
     if (isSummary) {
-      // --- Making it a Summary Task ---
       if (parentTaskIndex != -1) {
-        // Task already exists, just update its type.
-        final existingTask = _ganttTasks[parentTaskIndex];
-        _ganttTasks[parentTaskIndex] = existingTask.copyWith(isSummary: true);
+        final existingTask = nextTasks[parentTaskIndex];
+        // Create a new list with the modified task.
+        nextTasks = List.from(nextTasks)..[parentTaskIndex] = existingTask.copyWith(isSummary: true);
       } else {
-        // No task exists for this parent, so we create one.
-        // Its duration will be the min/max of its children's tasks.
         final parentGridItem = _gridData.firstWhere((g) => g.id == parentId);
         final childIds = parentGridItem.children.map((c) => c.id).toSet();
-        final childrenTasks = _ganttTasks.where((t) => childIds.contains(t.rowId)).toList();
+        final childrenTasks = nextTasks.where((t) => childIds.contains(t.rowId)).toList();
 
         if (childrenTasks.isNotEmpty) {
           DateTime minStart = childrenTasks.first.start;
           DateTime maxEnd = childrenTasks.first.end;
           for (final task in childrenTasks) {
-            if (task.start.isBefore(minStart)) minStart = task.start;
-            if (task.end.isAfter(maxEnd)) maxEnd = task.end;
+            if (task.start.isBefore(minStart)) {
+              minStart = task.start;
+            }
+            if (task.end.isAfter(maxEnd)) {
+              maxEnd = task.end;
+            }
           }
 
           final newTask = LegacyGanttTask(
-            id: 'summary-task-$parentId', // A new unique ID
+            id: 'summary-task-$parentId',
             rowId: parentId,
             name: parentGridItem.name,
             start: minStart,
             end: maxEnd,
             isSummary: true,
           );
-          _ganttTasks.add(newTask);
+          nextTasks = [...nextTasks, newTask];
         }
       }
 
-      // Add 'contained' dependency if it doesn't exist.
       final hasDependency =
-          _dependencies.any((d) => d.predecessorTaskId == parentId && d.type == DependencyType.contained);
+          nextDependencies.any((d) => d.predecessorTaskId == parentId && d.type == DependencyType.contained);
       if (!hasDependency) {
         final successorForContainedDemo =
-            _ganttTasks.firstWhere((t) => !t.isSummary && !t.isTimeRangeHighlight, orElse: () => _ganttTasks.first);
-        _dependencies.add(LegacyGanttTaskDependency(
-            predecessorTaskId: parentId,
-            successorTaskId: successorForContainedDemo.id,
-            type: DependencyType.contained));
+            nextTasks.firstWhere((t) => !t.isSummary && !t.isTimeRangeHighlight, orElse: () => nextTasks.first);
+        final newDependency = LegacyGanttTaskDependency(
+          predecessorTaskId: parentId,
+          successorTaskId: successorForContainedDemo.id,
+          type: DependencyType.contained,
+        );
+        nextDependencies = [...nextDependencies, newDependency];
       }
     } else {
-      // --- Making it a Regular Task ---
       if (parentTaskIndex != -1) {
-        final existingTask = _ganttTasks[parentTaskIndex];
+        final existingTask = nextTasks[parentTaskIndex];
         if (existingTask.id.startsWith('summary-task-')) {
-          _ganttTasks.removeAt(parentTaskIndex);
+          nextTasks = nextTasks.where((t) => t.id != existingTask.id).toList();
         } else {
-          _ganttTasks[parentTaskIndex] = existingTask.copyWith(isSummary: false);
+          nextTasks = List.from(nextTasks)..[parentTaskIndex] = existingTask.copyWith(isSummary: false);
         }
       }
-      _dependencies.removeWhere((d) => d.predecessorTaskId == parentId && d.type == DependencyType.contained);
+      nextDependencies = nextDependencies
+          .where((d) => !(d.predecessorTaskId == parentId && d.type == DependencyType.contained))
+          .toList();
     }
 
-    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(_ganttTasks, _apiResponse!);
+    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(nextTasks, _apiResponse!);
     _ganttTasks = recalculatedTasks;
+    _dependencies = nextDependencies;
     _rowMaxStackDepth = newMaxDepth;
     notifyListeners();
   }
@@ -682,16 +695,94 @@ class GanttViewModel extends ChangeNotifier {
   void handleDeleteTask(LegacyGanttTask task) {
     if (_apiResponse == null) return;
 
-    // Remove the task itself.
-    _ganttTasks.removeWhere((t) => t.id == task.id);
+    // Create new lists by filtering out the deleted task and its dependencies.
+    final newTasks = _ganttTasks.where((t) => t.id != task.id).toList();
+    final newDependencies =
+        _dependencies.where((d) => d.predecessorTaskId != task.id && d.successorTaskId != task.id).toList();
 
-    // Remove any dependencies connected to this task.
-    _dependencies.removeWhere((d) => d.predecessorTaskId == task.id || d.successorTaskId == task.id);
+    // After removing the task, recalculate stacking with the new list.
+    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!);
 
-    // After removing the task, recalculate stacking.
-    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(_ganttTasks, _apiResponse!);
     _ganttTasks = recalculatedTasks;
+    _dependencies = newDependencies;
     _rowMaxStackDepth = newMaxDepth;
     notifyListeners();
+  }
+
+  String? _getParentId(String rowId) {
+    for (final parent in _gridData) {
+      if (parent.id == rowId) {
+        return parent.id; // It's a parent row
+      }
+      for (final child in parent.children) {
+        if (child.id == rowId) {
+          return parent.id; // It's a child row, return its parent's id
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Returns a list of tasks that can be selected as a predecessor or successor.
+  List<LegacyGanttTask> getValidDependencyTasks(LegacyGanttTask sourceTask) {
+    final sourceParentId = _getParentId(sourceTask.rowId);
+    if (sourceParentId == null) return [];
+
+    final parentGridItem = _gridData.firstWhere((g) => g.id == sourceParentId,
+        orElse: () => GanttGridData(id: '', name: '', isParent: false, children: []));
+    if (parentGridItem.id.isEmpty) return [];
+
+    final allRowIdsForParent = <String>{parentGridItem.id, ...parentGridItem.children.map((c) => c.id)};
+
+    return ganttTasks
+        .where((task) =>
+            !task.isSummary &&
+            !task.isTimeRangeHighlight &&
+            task.id != sourceTask.id &&
+            allRowIdsForParent.contains(task.rowId))
+        .toList();
+  }
+
+  /// Adds a new dependency between two tasks.
+  void addDependency(String fromTaskId, String toTaskId) {
+    // For now, default to FinishToStart. This could be made configurable in the UI.
+    final newDependency = LegacyGanttTaskDependency(
+      predecessorTaskId: fromTaskId,
+      successorTaskId: toTaskId,
+      type: DependencyType.finishToStart,
+    );
+
+    // Avoid adding duplicate dependencies
+    if (!_dependencies.any((d) =>
+        d.predecessorTaskId == newDependency.predecessorTaskId && d.successorTaskId == newDependency.successorTaskId)) {
+      _dependencies = [..._dependencies, newDependency];
+      notifyListeners();
+    }
+  }
+
+  /// Returns a list of dependencies where the given task is either a predecessor or a successor.
+  List<LegacyGanttTaskDependency> getDependenciesForTask(LegacyGanttTask task) =>
+      _dependencies.where((d) => d.predecessorTaskId == task.id || d.successorTaskId == task.id).toList();
+
+  /// Removes a specific dependency.
+  void removeDependency(LegacyGanttTaskDependency dependency) {
+    final initialCount = _dependencies.length;
+    final newList = _dependencies.where((d) => d != dependency).toList();
+
+    if (newList.length < initialCount) {
+      _dependencies = newList;
+      notifyListeners();
+    }
+  }
+
+  /// Removes all dependencies associated with a given task.
+  void clearDependenciesForTask(LegacyGanttTask task) {
+    final initialCount = _dependencies.length;
+    final newList = _dependencies.where((d) => d.predecessorTaskId != task.id && d.successorTaskId != task.id).toList();
+
+    if (newList.length < initialCount) {
+      _dependencies = newList;
+      notifyListeners();
+    }
   }
 }

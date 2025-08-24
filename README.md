@@ -15,7 +15,8 @@ A flexible and performant Gantt chart widget for Flutter. Supports interactive d
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
 -   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.
--   **Task Dependencies:** Define and visualize relationships between tasks (e.g., finish-to-start).
+-   **Interactive Dependency Creation:** Users can visually create dependencies by dragging a connector from one task to another.
+-   **Task Dependencies:** Define and visualize relationships between tasks. Supports Finish-to-Start, Start-to-Start, Finish-to-Finish, Start-to-Finish, and Contained dependency types.
 -   **Task Stacking:** Automatically stacks overlapping tasks within the same row.
 -   **Customization:**
     -   Extensive theming support via `LegacyGanttTheme`.

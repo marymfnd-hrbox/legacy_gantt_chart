@@ -6,6 +6,15 @@ enum DependencyType {
   /// The successor task cannot start until the predecessor task is finished.
   finishToStart,
 
+  /// The successor task cannot start until the predecessor task starts.
+  startToStart,
+
+  /// The successor task cannot finish until the predecessor task finishes.
+  finishToFinish,
+
+  /// The successor task cannot finish until the predecessor task starts.
+  startToFinish,
+
   /// The successor task must be completed entirely within the time frame of the
   /// predecessor task.
   contained,
@@ -35,4 +44,21 @@ class LegacyGanttTaskDependency {
     this.type = DependencyType.finishToStart,
     this.lag,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LegacyGanttTaskDependency &&
+          runtimeType == other.runtimeType &&
+          predecessorTaskId == other.predecessorTaskId &&
+          successorTaskId == other.successorTaskId &&
+          type == other.type &&
+          lag == other.lag;
+
+  @override
+  int get hashCode =>
+      predecessorTaskId.hashCode ^
+      successorTaskId.hashCode ^
+      type.hashCode ^
+      lag.hashCode;
 }

@@ -93,7 +93,7 @@ class MockApiService {
       'name': 'John Doe - PTO',
       'utcStartDate': person1SummaryStart.toIso8601String(),
       'utcEndDate': person1SummaryEnd.toIso8601String(),
-      'elementId': null, // A null elementId indicates a top-level event.
+      'resourceId': null, // A null resourceId indicates a top-level event.
       'referenceData': {'taskName': 'On Duty', 'taskColor': '00BCD4'}, // Cyan
     });
     mockAssignments.add({
@@ -109,7 +109,7 @@ class MockApiService {
       'name': 'Ground Training - Jane',
       'utcStartDate': person2SummaryStart.toIso8601String(),
       'utcEndDate': person2SummaryEnd.toIso8601String(),
-      'elementId': null,
+      'resourceId': null,
       'referenceData': {'taskName': 'Training', 'taskColor': 'F44336'}, // Red
     });
     mockAssignments.add({
@@ -120,7 +120,7 @@ class MockApiService {
 
     // --- Regular Tasks (Child Tasks) ---
     // These are assigned to child resources (jobs) and are visually nested under their parent.
-    // The `elementId` links a child event to its parent summary event. This is useful
+    // The `resourceId` links a child event to its parent summary event. This is useful
     // for logic like calculating "Day X of Y" in tooltips.
 
     // Job 1-1: Pilot A1's flight
@@ -129,7 +129,7 @@ class MockApiService {
       'name': 'Flight 123 to NYC',
       'utcStartDate': startDate.add(const Duration(days: 1, hours: 9)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 1, hours: 17)).toIso8601String(),
-      'elementId': 'event-person-1-summary', // Links to parent summary
+      'resourceId': 'event-person-1-summary', // Links to parent summary
       'referenceData': {'taskName': 'Active', 'taskColor': '8BC34A'}, // Light Green
     });
     mockAssignments.add({
@@ -144,7 +144,7 @@ class MockApiService {
       'name': 'Pick Up Kids',
       'utcStartDate': startDate.add(const Duration(days: 2)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 4)).toIso8601String(),
-      'elementId': 'event-person-1-summary',
+      'resourceId': 'event-person-1-summary',
       'referenceData': {'taskName': 'Vacation', 'taskColor': 'FFEB3B', 'taskTextColor': '000000'}, // Yellow, Black text
     });
     mockAssignments.add({
@@ -162,7 +162,7 @@ class MockApiService {
       'name': 'Safety Course',
       'utcStartDate': startDate.add(const Duration(days: 3, hours: 9)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 4, hours: 17)).toIso8601String(),
-      'elementId': 'event-person-2-summary',
+      'resourceId': 'event-person-2-summary',
       'referenceData': {'taskName': 'In Class', 'taskColor': '673AB7'}, // Deep Purple
     });
     mockAssignments.add({
@@ -176,7 +176,7 @@ class MockApiService {
       'name': 'Advanced CRM',
       'utcStartDate': startDate.add(const Duration(days: 3, hours: 14)).toIso8601String(),
       'utcEndDate': startDate.add(const Duration(days: 5, hours: 10)).toIso8601String(),
-      'elementId': 'event-person-2-summary',
+      'resourceId': 'event-person-2-summary',
       'referenceData': {'taskName': 'Online', 'taskColor': '9C27B0'}, // Purple
     });
     mockAssignments.add({

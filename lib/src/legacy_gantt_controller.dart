@@ -117,7 +117,7 @@ class LegacyGanttController extends ChangeNotifier {
       throw StateError(
           'Cannot call setTasks when a tasksAsync callback is provided.');
     }
-    _tasks = newTasks;
+    _tasks = List.from(newTasks);
     notifyListeners();
   }
 
@@ -130,14 +130,14 @@ class LegacyGanttController extends ChangeNotifier {
       throw StateError(
           'Cannot call setHolidays when a holidaysAsync callback is provided.');
     }
-    _holidays = newHolidays;
+    _holidays = List.from(newHolidays);
     notifyListeners();
   }
 
   /// Replaces the current list of dependencies with a new list and notifies listeners.
   void setDependencies(List<LegacyGanttTaskDependency> newDependencies) {
     // Dependencies are not typically fetched async, so no check is needed here.
-    _dependencies = newDependencies;
+    _dependencies = List.from(newDependencies);
     notifyListeners();
   }
 
@@ -158,8 +158,8 @@ class LegacyGanttController extends ChangeNotifier {
   /// has been fetched.
   Future<void> fetchTasksForVisibleRange() async {
     await _fetchData(
-      fetcher: tasksAsync,
-      onDataReceived: (tasks) => _tasks = tasks,
+      fetcher: tasksAsync, // The async function to call
+      onDataReceived: (tasks) => _tasks = List.from(tasks), // Store a copy
       setLoading: (loading) => _isLoading = loading,
       errorContext: 'tasks',
     );

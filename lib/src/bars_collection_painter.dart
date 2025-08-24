@@ -25,6 +25,11 @@ class BarsCollectionPainter extends CustomPainter {
   final DateTime? hoveredDate;
   final bool hasCustomTaskBuilder;
   final bool hasCustomTaskContentBuilder;
+  final bool enableDependencyCreation;
+  final String? dependencyDragStartTaskId;
+  final bool? dependencyDragStartIsFromStart;
+  final Offset? dependencyDragCurrentPosition;
+  final String? hoveredTaskForDependency;
 
   BarsCollectionPainter({
     required this.data,
@@ -42,6 +47,11 @@ class BarsCollectionPainter extends CustomPainter {
     this.dependencies = const [],
     this.hasCustomTaskBuilder = false,
     this.hasCustomTaskContentBuilder = false,
+    this.enableDependencyCreation = false,
+    this.dependencyDragStartTaskId,
+    this.dependencyDragStartIsFromStart,
+    this.dependencyDragCurrentPosition,
+    this.hoveredTaskForDependency,
   });
 
   @override
@@ -107,6 +117,11 @@ class BarsCollectionPainter extends CustomPainter {
             continue;
           }
 
+          // Don't draw zero-duration tasks.
+          if (taskEndX <= taskStartX) {
+            continue;
+          }
+
           final isBeingDragged = task.id == draggedTaskId;
 
           final double barTop =
@@ -116,6 +131,13 @@ class BarsCollectionPainter extends CustomPainter {
 
           final bool hasSegments =
               task.segments != null && task.segments!.isNotEmpty;
+
+          // Define the RRect for the whole task, used for dependency handles and non-segmented bars.
+          final RRect barRRect = RRect.fromRectAndRadius(
+            Rect.fromLTWH(taskStartX, barTop + barVerticalCenterOffset,
+                taskEndX - taskStartX, barHeight),
+            theme.barCornerRadius,
+          );
 
           if (hasSegments) {
             // --- Draw Segmented Bar ---
@@ -146,16 +168,6 @@ class BarsCollectionPainter extends CustomPainter {
           } else {
             // --- Draw Single Continuous Bar (existing logic) ---
             // We can reuse the start/end coordinates calculated earlier.
-            if (taskEndX <= taskStartX) {
-              continue;
-            }
-
-            final RRect barRRect = RRect.fromRectAndRadius(
-              Rect.fromLTWH(taskStartX, barTop + barVerticalCenterOffset,
-                  taskEndX - taskStartX, barHeight),
-              theme.barCornerRadius,
-            );
-
             // Draw the bar
             final barPaint = Paint()
               ..color = (task.color ?? theme.barColorPrimary)
@@ -166,6 +178,11 @@ class BarsCollectionPainter extends CustomPainter {
             if (task.isSummary) {
               _drawSummaryPattern(canvas, barRRect);
             }
+          }
+
+          // --- Draw dependency handles ---
+          if (enableDependencyCreation) {
+            _drawDependencyHandles(canvas, barRRect, task, isBeingDragged);
           }
 
           // --- Draw Text for the entire task ---
@@ -248,6 +265,9 @@ class BarsCollectionPainter extends CustomPainter {
 
     // Draw dependency lines on top of tasks.
     _drawDependencyLines(canvas, size);
+
+    // Draw the in-progress dependency line.
+    _drawInprogressDependencyLine(canvas, size);
 
     // 4. Draw ghost bar on top of everything if a task is being dragged
     if (draggedTaskId != null &&
@@ -342,6 +362,32 @@ class BarsCollectionPainter extends CustomPainter {
     _drawAngledPattern(canvas, rrect, theme.summaryBarColor, 1.5);
   }
 
+  void _drawDependencyHandles(
+      Canvas canvas, RRect rrect, LegacyGanttTask task, bool isBeingDragged) {
+    if (isBeingDragged || task.isSummary) return;
+
+    final handlePaint = Paint()
+      ..color = theme.dependencyLineColor.withValues(alpha: 0.8);
+    const handleRadius = 4.0;
+
+    // Left handle
+    final leftCenter = Offset(rrect.left, rrect.center.dy);
+    canvas.drawCircle(leftCenter, handleRadius, handlePaint);
+
+    // Right handle
+    final rightCenter = Offset(rrect.right, rrect.center.dy);
+    canvas.drawCircle(rightCenter, handleRadius, handlePaint);
+
+    // Highlight task if it's being hovered over as a potential dependency target
+    if (task.id == hoveredTaskForDependency) {
+      final borderPaint = Paint()
+        ..color = theme.dependencyLineColor
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke;
+      canvas.drawRRect(rrect.inflate(2.0), borderPaint);
+    }
+  }
+
   void _drawDependencyBackgrounds(Canvas canvas, Size size) {
     if (dependencies.isEmpty) return;
     for (final dependency in dependencies) {
@@ -351,11 +397,58 @@ class BarsCollectionPainter extends CustomPainter {
     }
   }
 
+  void _drawInprogressDependencyLine(Canvas canvas, Size size) {
+    if (dependencyDragStartTaskId == null ||
+        dependencyDragCurrentPosition == null) {
+      return;
+    }
+
+    final startTaskRect = _findTaskRect(dependencyDragStartTaskId!);
+    if (startTaskRect == null) return;
+
+    final startX = (dependencyDragStartIsFromStart ?? false)
+        ? startTaskRect.left
+        : startTaskRect.right;
+    final startY = startTaskRect.center.dy;
+
+    final endX = dependencyDragCurrentPosition!.dx;
+    final endY = dependencyDragCurrentPosition!.dy;
+
+    final paint = Paint()
+      ..color = theme.dependencyLineColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawLine(Offset(startX, startY), Offset(endX, endY), paint);
+
+    // Draw arrowhead at the end
+    final arrowPath = Path();
+    const arrowSize = 5.0;
+    arrowPath.moveTo(endX - arrowSize, endY - arrowSize / 2);
+    arrowPath.lineTo(endX, endY);
+    arrowPath.lineTo(endX - arrowSize, endY + arrowSize / 2);
+    canvas.drawPath(arrowPath, paint);
+  }
+
   void _drawDependencyLines(Canvas canvas, Size size) {
     if (dependencies.isEmpty) return;
     for (final dependency in dependencies) {
-      if (dependency.type == DependencyType.finishToStart) {
-        _drawFinishToStartDependency(canvas, dependency);
+      switch (dependency.type) {
+        case DependencyType.finishToStart:
+          _drawFinishToStartDependency(canvas, dependency);
+          break;
+        case DependencyType.startToStart:
+          _drawStartToStartDependency(canvas, dependency);
+          break;
+        case DependencyType.finishToFinish:
+          _drawFinishToFinishDependency(canvas, dependency);
+          break;
+        case DependencyType.startToFinish:
+          _drawStartToFinishDependency(canvas, dependency);
+          break;
+        case DependencyType.contained:
+          // Contained is a background, not a line.
+          break;
       }
     }
   }
@@ -382,7 +475,7 @@ class BarsCollectionPainter extends CustomPainter {
 
     // Add a small horizontal segment before turning
     final controlXOffset =
-        (endX - startX).abs() > 20 ? 10.0 : (endX - startX) / 2;
+        (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
     final controlX1 = startX + controlXOffset;
     final controlX2 = endX - controlXOffset;
 
@@ -397,6 +490,109 @@ class BarsCollectionPainter extends CustomPainter {
     arrowPath.moveTo(endX - arrowSize, endY - arrowSize / 2);
     arrowPath.lineTo(endX, endY);
     arrowPath.lineTo(endX - arrowSize, endY + arrowSize / 2);
+    canvas.drawPath(arrowPath, paint);
+  }
+
+  void _drawStartToStartDependency(
+      Canvas canvas, LegacyGanttTaskDependency dependency) {
+    final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
+    final successorRect = _findTaskRect(dependency.successorTaskId);
+
+    if (predecessorRect == null || successorRect == null) return;
+
+    final startX = predecessorRect.left;
+    final startY = predecessorRect.center.dy;
+    final endX = successorRect.left;
+    final endY = successorRect.center.dy;
+
+    final paint = Paint()
+      ..color = theme.dependencyLineColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    path.moveTo(startX, startY);
+
+    final controlXOffset =
+        (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
+    final controlX1 = startX - controlXOffset;
+    final controlX2 = endX - controlXOffset;
+
+    path.cubicTo(controlX1, startY, controlX2, endY, endX, endY);
+    canvas.drawPath(path, paint);
+
+    // Draw arrowhead (points right, towards successor task body)
+    final arrowPath = Path();
+    const arrowSize = 5.0;
+    arrowPath.moveTo(endX - arrowSize, endY - arrowSize / 2);
+    arrowPath.lineTo(endX, endY);
+    arrowPath.lineTo(endX - arrowSize, endY + arrowSize / 2);
+    canvas.drawPath(arrowPath, paint);
+  }
+
+  void _drawFinishToFinishDependency(
+      Canvas canvas, LegacyGanttTaskDependency dependency) {
+    final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
+    final successorRect = _findTaskRect(dependency.successorTaskId);
+
+    if (predecessorRect == null || successorRect == null) return;
+
+    final startX = predecessorRect.right;
+    final startY = predecessorRect.center.dy;
+    final endX = successorRect.right;
+    final endY = successorRect.center.dy;
+
+    final paint = Paint()
+      ..color = theme.dependencyLineColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    path.moveTo(startX, startY);
+
+    final controlXOffset =
+        (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
+    final controlX1 = startX + controlXOffset;
+    final controlX2 = endX + controlXOffset;
+
+    path.cubicTo(controlX1, startY, controlX2, endY, endX, endY);
+    canvas.drawPath(path, paint);
+
+    // Draw arrowhead (points left, towards successor task body)
+    final arrowPath = Path();
+    const arrowSize = 5.0;
+    arrowPath.moveTo(endX + arrowSize, endY - arrowSize / 2);
+    arrowPath.lineTo(endX, endY);
+    arrowPath.lineTo(endX + arrowSize, endY + arrowSize / 2);
+    canvas.drawPath(arrowPath, paint);
+  }
+
+  void _drawStartToFinishDependency(
+      Canvas canvas, LegacyGanttTaskDependency dependency) {
+    final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
+    final successorRect = _findTaskRect(dependency.successorTaskId);
+
+    if (predecessorRect == null || successorRect == null) return;
+
+    final startX = predecessorRect.left;
+    final startY = predecessorRect.center.dy;
+    final endX = successorRect.right;
+    final endY = successorRect.center.dy;
+
+    final paint = Paint()
+      ..color = theme.dependencyLineColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    // This can be a simple line as it's less common and less likely to need complex routing.
+    canvas.drawLine(Offset(startX, startY), Offset(endX, endY), paint);
+
+    // Draw arrowhead (points left, towards successor task body)
+    final arrowPath = Path();
+    const arrowSize = 5.0;
+    arrowPath.moveTo(endX + arrowSize, endY - arrowSize / 2);
+    arrowPath.lineTo(endX, endY);
+    arrowPath.lineTo(endX + arrowSize, endY + arrowSize / 2);
     canvas.drawPath(arrowPath, paint);
   }
 
@@ -530,22 +726,26 @@ class BarsCollectionPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant BarsCollectionPainter oldDelegate) {
-    // Use listEquals and mapEquals for proper comparison of collections.
-    // This prevents unnecessary repaints when the data hasn't actually changed.
-    return !listEquals(oldDelegate.data, data) ||
-        !listEquals(oldDelegate.visibleRows, visibleRows) ||
-        !mapEquals(oldDelegate.rowMaxStackDepth, rowMaxStackDepth) ||
-        !listEquals(oldDelegate.dependencies, dependencies) ||
-        oldDelegate.hoveredRowId != hoveredRowId ||
-        oldDelegate.hoveredDate != hoveredDate ||
-        !listEquals(oldDelegate.domain, domain) ||
-        oldDelegate.rowHeight != rowHeight ||
-        oldDelegate.draggedTaskId != draggedTaskId ||
-        oldDelegate.ghostTaskStart != ghostTaskStart ||
-        oldDelegate.ghostTaskEnd != ghostTaskEnd ||
-        oldDelegate.theme != theme ||
-        oldDelegate.hasCustomTaskBuilder != hasCustomTaskBuilder ||
-        oldDelegate.hasCustomTaskContentBuilder != hasCustomTaskContentBuilder;
-  }
+  bool shouldRepaint(covariant BarsCollectionPainter oldDelegate) =>
+      !listEquals(oldDelegate.data, data) ||
+      !listEquals(oldDelegate.visibleRows, visibleRows) ||
+      !mapEquals(oldDelegate.rowMaxStackDepth, rowMaxStackDepth) ||
+      !listEquals(oldDelegate.dependencies, dependencies) ||
+      oldDelegate.hoveredRowId != hoveredRowId ||
+      oldDelegate.hoveredDate != hoveredDate ||
+      !listEquals(oldDelegate.domain, domain) ||
+      oldDelegate.rowHeight != rowHeight ||
+      oldDelegate.draggedTaskId != draggedTaskId ||
+      oldDelegate.ghostTaskStart != ghostTaskStart ||
+      oldDelegate.ghostTaskEnd != ghostTaskEnd ||
+      oldDelegate.theme != theme ||
+      oldDelegate.enableDependencyCreation != enableDependencyCreation ||
+      oldDelegate.dependencyDragStartTaskId != dependencyDragStartTaskId ||
+      oldDelegate.dependencyDragStartIsFromStart !=
+          dependencyDragStartIsFromStart ||
+      oldDelegate.dependencyDragCurrentPosition !=
+          dependencyDragCurrentPosition ||
+      oldDelegate.hoveredTaskForDependency != hoveredTaskForDependency ||
+      oldDelegate.hasCustomTaskBuilder != hasCustomTaskBuilder ||
+      oldDelegate.hasCustomTaskContentBuilder != hasCustomTaskContentBuilder;
 }

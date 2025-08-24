@@ -42,6 +42,7 @@ Defines a relationship between two tasks.
 -   **`predecessorTaskId`**: The ID of the task that must come first.
 -   **`successorTaskId`**: The ID of the task that depends on the predecessor.
 -   **`type`**: A `DependencyType` enum (`finishToStart`, `contained`) that defines the relationship's behavior and visual representation.
+-   **`type`**: A `DependencyType` enum (`finishToStart`, `startToStart`, `finishToFinish`, `startToFinish`, `contained`) that defines the relationship's behavior and visual representation.
 
 ## `LegacyGanttRow`
 
