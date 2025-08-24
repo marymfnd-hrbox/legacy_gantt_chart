@@ -1,3 +1,7 @@
+## 0.4.1
+
+* **FIX**: Resolved a collision of options menu and end date drag handle on the example
+
 ## 0.4.0
 
 * **FIX**: Corrected context menu implementation on task bars to support both desktop right-click and mobile tap interactions.

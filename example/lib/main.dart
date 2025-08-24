@@ -394,63 +394,63 @@ class _GanttViewState extends State<GanttView> {
                                                       tapPosition: details.globalPosition,
                                                     );
                                                   },
-                                                  child: Stack(
-                                                    children: [
-                                                      LayoutBuilder(
-                                                        builder: (context, constraints) {
-                                                          final bool showContent = constraints.maxWidth > 66;
-                                                          return Padding(
-                                                            padding: const EdgeInsets.only(right: 18.0),
+                                                  child: LayoutBuilder(builder: (context, constraints) {
+                                                    // Define minimum widths for content visibility.
+                                                    final bool canShowButton = constraints.maxWidth >= 32;
+                                                    final bool canShowText = constraints.maxWidth > 66;
+
+                                                    return Stack(
+                                                      children: [
+                                                        // Task content (icon and name)
+                                                        if (canShowText)
+                                                          Padding(
+                                                            // Pad to the right to avoid overlapping the options button.
+                                                            padding: const EdgeInsets.only(left: 4.0, right: 32.0),
                                                             child: Row(
                                                               children: [
-                                                                if (showContent) ...[
-                                                                  const SizedBox(width: 4),
-                                                                  Icon(
-                                                                    task.isSummary
-                                                                        ? Icons.summarize_outlined
-                                                                        : Icons.task_alt,
-                                                                    color: textColor,
-                                                                    size: 16,
+                                                                Icon(
+                                                                  task.isSummary
+                                                                      ? Icons.summarize_outlined
+                                                                      : Icons.task_alt,
+                                                                  color: textColor,
+                                                                  size: 16,
+                                                                ),
+                                                                const SizedBox(width: 4),
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    task.name ?? '',
+                                                                    style: textStyle,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    softWrap: false,
                                                                   ),
-                                                                  const SizedBox(width: 4),
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      task.name ?? '',
-                                                                      style: textStyle,
-                                                                      overflow: TextOverflow.ellipsis,
-                                                                      softWrap: false,
-                                                                    ),
-                                                                  ),
-                                                                ]
+                                                                ),
                                                               ],
                                                             ),
-                                                          );
-                                                        },
-                                                      ),
-                                                      Align(
-                                                        alignment: Alignment.centerRight,
-                                                        child: Builder(
-                                                          builder: (context) => IconButton(
-                                                            padding: EdgeInsets.zero,
-                                                            icon: Icon(Icons.more_vert, color: textColor, size: 18),
-                                                            tooltip: 'Task Options',
-                                                            onPressed: () {
-                                                              final RenderBox button =
-                                                                  context.findRenderObject() as RenderBox;
-                                                              final Offset offset = button.localToGlobal(Offset.zero);
-                                                              final tapPosition =
-                                                                  offset.translate(button.size.width, 0);
-                                                              showContextMenu(
-                                                                context: context,
-                                                                menuItems: menuItems,
-                                                                tapPosition: tapPosition,
-                                                              );
-                                                            },
                                                           ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+
+                                                        // Options menu button
+                                                        if (canShowButton)
+                                                          Positioned(
+                                                            right: 8, // Inset from the right edge to leave space for resize handle
+                                                            top: 0,
+                                                            bottom: 0,
+                                                            child: Builder(
+                                                              builder: (context) => IconButton(
+                                                                padding: EdgeInsets.zero,
+                                                                icon: Icon(Icons.more_vert, color: textColor, size: 18),
+                                                                tooltip: 'Task Options',
+                                                                onPressed: () {
+                                                                  final RenderBox button = context.findRenderObject() as RenderBox;
+                                                                  final Offset offset = button.localToGlobal(Offset.zero);
+                                                                  final tapPosition = offset.translate(button.size.width, 0);
+                                                                  showContextMenu(context: context, menuItems: menuItems, tapPosition: tapPosition);
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    );
+                                                  }),
                                                 );
                                               },
                                             ),
