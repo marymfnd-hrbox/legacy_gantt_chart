@@ -1,9 +1,8 @@
-## 0.5.0
-
-* **FEAT**: Added interactive dependency creation. Users can now drag from handles on task bars to create new dependencies between tasks.
-
 ## 0.4.0
 
+* **FIX**: Corrected context menu implementation on task bars to support both desktop right-click and mobile tap interactions.
+* **FIX**: Resolved an issue where the context sub-menu was not displaying correctly by integrating with the `legacy_context_menu` package properly.
+* **FEAT**: Added interactive dependency creation. Users can now drag from handles on task bars to create new dependencies between tasks.
 * **FEAT**: Added support for more dependency types: Start-to-Start (SS), Finish-to-Finish (FF), and Start-to-Finish (SF).
 * **FEAT**: Implemented visual connectors for the new dependency types.
 

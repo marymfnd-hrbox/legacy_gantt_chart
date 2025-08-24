@@ -343,15 +343,15 @@ class _GanttViewState extends State<GanttView> {
                                                         if (availableTasks.isEmpty) {
                                                           return [const ContextMenuItem(caption: 'No valid tasks')];
                                                         }
-                                                        return availableTasks.map((otherTask) {
-                                                          return ContextMenuItem(
-                                                            caption: otherTask.name ?? 'Unnamed Task',
-                                                            onTap: () {
-                                                              _viewModel.addDependency(otherTask.id, task.id);
-                                                              _showSnackbar('Added dependency for ${task.name}');
-                                                            },
-                                                          );
-                                                        }).toList();
+                                                        return availableTasks
+                                                            .map((otherTask) => ContextMenuItem(
+                                                                  caption: otherTask.name ?? 'Unnamed Task',
+                                                                  onTap: () {
+                                                                    _viewModel.addDependency(otherTask.id, task.id);
+                                                                    _showSnackbar('Added dependency for ${task.name}');
+                                                                  },
+                                                                ))
+                                                            .toList();
                                                       },
                                                     ),
                                                   if (vm.dependencyCreationEnabled)
@@ -361,15 +361,15 @@ class _GanttViewState extends State<GanttView> {
                                                         if (availableTasks.isEmpty) {
                                                           return [const ContextMenuItem(caption: 'No valid tasks')];
                                                         }
-                                                        return availableTasks.map((otherTask) {
-                                                          return ContextMenuItem(
-                                                            caption: otherTask.name ?? 'Unnamed Task',
-                                                            onTap: () {
-                                                              _viewModel.addDependency(task.id, otherTask.id);
-                                                              _showSnackbar('Added dependency for ${task.name}');
-                                                            },
-                                                          );
-                                                        }).toList();
+                                                        return availableTasks
+                                                            .map((otherTask) => ContextMenuItem(
+                                                                  caption: otherTask.name ?? 'Unnamed Task',
+                                                                  onTap: () {
+                                                                    _viewModel.addDependency(task.id, otherTask.id);
+                                                                    _showSnackbar('Added dependency for ${task.name}');
+                                                                  },
+                                                                ))
+                                                            .toList();
                                                       },
                                                     ),
                                                   if (vm.dependencyCreationEnabled && hasDependencies)
@@ -430,25 +430,23 @@ class _GanttViewState extends State<GanttView> {
                                                       Align(
                                                         alignment: Alignment.centerRight,
                                                         child: Builder(
-                                                          builder: (context) {
-                                                            return IconButton(
-                                                              padding: EdgeInsets.zero,
-                                                              icon: Icon(Icons.more_vert, color: textColor, size: 18),
-                                                              tooltip: 'Task Options',
-                                                              onPressed: () {
-                                                                final RenderBox button =
-                                                                    context.findRenderObject() as RenderBox;
-                                                                final Offset offset = button.localToGlobal(Offset.zero);
-                                                                final tapPosition =
-                                                                    offset.translate(button.size.width, 0);
-                                                                showContextMenu(
-                                                                  context: context,
-                                                                  menuItems: menuItems,
-                                                                  tapPosition: tapPosition,
-                                                                );
-                                                              },
-                                                            );
-                                                          },
+                                                          builder: (context) => IconButton(
+                                                            padding: EdgeInsets.zero,
+                                                            icon: Icon(Icons.more_vert, color: textColor, size: 18),
+                                                            tooltip: 'Task Options',
+                                                            onPressed: () {
+                                                              final RenderBox button =
+                                                                  context.findRenderObject() as RenderBox;
+                                                              final Offset offset = button.localToGlobal(Offset.zero);
+                                                              final tapPosition =
+                                                                  offset.translate(button.size.width, 0);
+                                                              showContextMenu(
+                                                                context: context,
+                                                                menuItems: menuItems,
+                                                                tapPosition: tapPosition,
+                                                              );
+                                                            },
+                                                          ),
                                                         ),
                                                       ),
                                                     ],

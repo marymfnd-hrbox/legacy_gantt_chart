@@ -15,6 +15,7 @@ A flexible and performant Gantt chart widget for Flutter. Supports interactive d
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
 -   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.
+-   **Task Options Menu:** Right-click or tap a task's option icon to access actions like copy, delete, and dependency management.
 -   **Interactive Dependency Creation:** Users can visually create dependencies by dragging a connector from one task to another.
 -   **Task Dependencies:** Define and visualize relationships between tasks. Supports Finish-to-Start, Start-to-Start, Finish-to-Finish, Start-to-Finish, and Contained dependency types.
 -   **Task Stacking:** Automatically stacks overlapping tasks within the same row.
@@ -35,7 +36,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  legacy_gantt_chart: ^0.3.0 # Replace with the latest version
+  legacy_gantt_chart: ^0.5.1 # Replace with the latest version
 ```
 
 Then, you can install the package using the command-line:
