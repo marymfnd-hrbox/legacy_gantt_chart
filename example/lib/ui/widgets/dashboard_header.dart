@@ -76,7 +76,7 @@ class DashboardHeader extends StatelessWidget {
               child: DropdownButtonFormField<int>(
                 alignment: Alignment.center,
                 isDense: true,
-                value: selectedRange,
+                initialValue: selectedRange,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
