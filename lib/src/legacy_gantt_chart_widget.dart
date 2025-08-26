@@ -226,29 +226,34 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       // Use a key to ensure the ViewModel is recreated if the core data changes.
       key: ValueKey(Object.hash(
           tasks, dependencies, widget.visibleRows, widget.rowMaxStackDepth)),
-      create: (_) => LegacyGanttViewModel(
-        data: tasks,
-        dependencies: dependencies,
-        // Pass all other widget properties to the ViewModel
-        visibleRows: widget.visibleRows,
-        rowMaxStackDepth: widget.rowMaxStackDepth,
-        rowHeight: widget.rowHeight,
-        axisHeight: widget.axisHeight,
-        gridMin: gridMin ?? widget.gridMin,
-        gridMax: gridMax ?? widget.gridMax,
-        totalGridMin: widget.totalGridMin,
-        totalGridMax: widget.totalGridMax,
-        enableDragAndDrop: widget.enableDragAndDrop,
-        enableResize: widget.enableResize,
-        onTaskUpdate: widget.onTaskUpdate,
-        onEmptySpaceClick: widget.onEmptySpaceClick,
-        onPressTask: widget.onPressTask,
-        onTaskHover: widget.onTaskHover,
-        taskBarBuilder: widget.taskBarBuilder,
-        resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
-        scrollController: widget.scrollController,
-        // taskContentBuilder is handled directly in the widget's build method.
-      ),
+      create: (context) {
+        final isMobilePlatform = Theme.of(context).platform == TargetPlatform.iOS ||
+            Theme.of(context).platform == TargetPlatform.android;
+        return LegacyGanttViewModel(
+          data: tasks,
+          dependencies: dependencies,
+          // Pass all other widget properties to the ViewModel
+          visibleRows: widget.visibleRows,
+          rowMaxStackDepth: widget.rowMaxStackDepth,
+          rowHeight: widget.rowHeight,
+          axisHeight: widget.axisHeight,
+          gridMin: gridMin ?? widget.gridMin,
+          gridMax: gridMax ?? widget.gridMax,
+          totalGridMin: widget.totalGridMin,
+          totalGridMax: widget.totalGridMax,
+          enableDragAndDrop: widget.enableDragAndDrop,
+          enableResize: widget.enableResize,
+          onTaskUpdate: widget.onTaskUpdate,
+          onEmptySpaceClick: widget.onEmptySpaceClick,
+          onPressTask: widget.onPressTask,
+          onTaskHover: widget.onTaskHover,
+          taskBarBuilder: widget.taskBarBuilder,
+          resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
+          scrollController: widget.scrollController,
+          isMobilePlatform: isMobilePlatform,
+          // taskContentBuilder is handled directly in the widget's build method.
+        );
+      },
       child: Consumer<LegacyGanttViewModel>(
         builder: (context, vm, child) {
           // Update the ViewModel with the latest properties from the widget. This
