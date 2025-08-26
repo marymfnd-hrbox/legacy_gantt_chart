@@ -7,7 +7,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:example/main.dart';
+import '../lib/main.dart';
 
 void main() => testWidgets('GanttView smoke test', (WidgetTester tester) async {
       // Build our app and trigger a frame.
