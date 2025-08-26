@@ -35,7 +35,6 @@ class LegacyGanttViewModel extends ChangeNotifier {
 
   final Widget Function(LegacyGanttTask task)? taskBarBuilder;
   final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
-  final bool isMobilePlatform;
 
   LegacyGanttViewModel({
     required this.data,
@@ -57,7 +56,6 @@ class LegacyGanttViewModel extends ChangeNotifier {
     this.taskBarBuilder,
     this.resizeTooltipDateFormat,
     this.onTaskHover,
-    this.isMobilePlatform = false,
   }) {
     scrollController?.addListener(_onExternalScroll);
   }
@@ -230,27 +228,14 @@ class LegacyGanttViewModel extends ChangeNotifier {
   }
 
   void onPanUpdate(DragUpdateDetails details) {
-    const double verticalDragTolerance = 10.0; // Pixels
-
     if (_panType == PanType.none) {
-      if (_draggedTask != null) {
-        // If a task was initially hit, prioritize horizontal drag
-        if (details.delta.dx.abs() > details.delta.dy.abs() ||
-            details.delta.dy.abs() < verticalDragTolerance) {
-          _panType = PanType.horizontal;
-        } else {
-          // If vertical movement is significant, switch to vertical pan
-          _panType = PanType.vertical;
-          _draggedTask = null; // Cancel task drag
-          _dragMode = DragMode.none;
-        }
+      if (_draggedTask != null &&
+          details.delta.dx.abs() > details.delta.dy.abs()) {
+        _panType = PanType.horizontal;
       } else {
-        // No task was hit, determine pan type based on initial movement
-        if (details.delta.dx.abs() > details.delta.dy.abs()) {
-          _panType = PanType.horizontal;
-        } else {
-          _panType = PanType.vertical;
-        }
+        _panType = PanType.vertical;
+        _draggedTask = null;
+        _dragMode = DragMode.none;
       }
     }
 
@@ -428,7 +413,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
                 !task.isOverlapIndicator)
             .toList()
             .reversed;
-        final double handleWidth = isMobilePlatform ? 25.0 : 10.0;
+        const double handleWidth = 10.0;
         for (final task in tasksInTappedStack) {
           final double barStartX = _totalScale(task.start);
           final double barEndX = _totalScale(task.end);
