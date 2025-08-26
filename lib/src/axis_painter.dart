@@ -121,13 +121,11 @@ class AxisPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant AxisPainter oldDelegate) {
-    return oldDelegate.theme != theme ||
+  bool shouldRepaint(covariant AxisPainter oldDelegate) => oldDelegate.theme != theme ||
         oldDelegate.scale != scale ||
         !listEquals(oldDelegate.visibleDomain, visibleDomain) ||
         oldDelegate.width != width ||
         oldDelegate.height != height;
-  }
 
   DateTime _roundDownTo(DateTime dt, Duration delta) {
     final ms = dt.millisecondsSinceEpoch;
@@ -140,7 +138,7 @@ class AxisPainter extends CustomPainter {
 
   int _weekNumber(DateTime date) {
     // A simple week number calculation.
-    final dayOfYear = int.parse(DateFormat("D").format(date));
+    final dayOfYear = int.parse(DateFormat('D').format(date));
     final woy = ((dayOfYear - date.weekday + 10) / 7).floor();
     if (woy < 1) return 52; // Fallback for early days in the year.
     if (woy > 52) return 52; // Fallback for late days in the year.

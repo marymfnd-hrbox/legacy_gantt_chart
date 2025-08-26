@@ -222,8 +222,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       List<LegacyGanttTaskDependency> dependencies,
       LegacyGanttTheme effectiveTheme,
       {double? gridMin,
-      double? gridMax}) {
-    return ChangeNotifierProvider(
+      double? gridMax}) => ChangeNotifierProvider(
       // Use a key to ensure the ViewModel is recreated if the core data changes.
       key: ValueKey(Object.hash(
           tasks, dependencies, widget.visibleRows, widget.rowMaxStackDepth)),
@@ -401,7 +400,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         },
       ),
     );
-  }
 
   Widget _buildResizeTooltip(
       BuildContext context, String text, LegacyGanttTheme theme) {

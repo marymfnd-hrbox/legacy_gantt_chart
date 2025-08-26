@@ -147,7 +147,7 @@ class _LegacyGanttTimelineScrubberState
     }
 
     // Clamp values to stay within bounds and maintain minimum duration
-    final minWindowDuration = const Duration(hours: 1);
+    const minWindowDuration = Duration(hours: 1);
     if (newVisibleEnd.difference(newVisibleStart) < minWindowDuration) {
       if (_dragType == _DragType.leftHandle) {
         newVisibleStart = newVisibleEnd.subtract(minWindowDuration);
@@ -190,8 +190,7 @@ class _LegacyGanttTimelineScrubberState
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
+  Widget build(BuildContext context) => MouseRegion(
       cursor: _cursor,
       onHover: _onHover,
       onExit: _onExit,
@@ -212,7 +211,6 @@ class _LegacyGanttTimelineScrubberState
         ),
       ),
     );
-  }
 }
 
 class _ScrubberPainter extends CustomPainter {
@@ -286,12 +284,10 @@ class _ScrubberPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ScrubberPainter oldDelegate) {
-    return oldDelegate.totalStartDate != totalStartDate ||
+  bool shouldRepaint(covariant _ScrubberPainter oldDelegate) => oldDelegate.totalStartDate != totalStartDate ||
         oldDelegate.totalEndDate != totalEndDate ||
         oldDelegate.visibleStartDate != visibleStartDate ||
         oldDelegate.visibleEndDate != visibleEndDate ||
         !listEquals(oldDelegate.tasks, tasks) ||
         oldDelegate.theme != theme;
-  }
 }

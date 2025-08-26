@@ -88,8 +88,7 @@ class LegacyGanttTheme {
     Radius? barCornerRadius,
     bool? showRowBorders,
     Color? rowBorderColor,
-  }) {
-    return LegacyGanttTheme(
+  }) => LegacyGanttTheme(
       barColorPrimary: barColorPrimary ?? this.barColorPrimary,
       barColorSecondary: barColorSecondary ?? this.barColorSecondary,
       textColor: textColor ?? this.textColor,
@@ -114,7 +113,6 @@ class LegacyGanttTheme {
       showRowBorders: showRowBorders ?? this.showRowBorders,
       rowBorderColor: rowBorderColor ?? this.rowBorderColor,
     );
-  }
 
   /// Creates a default theme based on the application's [ThemeData].
   factory LegacyGanttTheme.fromTheme(ThemeData theme) => LegacyGanttTheme(

@@ -194,7 +194,7 @@ class BarsCollectionPainter extends CustomPainter {
             final double overallWidth = max(0, taskEndX - taskStartX);
 
             final textSpan = TextSpan(
-              text: task.name!,
+              text: task.name,
               style: theme.taskTextStyle,
             );
             final textPainter = TextPainter(

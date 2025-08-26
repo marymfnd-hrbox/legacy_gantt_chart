@@ -175,15 +175,13 @@ class LegacyGanttConflictDetector {
       {required LegacyGanttTask task,
       required DateTime start,
       required DateTime end,
-      required String idSuffix}) {
-    return LegacyGanttTask(
+      required String idSuffix}) => LegacyGanttTask(
         id: 'overlap-${task.id}-$idSuffix',
         rowId: task.rowId,
         start: start,
         end: end,
         stackIndex: task.stackIndex,
         isOverlapIndicator: true);
-  }
 
   List<({DateTime start, DateTime end})> _mergeOverlapIntervals(
       List<({DateTime start, DateTime end})> intervals) {
