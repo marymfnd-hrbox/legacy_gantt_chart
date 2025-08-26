@@ -1,3 +1,7 @@
+## 0.4.2
+
+* **FIX**: Add screenshot to pubspec.yaml
+
 ## 0.4.1
 
 * **FIX**: Resolved a collision of options menu and end date drag handle on the example
