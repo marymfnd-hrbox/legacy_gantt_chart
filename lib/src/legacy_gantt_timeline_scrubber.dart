@@ -27,39 +27,30 @@ class LegacyGanttTimelineScrubber extends StatefulWidget {
   });
 
   @override
-  State<LegacyGanttTimelineScrubber> createState() =>
-      _LegacyGanttTimelineScrubberState();
+  State<LegacyGanttTimelineScrubber> createState() => _LegacyGanttTimelineScrubberState();
 }
 
-class _LegacyGanttTimelineScrubberState
-    extends State<LegacyGanttTimelineScrubber> {
+class _LegacyGanttTimelineScrubberState extends State<LegacyGanttTimelineScrubber> {
   _DragType _dragType = _DragType.none;
   double _dragStartDx = 0.0;
   late DateTime _dragStartVisibleStart;
   late DateTime _dragStartVisibleEnd;
   MouseCursor _cursor = SystemMouseCursors.basic;
 
-  DateTime get _effectiveTotalStart =>
-      widget.totalStartDate.subtract(widget.startPadding);
+  DateTime get _effectiveTotalStart => widget.totalStartDate.subtract(widget.startPadding);
   DateTime get _effectiveTotalEnd => widget.totalEndDate.add(widget.endPadding);
 
   _DragType _getDragTypeAtPosition(Offset localPosition) {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return _DragType.none;
 
-    final totalDurationMs =
-        _effectiveTotalEnd.difference(_effectiveTotalStart).inMilliseconds;
+    final totalDurationMs = _effectiveTotalEnd.difference(_effectiveTotalStart).inMilliseconds;
     if (totalDurationMs <= 0) return _DragType.none;
 
-    final double startX = (widget.visibleStartDate
-                .difference(_effectiveTotalStart)
-                .inMilliseconds /
-            totalDurationMs) *
-        box.size.width;
+    final double startX =
+        (widget.visibleStartDate.difference(_effectiveTotalStart).inMilliseconds / totalDurationMs) * box.size.width;
     final double endX =
-        (widget.visibleEndDate.difference(_effectiveTotalStart).inMilliseconds /
-                totalDurationMs) *
-            box.size.width;
+        (widget.visibleEndDate.difference(_effectiveTotalStart).inMilliseconds / totalDurationMs) * box.size.width;
 
     // Use a generous hit area for the cursor change and drag initiation.
     // The if/else if order gives priority to the handles.
@@ -124,9 +115,7 @@ class _LegacyGanttTimelineScrubberState
     if (totalDuration.inMilliseconds <= 0) return;
 
     final dx = details.localPosition.dx - _dragStartDx;
-    final dDuration = Duration(
-        milliseconds:
-            (dx / box.size.width * totalDuration.inMilliseconds).round());
+    final dDuration = Duration(milliseconds: (dx / box.size.width * totalDuration.inMilliseconds).round());
 
     DateTime newVisibleStart = _dragStartVisibleStart;
     DateTime newVisibleEnd = _dragStartVisibleEnd;
@@ -173,12 +162,8 @@ class _LegacyGanttTimelineScrubberState
     }
 
     // Final clamp after adjustments
-    newVisibleStart = newVisibleStart.isBefore(_effectiveTotalStart)
-        ? _effectiveTotalStart
-        : newVisibleStart;
-    newVisibleEnd = newVisibleEnd.isAfter(_effectiveTotalEnd)
-        ? _effectiveTotalEnd
-        : newVisibleEnd;
+    newVisibleStart = newVisibleStart.isBefore(_effectiveTotalStart) ? _effectiveTotalStart : newVisibleStart;
+    newVisibleEnd = newVisibleEnd.isAfter(_effectiveTotalEnd) ? _effectiveTotalEnd : newVisibleEnd;
     if (newVisibleEnd.isBefore(newVisibleStart)) {
       newVisibleEnd = newVisibleStart.add(minWindowDuration);
     }
@@ -191,26 +176,26 @@ class _LegacyGanttTimelineScrubberState
 
   @override
   Widget build(BuildContext context) => MouseRegion(
-      cursor: _cursor,
-      onHover: _onHover,
-      onExit: _onExit,
-      child: GestureDetector(
-        onPanStart: _onPanStart,
-        onPanUpdate: _onPanUpdate,
-        onPanEnd: _onPanEnd,
-        child: CustomPaint(
-          painter: _ScrubberPainter(
-            totalStartDate: _effectiveTotalStart,
-            totalEndDate: _effectiveTotalEnd,
-            visibleStartDate: widget.visibleStartDate,
-            visibleEndDate: widget.visibleEndDate,
-            tasks: widget.tasks,
-            theme: Theme.of(context),
+        cursor: _cursor,
+        onHover: _onHover,
+        onExit: _onExit,
+        child: GestureDetector(
+          onPanStart: _onPanStart,
+          onPanUpdate: _onPanUpdate,
+          onPanEnd: _onPanEnd,
+          child: CustomPaint(
+            painter: _ScrubberPainter(
+              totalStartDate: _effectiveTotalStart,
+              totalEndDate: _effectiveTotalEnd,
+              visibleStartDate: widget.visibleStartDate,
+              visibleEndDate: widget.visibleEndDate,
+              tasks: widget.tasks,
+              theme: Theme.of(context),
+            ),
+            size: const Size.fromHeight(40),
           ),
-          size: const Size.fromHeight(40),
         ),
-      ),
-    );
+      );
 }
 
 class _ScrubberPainter extends CustomPainter {
@@ -232,8 +217,7 @@ class _ScrubberPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final totalDurationMs =
-        totalEndDate.difference(totalStartDate).inMilliseconds;
+    final totalDurationMs = totalEndDate.difference(totalStartDate).inMilliseconds;
     if (totalDurationMs <= 0) return;
 
     // --- Helper function to convert date to x-coordinate ---
@@ -248,46 +232,40 @@ class _ScrubberPainter extends CustomPainter {
     for (final task in nonHighlightTasks) {
       final startX = dateToX(task.start);
       final endX = dateToX(task.end);
-      taskPaint.color =
-          task.color ?? theme.colorScheme.primary.withValues(alpha: 0.5);
-      canvas.drawRect(
-          Rect.fromLTRB(startX, size.height * 0.25, endX, size.height * 0.75),
-          taskPaint);
+      taskPaint.color = task.color ?? theme.colorScheme.primary.withValues(alpha: 0.5);
+      canvas.drawRect(Rect.fromLTRB(startX, size.height * 0.25, endX, size.height * 0.75), taskPaint);
     }
 
     // --- 2. Draw selection window ---
     final visibleStartX = dateToX(visibleStartDate);
     final visibleEndX = dateToX(visibleEndDate);
 
-    final windowPaint = Paint()
-      ..color = theme.colorScheme.primary.withValues(alpha: 0.2);
+    final windowPaint = Paint()..color = theme.colorScheme.primary.withValues(alpha: 0.2);
     final borderPaint = Paint()
       ..color = theme.colorScheme.primary
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
-    final windowRect =
-        Rect.fromLTRB(visibleStartX, 0, visibleEndX, size.height);
+    final windowRect = Rect.fromLTRB(visibleStartX, 0, visibleEndX, size.height);
     canvas.drawRect(windowRect, windowPaint);
     canvas.drawRect(windowRect, borderPaint);
 
     // --- 3. Draw handles ---
     final handlePaint = Paint()..color = theme.colorScheme.primary;
     const handleWidth = 4.0;
-    final leftHandleRect = Rect.fromLTWH(
-        visibleStartX - handleWidth / 2, 0, handleWidth, size.height);
-    final rightHandleRect = Rect.fromLTWH(
-        visibleEndX - handleWidth / 2, 0, handleWidth, size.height);
+    final leftHandleRect = Rect.fromLTWH(visibleStartX - handleWidth / 2, 0, handleWidth, size.height);
+    final rightHandleRect = Rect.fromLTWH(visibleEndX - handleWidth / 2, 0, handleWidth, size.height);
 
     canvas.drawRect(leftHandleRect, handlePaint);
     canvas.drawRect(rightHandleRect, handlePaint);
   }
 
   @override
-  bool shouldRepaint(covariant _ScrubberPainter oldDelegate) => oldDelegate.totalStartDate != totalStartDate ||
-        oldDelegate.totalEndDate != totalEndDate ||
-        oldDelegate.visibleStartDate != visibleStartDate ||
-        oldDelegate.visibleEndDate != visibleEndDate ||
-        !listEquals(oldDelegate.tasks, tasks) ||
-        oldDelegate.theme != theme;
+  bool shouldRepaint(covariant _ScrubberPainter oldDelegate) =>
+      oldDelegate.totalStartDate != totalStartDate ||
+      oldDelegate.totalEndDate != totalEndDate ||
+      oldDelegate.visibleStartDate != visibleStartDate ||
+      oldDelegate.visibleEndDate != visibleEndDate ||
+      !listEquals(oldDelegate.tasks, tasks) ||
+      oldDelegate.theme != theme;
 }

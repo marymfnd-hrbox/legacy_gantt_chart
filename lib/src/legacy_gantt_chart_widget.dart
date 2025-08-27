@@ -49,8 +49,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// The chart will still draw the bar's background.
   /// This cannot be used simultaneously with [taskBarBuilder].
   final Widget Function(LegacyGanttTask task)? taskContentBuilder;
-  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)?
-      onTaskUpdate;
+  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
 
   /// A function to format the date/time shown in the tooltip when resizing a task.
   final String Function(DateTime)? resizeTooltipDateFormat;
@@ -97,10 +96,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.onEmptySpaceClick,
     this.resizeTooltipBackgroundColor,
     this.resizeTooltipFontColor,
-  })  : assert(
-            controller != null ||
-                ((data != null && tasksFuture == null) ||
-                    (data == null && tasksFuture != null)),
+  })  : assert(controller != null || ((data != null && tasksFuture == null) || (data == null && tasksFuture != null)),
             'If a controller is not used, exactly one of tasksFuture or data must be provided.'),
         assert(controller == null || dependencies == null,
             'Cannot provide both a controller and a dependencies list. Dependencies are managed by the controller.'),
@@ -124,8 +120,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final LegacyGanttTheme effectiveTheme =
-        widget.theme ?? LegacyGanttTheme.fromTheme(theme);
+    final LegacyGanttTheme effectiveTheme = widget.theme ?? LegacyGanttTheme.fromTheme(theme);
 
     if (widget.controller != null) {
       return AnimatedBuilder(
@@ -144,8 +139,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
           if (allItems.isEmpty && !controller.isOverallLoading) {
             return Center(
-              child: Text('No data to display.',
-                  style: TextStyle(color: effectiveTheme.textColor)),
+              child: Text('No data to display.', style: TextStyle(color: effectiveTheme.textColor)),
             );
           }
 
@@ -158,10 +152,8 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                 allItems,
                 dependencies,
                 effectiveTheme,
-                gridMin: controller.visibleStartDate.millisecondsSinceEpoch
-                    .toDouble(),
-                gridMax:
-                    controller.visibleEndDate.millisecondsSinceEpoch.toDouble(),
+                gridMin: controller.visibleStartDate.millisecondsSinceEpoch.toDouble(),
+                gridMax: controller.visibleEndDate.millisecondsSinceEpoch.toDouble(),
               ),
               if (controller.isLoading)
                 Container(
@@ -193,12 +185,10 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
           if (allItems.isEmpty) {
             return Center(
-              child: Text('No data to display.',
-                  style: TextStyle(color: effectiveTheme.textColor)),
+              child: Text('No data to display.', style: TextStyle(color: effectiveTheme.textColor)),
             );
           }
-          return _buildChart(
-              context, allItems, widget.dependencies ?? [], effectiveTheme);
+          return _buildChart(context, allItems, widget.dependencies ?? [], effectiveTheme);
         },
       );
     } else {
@@ -207,209 +197,185 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       final allItems = [...tasks, ...holidays];
       if (allItems.isEmpty) {
         return Center(
-          child: Text('No data to display.',
-              style: TextStyle(color: effectiveTheme.textColor)),
+          child: Text('No data to display.', style: TextStyle(color: effectiveTheme.textColor)),
         );
       }
-      return _buildChart(
-          context, allItems, widget.dependencies ?? [], effectiveTheme);
+      return _buildChart(context, allItems, widget.dependencies ?? [], effectiveTheme);
     }
   }
 
-  Widget _buildChart(
-      BuildContext context,
-      List<LegacyGanttTask> tasks,
-      List<LegacyGanttTaskDependency> dependencies,
-      LegacyGanttTheme effectiveTheme,
-      {double? gridMin,
-      double? gridMax}) => ChangeNotifierProvider(
-      // Use a key to ensure the ViewModel is recreated if the core data changes.
-      key: ValueKey(Object.hash(
-          tasks, dependencies, widget.visibleRows, widget.rowMaxStackDepth)),
-      create: (_) => LegacyGanttViewModel(
-        data: tasks,
-        dependencies: dependencies,
-        // Pass all other widget properties to the ViewModel
-        visibleRows: widget.visibleRows,
-        rowMaxStackDepth: widget.rowMaxStackDepth,
-        rowHeight: widget.rowHeight,
-        axisHeight: widget.axisHeight,
-        gridMin: gridMin ?? widget.gridMin,
-        gridMax: gridMax ?? widget.gridMax,
-        totalGridMin: widget.totalGridMin,
-        totalGridMax: widget.totalGridMax,
-        enableDragAndDrop: widget.enableDragAndDrop,
-        enableResize: widget.enableResize,
-        onTaskUpdate: widget.onTaskUpdate,
-        onEmptySpaceClick: widget.onEmptySpaceClick,
-        onPressTask: widget.onPressTask,
-        onTaskHover: widget.onTaskHover,
-        taskBarBuilder: widget.taskBarBuilder,
-        resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
-        scrollController: widget.scrollController,
-        // taskContentBuilder is handled directly in the widget's build method.
-      ),
-      child: Consumer<LegacyGanttViewModel>(
-        builder: (context, vm, child) {
-          // Update the ViewModel with the latest properties from the widget. This
-          // is the correct way to pass updated values to a long-lived ViewModel
-          // that is not recreated on every build.
-          vm.updateVisibleRange(
-              gridMin ?? widget.gridMin, gridMax ?? widget.gridMax);
+  Widget _buildChart(BuildContext context, List<LegacyGanttTask> tasks, List<LegacyGanttTaskDependency> dependencies,
+          LegacyGanttTheme effectiveTheme,
+          {double? gridMin, double? gridMax}) =>
+      ChangeNotifierProvider(
+        // Use a key to ensure the ViewModel is recreated if the core data changes.
+        key: ValueKey(Object.hash(tasks, dependencies, widget.visibleRows, widget.rowMaxStackDepth)),
+        create: (_) => LegacyGanttViewModel(
+          data: tasks,
+          dependencies: dependencies,
+          // Pass all other widget properties to the ViewModel
+          visibleRows: widget.visibleRows,
+          rowMaxStackDepth: widget.rowMaxStackDepth,
+          rowHeight: widget.rowHeight,
+          axisHeight: widget.axisHeight,
+          gridMin: gridMin ?? widget.gridMin,
+          gridMax: gridMax ?? widget.gridMax,
+          totalGridMin: widget.totalGridMin,
+          totalGridMax: widget.totalGridMax,
+          enableDragAndDrop: widget.enableDragAndDrop,
+          enableResize: widget.enableResize,
+          onTaskUpdate: widget.onTaskUpdate,
+          onEmptySpaceClick: widget.onEmptySpaceClick,
+          onPressTask: widget.onPressTask,
+          onTaskHover: widget.onTaskHover,
+          taskBarBuilder: widget.taskBarBuilder,
+          resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
+          scrollController: widget.scrollController,
+          // taskContentBuilder is handled directly in the widget's build method.
+        ),
+        child: Consumer<LegacyGanttViewModel>(
+          builder: (context, vm, child) {
+            // Update the ViewModel with the latest properties from the widget. This
+            // is the correct way to pass updated values to a long-lived ViewModel
+            // that is not recreated on every build.
+            vm.updateVisibleRange(gridMin ?? widget.gridMin, gridMax ?? widget.gridMax);
 
-          return LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              if (constraints.maxWidth == 0 || constraints.maxHeight == 0) {
-                return const SizedBox
-                    .shrink(); // Avoid calculations if we have no space
-              }
+            return LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                if (constraints.maxWidth == 0 || constraints.maxHeight == 0) {
+                  return const SizedBox.shrink(); // Avoid calculations if we have no space
+                }
 
-              // Inform the ViewModel of the available layout space.
-              vm.updateLayout(constraints.maxWidth, constraints.maxHeight);
+                // Inform the ViewModel of the available layout space.
+                vm.updateLayout(constraints.maxWidth, constraints.maxHeight);
 
-              // The rest of the UI rebuilds automatically when the VM's state changes.
-              final double totalContentWidth = vm.totalDomain.isEmpty
-                  ? 0
-                  : vm.totalScale(vm.totalDomain.last);
+                // The rest of the UI rebuilds automatically when the VM's state changes.
+                final double totalContentWidth = vm.totalDomain.isEmpty ? 0 : vm.totalScale(vm.totalDomain.last);
 
-              // Calculate the total height of all rows to provide the correct size to the painter.
-              final double totalContentHeight = widget.visibleRows.fold<double>(
-                0.0,
-                (prev, row) =>
-                    prev +
-                    widget.rowHeight * (widget.rowMaxStackDepth[row.id] ?? 1),
-              );
+                // Calculate the total height of all rows to provide the correct size to the painter.
+                final double totalContentHeight = widget.visibleRows.fold<double>(
+                  0.0,
+                  (prev, row) => prev + widget.rowHeight * (widget.rowMaxStackDepth[row.id] ?? 1),
+                );
 
-              return MouseRegion(
-                cursor: vm.cursor,
-                onHover: vm.onHover,
-                onExit: vm.onHoverExit,
-                child: GestureDetector(
-                  onPanStart: vm.onPanStart,
-                  onPanUpdate: vm.onPanUpdate,
-                  onPanEnd: vm.onPanEnd,
-                  onTapUp: vm.onTapUp,
-                  child: Container(
-                    color: effectiveTheme.backgroundColor,
-                    child: Stack(
-                      children: [
-                        // Layer 1: Background Grid Lines.
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: AxisPainter(
-                              x: 0,
-                              y: vm.timeAxisHeight,
-                              width: totalContentWidth,
-                              height: constraints.maxHeight,
-                              scale: vm.totalScale,
-                              domain: vm.totalDomain,
-                              visibleDomain: vm.visibleExtent,
-                              theme: effectiveTheme.copyWith(
-                                  axisTextStyle: const TextStyle(
-                                      color: Colors.transparent)),
-                            ),
-                          ),
-                        ),
-
-                        // Layer 2: Bars Layer (scrollable).
-                        Positioned(
-                          top: vm.timeAxisHeight,
-                          left: 0,
-                          width: constraints.maxWidth,
-                          height: constraints.maxHeight - vm.timeAxisHeight,
-                          child: ClipRect(
-                            child: Transform.translate(
-                              offset: Offset(0, vm.translateY),
-                              child: Stack(
-                                children: [
-                                  CustomPaint(
-                                    painter: BarsCollectionPainter(
-                                      dependencies: vm.dependencies,
-                                      data: tasks,
-                                      domain: vm.totalDomain,
-                                      visibleRows: widget.visibleRows,
-                                      rowMaxStackDepth: widget.rowMaxStackDepth,
-                                      scale: vm.totalScale,
-                                      rowHeight: widget.rowHeight,
-                                      draggedTaskId: vm.draggedTask?.id,
-                                      ghostTaskStart: vm.ghostTaskStart,
-                                      ghostTaskEnd: vm.ghostTaskEnd,
-                                      theme: effectiveTheme,
-                                      hoveredRowId: vm.hoveredRowId,
-                                      hoveredDate: vm.hoveredDate,
-                                      hasCustomTaskBuilder:
-                                          widget.taskBarBuilder != null,
-                                      hasCustomTaskContentBuilder:
-                                          widget.taskContentBuilder != null,
-                                    ),
-                                    size: Size(
-                                        totalContentWidth, totalContentHeight),
-                                  ),
-                                  if (widget.taskBarBuilder != null)
-                                    ..._buildCustomTaskWidgets(
-                                        vm, tasks, widget.taskBarBuilder!),
-                                  if (widget.taskContentBuilder != null)
-                                    ..._buildCustomTaskWidgets(
-                                        vm, tasks, widget.taskContentBuilder!),
-                                  ..._buildCustomCellWidgets(vm, tasks),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Layer 3: Header Foreground.
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: vm.timeAxisHeight,
-                          child: Container(
-                            color: effectiveTheme.backgroundColor,
+                return MouseRegion(
+                  cursor: vm.cursor,
+                  onHover: vm.onHover,
+                  onExit: vm.onHoverExit,
+                  child: GestureDetector(
+                    onPanStart: vm.onPanStart,
+                    onPanUpdate: vm.onPanUpdate,
+                    onPanEnd: vm.onPanEnd,
+                    onTapUp: vm.onTapUp,
+                    child: Container(
+                      color: effectiveTheme.backgroundColor,
+                      child: Stack(
+                        children: [
+                          // Layer 1: Background Grid Lines.
+                          Positioned.fill(
                             child: CustomPaint(
-                              size: Size(totalContentWidth, vm.timeAxisHeight),
                               painter: AxisPainter(
                                 x: 0,
-                                y: vm.timeAxisHeight / 2,
+                                y: vm.timeAxisHeight,
                                 width: totalContentWidth,
-                                height: 0,
+                                height: constraints.maxHeight,
                                 scale: vm.totalScale,
                                 domain: vm.totalDomain,
                                 visibleDomain: vm.visibleExtent,
-                                theme: effectiveTheme,
+                                theme:
+                                    effectiveTheme.copyWith(axisTextStyle: const TextStyle(color: Colors.transparent)),
                               ),
                             ),
                           ),
-                        ),
 
-                        // Layer 4: Resize Tooltip.
-                        if (vm.showResizeTooltip)
+                          // Layer 2: Bars Layer (scrollable).
                           Positioned(
-                            left: vm.resizeTooltipPosition.dx + 15,
-                            top: vm.resizeTooltipPosition.dy + 15,
-                            child: _buildResizeTooltip(
-                                context, vm.resizeTooltipText, effectiveTheme),
+                            top: vm.timeAxisHeight,
+                            left: 0,
+                            width: constraints.maxWidth,
+                            height: constraints.maxHeight - vm.timeAxisHeight,
+                            child: ClipRect(
+                              child: Transform.translate(
+                                offset: Offset(0, vm.translateY),
+                                child: Stack(
+                                  children: [
+                                    CustomPaint(
+                                      painter: BarsCollectionPainter(
+                                        dependencies: vm.dependencies,
+                                        data: tasks,
+                                        domain: vm.totalDomain,
+                                        visibleRows: widget.visibleRows,
+                                        rowMaxStackDepth: widget.rowMaxStackDepth,
+                                        scale: vm.totalScale,
+                                        rowHeight: widget.rowHeight,
+                                        draggedTaskId: vm.draggedTask?.id,
+                                        ghostTaskStart: vm.ghostTaskStart,
+                                        ghostTaskEnd: vm.ghostTaskEnd,
+                                        theme: effectiveTheme,
+                                        hoveredRowId: vm.hoveredRowId,
+                                        hoveredDate: vm.hoveredDate,
+                                        hasCustomTaskBuilder: widget.taskBarBuilder != null,
+                                        hasCustomTaskContentBuilder: widget.taskContentBuilder != null,
+                                      ),
+                                      size: Size(totalContentWidth, totalContentHeight),
+                                    ),
+                                    if (widget.taskBarBuilder != null)
+                                      ..._buildCustomTaskWidgets(vm, tasks, widget.taskBarBuilder!),
+                                    if (widget.taskContentBuilder != null)
+                                      ..._buildCustomTaskWidgets(vm, tasks, widget.taskContentBuilder!),
+                                    ..._buildCustomCellWidgets(vm, tasks),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                      ],
+
+                          // Layer 3: Header Foreground.
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: vm.timeAxisHeight,
+                            child: Container(
+                              color: effectiveTheme.backgroundColor,
+                              child: CustomPaint(
+                                size: Size(totalContentWidth, vm.timeAxisHeight),
+                                painter: AxisPainter(
+                                  x: 0,
+                                  y: vm.timeAxisHeight / 2,
+                                  width: totalContentWidth,
+                                  height: 0,
+                                  scale: vm.totalScale,
+                                  domain: vm.totalDomain,
+                                  visibleDomain: vm.visibleExtent,
+                                  theme: effectiveTheme,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Layer 4: Resize Tooltip.
+                          if (vm.showResizeTooltip)
+                            Positioned(
+                              left: vm.resizeTooltipPosition.dx + 15,
+                              top: vm.resizeTooltipPosition.dy + 15,
+                              child: _buildResizeTooltip(context, vm.resizeTooltipText, effectiveTheme),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
+                );
+              },
+            );
+          },
+        ),
+      );
 
-  Widget _buildResizeTooltip(
-      BuildContext context, String text, LegacyGanttTheme theme) {
-    final tooltipBackgroundColor =
-        widget.resizeTooltipBackgroundColor ?? theme.barColorPrimary;
+  Widget _buildResizeTooltip(BuildContext context, String text, LegacyGanttTheme theme) {
+    final tooltipBackgroundColor = widget.resizeTooltipBackgroundColor ?? theme.barColorPrimary;
     final tooltipFontColor = widget.resizeTooltipFontColor ??
-        (ThemeData.estimateBrightnessForColor(tooltipBackgroundColor) ==
-                Brightness.dark
-            ? Colors.white
-            : Colors.black);
+        (ThemeData.estimateBrightnessForColor(tooltipBackgroundColor) == Brightness.dark ? Colors.white : Colors.black);
 
     return Material(
       elevation: 4.0,
@@ -417,9 +383,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       color: Colors.transparent, // Let Container handle color
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-        decoration: BoxDecoration(
-            color: tooltipBackgroundColor,
-            borderRadius: BorderRadius.circular(4)),
+        decoration: BoxDecoration(color: tooltipBackgroundColor, borderRadius: BorderRadius.circular(4)),
         child: Text(
           text,
           style: theme.axisTextStyle.copyWith(color: tooltipFontColor),
@@ -429,18 +393,14 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
   }
 
   List<Widget> _buildCustomTaskWidgets(
-      LegacyGanttViewModel vm,
-      List<LegacyGanttTask> tasks,
-      Widget Function(LegacyGanttTask task) builder) {
+      LegacyGanttViewModel vm, List<LegacyGanttTask> tasks, Widget Function(LegacyGanttTask task) builder) {
     final List<Widget> customWidgets = [];
     double cumulativeRowTop = 0;
 
     final Map<String, List<LegacyGanttTask>> tasksByRow = {};
     final visibleRowIds = vm.visibleRows.map((r) => r.id).toSet();
     for (final task in tasks) {
-      if (visibleRowIds.contains(task.rowId) &&
-          !task.isTimeRangeHighlight &&
-          !task.isOverlapIndicator) {
+      if (visibleRowIds.contains(task.rowId) && !task.isTimeRangeHighlight && !task.isOverlapIndicator) {
         tasksByRow.putIfAbsent(task.rowId, () => []).add(task);
       }
     }
@@ -458,12 +418,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
         final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
 
-        customWidgets.add(Positioned(
-            left: startX,
-            top: top,
-            width: width,
-            height: vm.rowHeight,
-            child: builder(task)));
+        customWidgets.add(Positioned(left: startX, top: top, width: width, height: vm.rowHeight, child: builder(task)));
       }
       final stackDepth = vm.rowMaxStackDepth[rowData.id] ?? 1;
       cumulativeRowTop += vm.rowHeight * stackDepth;
@@ -471,8 +426,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
     return customWidgets;
   }
 
-  List<Widget> _buildCustomCellWidgets(
-      LegacyGanttViewModel vm, List<LegacyGanttTask> tasks) {
+  List<Widget> _buildCustomCellWidgets(LegacyGanttViewModel vm, List<LegacyGanttTask> tasks) {
     final List<Widget> customCells = [];
     double cumulativeRowTop = 0;
 
@@ -492,11 +446,9 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         final taskEnd = task.end;
 
         // Iterate through each day the task spans
-        var currentDate =
-            DateTime(taskStart.year, taskStart.month, taskStart.day);
+        var currentDate = DateTime(taskStart.year, taskStart.month, taskStart.day);
         while (currentDate.isBefore(taskEnd)) {
-          final segmentStart =
-              taskStart.isAfter(currentDate) ? taskStart : currentDate;
+          final segmentStart = taskStart.isAfter(currentDate) ? taskStart : currentDate;
           final nextDay = currentDate.add(const Duration(days: 1));
           final segmentEnd = taskEnd.isBefore(nextDay) ? taskEnd : nextDay;
 
@@ -507,11 +459,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           if (width > 0) {
             final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
             customCells.add(Positioned(
-                left: startX,
-                top: top,
-                width: width,
-                height: vm.rowHeight,
-                child: task.cellBuilder!(currentDate)));
+                left: startX, top: top, width: width, height: vm.rowHeight, child: task.cellBuilder!(currentDate)));
           }
           currentDate = nextDay;
         }

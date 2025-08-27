@@ -121,11 +121,12 @@ class AxisPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant AxisPainter oldDelegate) => oldDelegate.theme != theme ||
-        oldDelegate.scale != scale ||
-        !listEquals(oldDelegate.visibleDomain, visibleDomain) ||
-        oldDelegate.width != width ||
-        oldDelegate.height != height;
+  bool shouldRepaint(covariant AxisPainter oldDelegate) =>
+      oldDelegate.theme != theme ||
+      oldDelegate.scale != scale ||
+      !listEquals(oldDelegate.visibleDomain, visibleDomain) ||
+      oldDelegate.width != width ||
+      oldDelegate.height != height;
 
   DateTime _roundDownTo(DateTime dt, Duration delta) {
     final ms = dt.millisecondsSinceEpoch;

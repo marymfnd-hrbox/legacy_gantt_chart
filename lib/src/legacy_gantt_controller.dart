@@ -13,10 +13,8 @@ class LegacyGanttController extends ChangeNotifier {
   List<LegacyGanttTask> _tasks;
   List<LegacyGanttTask> _holidays;
   List<LegacyGanttTaskDependency> _dependencies;
-  final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)?
-      tasksAsync;
-  final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)?
-      holidaysAsync;
+  final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)? tasksAsync;
+  final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)? holidaysAsync;
   bool _isLoading = false;
   bool _isHolidayLoading = false;
 
@@ -62,16 +60,14 @@ class LegacyGanttController extends ChangeNotifier {
         _dependencies = initialDependencies ?? const [] {
     if (tasksAsync != null) {
       if (initialTasks != null && initialTasks.isNotEmpty) {
-        debugPrint(
-            'Warning: `initialTasks` are ignored when `tasksAsync` is provided.');
+        debugPrint('Warning: `initialTasks` are ignored when `tasksAsync` is provided.');
       }
       // Perform an initial fetch for the provided date range.
       fetchTasksForVisibleRange();
     }
     if (holidaysAsync != null) {
       if (initialHolidays != null && initialHolidays.isNotEmpty) {
-        debugPrint(
-            'Warning: `initialHolidays` are ignored when `holidaysAsync` is provided.');
+        debugPrint('Warning: `initialHolidays` are ignored when `holidaysAsync` is provided.');
       }
       // Perform an initial fetch for the provided date range.
       fetchHolidaysForVisibleRange();
@@ -114,8 +110,7 @@ class LegacyGanttController extends ChangeNotifier {
   /// callback, as task management is handled automatically in that case.
   void setTasks(List<LegacyGanttTask> newTasks) {
     if (tasksAsync != null) {
-      throw StateError(
-          'Cannot call setTasks when a tasksAsync callback is provided.');
+      throw StateError('Cannot call setTasks when a tasksAsync callback is provided.');
     }
     _tasks = List.from(newTasks);
     notifyListeners();
@@ -127,8 +122,7 @@ class LegacyGanttController extends ChangeNotifier {
   /// callback, as holiday management is handled automatically in that case.
   void setHolidays(List<LegacyGanttTask> newHolidays) {
     if (holidaysAsync != null) {
-      throw StateError(
-          'Cannot call setHolidays when a holidaysAsync callback is provided.');
+      throw StateError('Cannot call setHolidays when a holidaysAsync callback is provided.');
     }
     _holidays = List.from(newHolidays);
     notifyListeners();
@@ -143,13 +137,13 @@ class LegacyGanttController extends ChangeNotifier {
 
   /// Moves the timeline forward by the given [duration], maintaining the
   /// same window size.
-  void next({Duration duration = const Duration(days: 7)}) => setVisibleRange(
-      _visibleStartDate.add(duration), _visibleEndDate.add(duration));
+  void next({Duration duration = const Duration(days: 7)}) =>
+      setVisibleRange(_visibleStartDate.add(duration), _visibleEndDate.add(duration));
 
   /// Moves the timeline backward by the given [duration], maintaining the
   /// same window size.
-  void prev({Duration duration = const Duration(days: 7)}) => setVisibleRange(
-      _visibleStartDate.subtract(duration), _visibleEndDate.subtract(duration));
+  void prev({Duration duration = const Duration(days: 7)}) =>
+      setVisibleRange(_visibleStartDate.subtract(duration), _visibleEndDate.subtract(duration));
 
   /// Fetches tasks for the current visible date range using the `tasksAsync`
   /// callback.
@@ -180,8 +174,7 @@ class LegacyGanttController extends ChangeNotifier {
 
   /// A generic helper to fetch data (tasks or holidays), handle loading states, and errors.
   Future<void> _fetchData({
-    required Future<List<LegacyGanttTask>> Function(DateTime, DateTime)?
-        fetcher,
+    required Future<List<LegacyGanttTask>> Function(DateTime, DateTime)? fetcher,
     required void Function(List<LegacyGanttTask>) onDataReceived,
     required void Function(bool) setLoading,
     required String errorContext,
@@ -198,10 +191,8 @@ class LegacyGanttController extends ChangeNotifier {
       final data = await fetcher(_visibleStartDate, _visibleEndDate);
       onDataReceived(data);
     } catch (e, s) {
-      debugPrint(
-          'Error fetching Gantt $errorContext for range $_visibleStartDate - $_visibleEndDate: $e\n$s');
-      onDataReceived(
-          []); // On error, clear the data to avoid showing stale data.
+      debugPrint('Error fetching Gantt $errorContext for range $_visibleStartDate - $_visibleEndDate: $e\n$s');
+      onDataReceived([]); // On error, clear the data to avoid showing stale data.
     } finally {
       setLoading(false);
       // Notify again to update the UI with the new data and hide the indicator.

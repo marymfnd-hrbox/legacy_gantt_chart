@@ -92,17 +92,14 @@ class BarsCollectionPainter extends CustomPainter {
 
         final double barWidth = max(0, barEndX - barStartX);
 
-        final rect = Rect.fromLTWH(
-            barStartX, cumulativeRowTop, barWidth, dynamicRowHeight);
-        final paint = Paint()
-          ..color = task.color ?? theme.timeRangeHighlightColor;
+        final rect = Rect.fromLTWH(barStartX, cumulativeRowTop, barWidth, dynamicRowHeight);
+        final paint = Paint()..color = task.color ?? theme.timeRangeHighlightColor;
         canvas.drawRect(rect, paint);
       }
 
       // 2. Draw regular event bars
       if (!hasCustomTaskBuilder) {
-        for (final task in tasksInThisRow
-            .where((t) => !t.isTimeRangeHighlight && !t.isOverlapIndicator)) {
+        for (final task in tasksInThisRow.where((t) => !t.isTimeRangeHighlight && !t.isOverlapIndicator)) {
           // If a cell builder is provided for this task, the widget will handle rendering it.
           if (task.cellBuilder != null) {
             continue;
@@ -124,18 +121,15 @@ class BarsCollectionPainter extends CustomPainter {
 
           final isBeingDragged = task.id == draggedTaskId;
 
-          final double barTop =
-              cumulativeRowTop + (task.stackIndex * rowHeight);
+          final double barTop = cumulativeRowTop + (task.stackIndex * rowHeight);
           final double barHeight = rowHeight * theme.barHeightRatio;
           final double barVerticalCenterOffset = (rowHeight - barHeight) / 2;
 
-          final bool hasSegments =
-              task.segments != null && task.segments!.isNotEmpty;
+          final bool hasSegments = task.segments != null && task.segments!.isNotEmpty;
 
           // Define the RRect for the whole task, used for dependency handles and non-segmented bars.
           final RRect barRRect = RRect.fromRectAndRadius(
-            Rect.fromLTWH(taskStartX, barTop + barVerticalCenterOffset,
-                taskEndX - taskStartX, barHeight),
+            Rect.fromLTWH(taskStartX, barTop + barVerticalCenterOffset, taskEndX - taskStartX, barHeight),
             theme.barCornerRadius,
           );
 
@@ -155,8 +149,7 @@ class BarsCollectionPainter extends CustomPainter {
               }
 
               final RRect segmentRRect = RRect.fromRectAndRadius(
-                Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
-                    barEndX - barStartX, barHeight),
+                Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset, barEndX - barStartX, barHeight),
                 theme.barCornerRadius,
               );
 
@@ -170,8 +163,7 @@ class BarsCollectionPainter extends CustomPainter {
             // We can reuse the start/end coordinates calculated earlier.
             // Draw the bar
             final barPaint = Paint()
-              ..color = (task.color ?? theme.barColorPrimary)
-                  .withValues(alpha: isBeingDragged ? 0.3 : 1.0);
+              ..color = (task.color ?? theme.barColorPrimary).withValues(alpha: isBeingDragged ? 0.3 : 1.0);
             canvas.drawRRect(barRRect, barPaint);
 
             // Draw summary pattern if needed
@@ -186,10 +178,7 @@ class BarsCollectionPainter extends CustomPainter {
           }
 
           // --- Draw Text for the entire task ---
-          if (task.name != null &&
-              task.name!.isNotEmpty &&
-              !hasCustomTaskBuilder &&
-              !hasCustomTaskContentBuilder) {
+          if (task.name != null && task.name!.isNotEmpty && !hasCustomTaskBuilder && !hasCustomTaskContentBuilder) {
             // We can reuse the start/end coordinates calculated earlier.
             final double overallWidth = max(0, taskEndX - taskStartX);
 
@@ -204,9 +193,7 @@ class BarsCollectionPainter extends CustomPainter {
               maxLines: 1,
               ellipsis: '...',
             );
-            textPainter.layout(
-                minWidth: 0,
-                maxWidth: max(0, overallWidth - 8)); // 4px padding on each side
+            textPainter.layout(minWidth: 0, maxWidth: max(0, overallWidth - 8)); // 4px padding on each side
 
             final textOffset = Offset(
               taskStartX + 4,
@@ -215,8 +202,7 @@ class BarsCollectionPainter extends CustomPainter {
 
             // Clip text to the bar's overall rectangle to prevent overflow.
             canvas.save();
-            canvas.clipRect(
-                Rect.fromLTWH(taskStartX, barTop, overallWidth, rowHeight));
+            canvas.clipRect(Rect.fromLTWH(taskStartX, barTop, overallWidth, rowHeight));
             textPainter.paint(canvas, textOffset);
             canvas.restore();
           }
@@ -235,11 +221,8 @@ class BarsCollectionPainter extends CustomPainter {
 
         final double barWidth = max(0, barEndX - barStartX);
 
-        final double barHeight =
-            rowHeight * theme.barHeightRatio; // Same height as the event bar
-        final double barTop = cumulativeRowTop +
-            (task.stackIndex * rowHeight) +
-            (rowHeight - barHeight) / 2;
+        final double barHeight = rowHeight * theme.barHeightRatio; // Same height as the event bar
+        final double barTop = cumulativeRowTop + (task.stackIndex * rowHeight) + (rowHeight - barHeight) / 2;
 
         final RRect barRRect = RRect.fromRectAndRadius(
           Rect.fromLTWH(barStartX, barTop, barWidth, barHeight),
@@ -251,9 +234,7 @@ class BarsCollectionPainter extends CustomPainter {
 
       // Draw row border line
       if (theme.showRowBorders) {
-        final y = cumulativeRowTop +
-            dynamicRowHeight -
-            0.5; // Center on the pixel line
+        final y = cumulativeRowTop + dynamicRowHeight - 0.5; // Center on the pixel line
         final borderPaint = Paint()
           ..color = theme.rowBorderColor ?? theme.gridColor
           ..strokeWidth = 1.0;
@@ -270,12 +251,9 @@ class BarsCollectionPainter extends CustomPainter {
     _drawInprogressDependencyLine(canvas, size);
 
     // 4. Draw ghost bar on top of everything if a task is being dragged
-    if (draggedTaskId != null &&
-        ghostTaskStart != null &&
-        ghostTaskEnd != null) {
+    if (draggedTaskId != null && ghostTaskStart != null && ghostTaskEnd != null) {
       final originalTask = data.firstWhere((t) => t.id == draggedTaskId,
-          orElse: () => LegacyGanttTask(
-              id: '', rowId: '', start: DateTime.now(), end: DateTime.now()));
+          orElse: () => LegacyGanttTask(id: '', rowId: '', start: DateTime.now(), end: DateTime.now()));
       // Should not happen, but a good safeguard.
       if (originalTask.id.isEmpty) return;
 
@@ -292,8 +270,7 @@ class BarsCollectionPainter extends CustomPainter {
       }
 
       if (foundRow) {
-        final double barTop =
-            ghostRowTop + (originalTask.stackIndex * rowHeight);
+        final double barTop = ghostRowTop + (originalTask.stackIndex * rowHeight);
         final double barHeight = rowHeight * theme.barHeightRatio;
         final double barVerticalCenterOffset = (rowHeight - barHeight) / 2;
 
@@ -302,15 +279,12 @@ class BarsCollectionPainter extends CustomPainter {
         final double barWidth = max(0, barEndX - barStartX);
 
         final RRect barRRect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-              barStartX, barTop + barVerticalCenterOffset, barWidth, barHeight),
+          Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset, barWidth, barHeight),
           theme.barCornerRadius,
         );
 
         // Draw the ghost bar
-        final barPaint = Paint()
-          ..color = (originalTask.color ?? theme.ghostBarColor)
-              .withValues(alpha: 0.7);
+        final barPaint = Paint()..color = (originalTask.color ?? theme.ghostBarColor).withValues(alpha: 0.7);
         canvas.drawRRect(barRRect, barPaint);
         // Not drawing text on ghost bar for simplicity
       }
@@ -318,8 +292,7 @@ class BarsCollectionPainter extends CustomPainter {
   }
 
   // Reusable helper to draw angled line patterns within a rounded rectangle.
-  void _drawAngledPattern(
-      Canvas canvas, RRect rrect, Color color, double strokeWidth) {
+  void _drawAngledPattern(Canvas canvas, RRect rrect, Color color, double strokeWidth) {
     final patternPaint = Paint()
       ..color = color
       ..strokeWidth = strokeWidth
@@ -348,8 +321,7 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
 
     // Next, draw the semi-transparent red background for the conflict area.
-    final backgroundPaint = Paint()
-      ..color = theme.conflictBarColor.withValues(alpha: 0.4);
+    final backgroundPaint = Paint()..color = theme.conflictBarColor.withValues(alpha: 0.4);
     canvas.drawRRect(rrect, backgroundPaint);
 
     // Then, draw the angled lines on top of that new background.
@@ -362,12 +334,10 @@ class BarsCollectionPainter extends CustomPainter {
     _drawAngledPattern(canvas, rrect, theme.summaryBarColor, 1.5);
   }
 
-  void _drawDependencyHandles(
-      Canvas canvas, RRect rrect, LegacyGanttTask task, bool isBeingDragged) {
+  void _drawDependencyHandles(Canvas canvas, RRect rrect, LegacyGanttTask task, bool isBeingDragged) {
     if (isBeingDragged || task.isSummary) return;
 
-    final handlePaint = Paint()
-      ..color = theme.dependencyLineColor.withValues(alpha: 0.8);
+    final handlePaint = Paint()..color = theme.dependencyLineColor.withValues(alpha: 0.8);
     const handleRadius = 4.0;
 
     // Left handle
@@ -398,17 +368,14 @@ class BarsCollectionPainter extends CustomPainter {
   }
 
   void _drawInprogressDependencyLine(Canvas canvas, Size size) {
-    if (dependencyDragStartTaskId == null ||
-        dependencyDragCurrentPosition == null) {
+    if (dependencyDragStartTaskId == null || dependencyDragCurrentPosition == null) {
       return;
     }
 
     final startTaskRect = _findTaskRect(dependencyDragStartTaskId!);
     if (startTaskRect == null) return;
 
-    final startX = (dependencyDragStartIsFromStart ?? false)
-        ? startTaskRect.left
-        : startTaskRect.right;
+    final startX = (dependencyDragStartIsFromStart ?? false) ? startTaskRect.left : startTaskRect.right;
     final startY = startTaskRect.center.dy;
 
     final endX = dependencyDragCurrentPosition!.dx;
@@ -453,8 +420,7 @@ class BarsCollectionPainter extends CustomPainter {
     }
   }
 
-  void _drawFinishToStartDependency(
-      Canvas canvas, LegacyGanttTaskDependency dependency) {
+  void _drawFinishToStartDependency(Canvas canvas, LegacyGanttTaskDependency dependency) {
     final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
     final successorRect = _findTaskRect(dependency.successorTaskId);
 
@@ -474,8 +440,7 @@ class BarsCollectionPainter extends CustomPainter {
     path.moveTo(startX, startY);
 
     // Add a small horizontal segment before turning
-    final controlXOffset =
-        (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
+    final controlXOffset = (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
     final controlX1 = startX + controlXOffset;
     final controlX2 = endX - controlXOffset;
 
@@ -493,8 +458,7 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.drawPath(arrowPath, paint);
   }
 
-  void _drawStartToStartDependency(
-      Canvas canvas, LegacyGanttTaskDependency dependency) {
+  void _drawStartToStartDependency(Canvas canvas, LegacyGanttTaskDependency dependency) {
     final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
     final successorRect = _findTaskRect(dependency.successorTaskId);
 
@@ -513,8 +477,7 @@ class BarsCollectionPainter extends CustomPainter {
     final path = Path();
     path.moveTo(startX, startY);
 
-    final controlXOffset =
-        (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
+    final controlXOffset = (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
     final controlX1 = startX - controlXOffset;
     final controlX2 = endX - controlXOffset;
 
@@ -530,8 +493,7 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.drawPath(arrowPath, paint);
   }
 
-  void _drawFinishToFinishDependency(
-      Canvas canvas, LegacyGanttTaskDependency dependency) {
+  void _drawFinishToFinishDependency(Canvas canvas, LegacyGanttTaskDependency dependency) {
     final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
     final successorRect = _findTaskRect(dependency.successorTaskId);
 
@@ -550,8 +512,7 @@ class BarsCollectionPainter extends CustomPainter {
     final path = Path();
     path.moveTo(startX, startY);
 
-    final controlXOffset =
-        (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
+    final controlXOffset = (endX - startX).abs() > 20 ? 10.0 : (endX - startX).abs() / 2;
     final controlX1 = startX + controlXOffset;
     final controlX2 = endX + controlXOffset;
 
@@ -567,8 +528,7 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.drawPath(arrowPath, paint);
   }
 
-  void _drawStartToFinishDependency(
-      Canvas canvas, LegacyGanttTaskDependency dependency) {
+  void _drawStartToFinishDependency(Canvas canvas, LegacyGanttTaskDependency dependency) {
     final predecessorRect = _findTaskRect(dependency.predecessorTaskId);
     final successorRect = _findTaskRect(dependency.successorTaskId);
 
@@ -596,8 +556,7 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.drawPath(arrowPath, paint);
   }
 
-  void _drawContainedDependency(
-      Canvas canvas, LegacyGanttTaskDependency dependency) {
+  void _drawContainedDependency(Canvas canvas, LegacyGanttTaskDependency dependency) {
     // This logic finds the full vertical span of a summary task's group.
     // It assumes child rows immediately follow their parent in `visibleRows`
     // and a new group is denoted by the next summary task.
@@ -618,8 +577,7 @@ class BarsCollectionPainter extends CustomPainter {
 
       if (inGroup) {
         // Check if the current row starts a new summary group.
-        final bool isNewGroup =
-            data.any((task) => task.rowId == rowData.id && task.isSummary);
+        final bool isNewGroup = data.any((task) => task.rowId == rowData.id && task.isSummary);
         if (isNewGroup) {
           inGroup = false; // The current group has ended.
         } else {
@@ -642,8 +600,7 @@ class BarsCollectionPainter extends CustomPainter {
     final predecessorStartX = scale(predecessorTask.start);
     final predecessorEndX = scale(predecessorTask.end);
 
-    final backgroundRect = Rect.fromLTRB(
-        predecessorStartX, groupStartY, predecessorEndX, groupEndY);
+    final backgroundRect = Rect.fromLTRB(predecessorStartX, groupStartY, predecessorEndX, groupEndY);
     final paint = Paint()..color = theme.containedDependencyBackgroundColor;
     canvas.drawRect(backgroundRect, paint);
   }
@@ -668,15 +625,13 @@ class BarsCollectionPainter extends CustomPainter {
     if (rowTop == null) return;
 
     // Calculate the start and end of the day.
-    final dayStart =
-        DateTime(hoveredDate!.year, hoveredDate!.month, hoveredDate!.day);
+    final dayStart = DateTime(hoveredDate!.year, hoveredDate!.month, hoveredDate!.day);
     final dayEnd = dayStart.add(const Duration(days: 1));
 
     final startX = scale(dayStart);
     final endX = scale(dayEnd);
 
-    final highlightRect =
-        Rect.fromLTWH(startX, rowTop, endX - startX, rowHeight);
+    final highlightRect = Rect.fromLTWH(startX, rowTop, endX - startX, rowHeight);
 
     // Draw the highlight box.
     final highlightPaint = Paint()..color = theme.emptySpaceHighlightColor;
@@ -691,8 +646,8 @@ class BarsCollectionPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final iconOffset = Offset(highlightRect.center.dx - textPainter.width / 2,
-        highlightRect.center.dy - textPainter.height / 2);
+    final iconOffset =
+        Offset(highlightRect.center.dx - textPainter.width / 2, highlightRect.center.dy - textPainter.height / 2);
     textPainter.paint(canvas, iconOffset);
   }
 
@@ -716,8 +671,7 @@ class BarsCollectionPainter extends CustomPainter {
         final double barVerticalCenterOffset = (rowHeight - barHeight) / 2;
         final double barStartX = scale(task.start);
         final double barEndX = scale(task.end);
-        return Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset,
-            barEndX - barStartX, barHeight);
+        return Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset, barEndX - barStartX, barHeight);
       }
       final int stackDepth = rowMaxStackDepth[rowData.id] ?? 1;
       cumulativeRowTop += rowHeight * stackDepth;
@@ -741,10 +695,8 @@ class BarsCollectionPainter extends CustomPainter {
       oldDelegate.theme != theme ||
       oldDelegate.enableDependencyCreation != enableDependencyCreation ||
       oldDelegate.dependencyDragStartTaskId != dependencyDragStartTaskId ||
-      oldDelegate.dependencyDragStartIsFromStart !=
-          dependencyDragStartIsFromStart ||
-      oldDelegate.dependencyDragCurrentPosition !=
-          dependencyDragCurrentPosition ||
+      oldDelegate.dependencyDragStartIsFromStart != dependencyDragStartIsFromStart ||
+      oldDelegate.dependencyDragCurrentPosition != dependencyDragCurrentPosition ||
       oldDelegate.hoveredTaskForDependency != hoveredTaskForDependency ||
       oldDelegate.hasCustomTaskBuilder != hasCustomTaskBuilder ||
       oldDelegate.hasCustomTaskContentBuilder != hasCustomTaskContentBuilder;

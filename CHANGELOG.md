@@ -1,3 +1,7 @@
+## 0.4.3
+
+* **FIX**: Formatting to dart's standards
+
 ## 0.4.2
 
 * **FIX**: Add screenshot to pubspec.yaml

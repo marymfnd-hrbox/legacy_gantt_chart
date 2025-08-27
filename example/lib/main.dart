@@ -431,7 +431,8 @@ class _GanttViewState extends State<GanttView> {
                                                         // Options menu button
                                                         if (canShowButton)
                                                           Positioned(
-                                                            right: 8, // Inset from the right edge to leave space for resize handle
+                                                            right:
+                                                                8, // Inset from the right edge to leave space for resize handle
                                                             top: 0,
                                                             bottom: 0,
                                                             child: Builder(
@@ -440,10 +441,16 @@ class _GanttViewState extends State<GanttView> {
                                                                 icon: Icon(Icons.more_vert, color: textColor, size: 18),
                                                                 tooltip: 'Task Options',
                                                                 onPressed: () {
-                                                                  final RenderBox button = context.findRenderObject() as RenderBox;
-                                                                  final Offset offset = button.localToGlobal(Offset.zero);
-                                                                  final tapPosition = offset.translate(button.size.width, 0);
-                                                                  showContextMenu(context: context, menuItems: menuItems, tapPosition: tapPosition);
+                                                                  final RenderBox button =
+                                                                      context.findRenderObject() as RenderBox;
+                                                                  final Offset offset =
+                                                                      button.localToGlobal(Offset.zero);
+                                                                  final tapPosition =
+                                                                      offset.translate(button.size.width, 0);
+                                                                  showContextMenu(
+                                                                      context: context,
+                                                                      menuItems: menuItems,
+                                                                      tapPosition: tapPosition);
                                                                 },
                                                               ),
                                                             ),

@@ -25,8 +25,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
   final double? totalGridMax;
   final bool enableDragAndDrop;
   final bool enableResize;
-  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)?
-      onTaskUpdate;
+  final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
   final Function(LegacyGanttTask)? onPressTask;
   final ScrollController? scrollController;
   final Function(String rowId, DateTime time)? onEmptySpaceClick;
@@ -153,15 +152,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
     } else {
       if (data.isEmpty) {
         final now = DateTime.now();
-        _visibleExtent = [
-          now.subtract(const Duration(days: 30)),
-          now.add(const Duration(days: 30))
-        ];
+        _visibleExtent = [now.subtract(const Duration(days: 30)), now.add(const Duration(days: 30))];
       } else {
-        final dateTimes = data
-            .expand((task) => [task.start, task.end])
-            .map((d) => d.millisecondsSinceEpoch)
-            .toList();
+        final dateTimes = data.expand((task) => [task.start, task.end]).map((d) => d.millisecondsSinceEpoch).toList();
         _visibleExtent = [
           DateTime.fromMillisecondsSinceEpoch(dateTimes.reduce(min)),
           DateTime.fromMillisecondsSinceEpoch(dateTimes.reduce(max)),
@@ -170,16 +163,12 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
 
     _totalDomain = [
-      DateTime.fromMillisecondsSinceEpoch(
-          totalGridMin?.toInt() ?? _visibleExtent[0].millisecondsSinceEpoch),
-      DateTime.fromMillisecondsSinceEpoch(
-          totalGridMax?.toInt() ?? _visibleExtent[1].millisecondsSinceEpoch),
+      DateTime.fromMillisecondsSinceEpoch(totalGridMin?.toInt() ?? _visibleExtent[0].millisecondsSinceEpoch),
+      DateTime.fromMillisecondsSinceEpoch(totalGridMax?.toInt() ?? _visibleExtent[1].millisecondsSinceEpoch),
     ];
 
     final double totalDomainDurationMs =
-        (_totalDomain[1].millisecondsSinceEpoch -
-                _totalDomain[0].millisecondsSinceEpoch)
-            .toDouble();
+        (_totalDomain[1].millisecondsSinceEpoch - _totalDomain[0].millisecondsSinceEpoch).toDouble();
 
     // The width provided to the ViewModel is the total width of the scrollable area,
     // as calculated by the parent widget (e.g., the example app's `_calculateGanttWidth`).
@@ -187,9 +176,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
 
     if (totalDomainDurationMs > 0) {
       _totalScale = (DateTime date) {
-        final double value = (date.millisecondsSinceEpoch -
-                _totalDomain[0].millisecondsSinceEpoch)
-            .toDouble();
+        final double value = (date.millisecondsSinceEpoch - _totalDomain[0].millisecondsSinceEpoch).toDouble();
         return (value / totalDomainDurationMs) * totalContentWidth;
       };
     } else {
@@ -229,8 +216,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
 
   void onPanUpdate(DragUpdateDetails details) {
     if (_panType == PanType.none) {
-      if (_draggedTask != null &&
-          details.delta.dx.abs() > details.delta.dy.abs()) {
+      if (_draggedTask != null && details.delta.dx.abs() > details.delta.dy.abs()) {
         _panType = PanType.horizontal;
       } else {
         _panType = PanType.vertical;
@@ -247,10 +233,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
   }
 
   void onPanEnd(DragEndDetails details) {
-    if (_panType == PanType.horizontal &&
-        _draggedTask != null &&
-        _ghostTaskStart != null &&
-        _ghostTaskEnd != null) {
+    if (_panType == PanType.horizontal && _draggedTask != null && _ghostTaskStart != null && _ghostTaskEnd != null) {
       onTaskUpdate?.call(_draggedTask!, _ghostTaskStart!, _ghostTaskEnd!);
     }
     _draggedTask = null;
@@ -354,8 +337,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     if (localPosition.dy < timeAxisHeight) {
       return (null, null);
     }
-    final pointerYRelativeToBarsArea =
-        localPosition.dy - timeAxisHeight - _translateY;
+    final pointerYRelativeToBarsArea = localPosition.dy - timeAxisHeight - _translateY;
 
     // Find row
     String? rowId;
@@ -374,26 +356,22 @@ class LegacyGanttViewModel extends ChangeNotifier {
     if (rowId == null) return (null, null);
 
     // Find time by inverting the scale function
-    final totalDomainDurationMs = (_totalDomain.last.millisecondsSinceEpoch -
-            _totalDomain.first.millisecondsSinceEpoch)
-        .toDouble();
+    final totalDomainDurationMs =
+        (_totalDomain.last.millisecondsSinceEpoch - _totalDomain.first.millisecondsSinceEpoch).toDouble();
     if (totalDomainDurationMs <= 0 || _width <= 0) return (rowId, null);
 
     final timeRatio = localPosition.dx / _width;
-    final timeMs = _totalDomain.first.millisecondsSinceEpoch +
-        (totalDomainDurationMs * timeRatio);
+    final timeMs = _totalDomain.first.millisecondsSinceEpoch + (totalDomainDurationMs * timeRatio);
     final time = DateTime.fromMillisecondsSinceEpoch(timeMs.round());
 
     return (rowId, time);
   }
 
-  ({LegacyGanttTask task, TaskPart part})? _getTaskPartAtPosition(
-      Offset localPosition) {
+  ({LegacyGanttTask task, TaskPart part})? _getTaskPartAtPosition(Offset localPosition) {
     if (localPosition.dy < timeAxisHeight) {
       return null;
     }
-    final pointerYRelativeToBarsArea =
-        localPosition.dy - timeAxisHeight - _translateY;
+    final pointerYRelativeToBarsArea = localPosition.dy - timeAxisHeight - _translateY;
     final pointerXOnTotalContent = localPosition.dx;
 
     double cumulativeHeight = 0;
@@ -403,8 +381,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
       if (pointerYRelativeToBarsArea >= cumulativeHeight &&
           pointerYRelativeToBarsArea < cumulativeHeight + currentRowHeight) {
         final pointerYWithinRow = pointerYRelativeToBarsArea - cumulativeHeight;
-        final tappedStackIndex =
-            max(0, (pointerYWithinRow / rowHeight).floor());
+        final tappedStackIndex = max(0, (pointerYWithinRow / rowHeight).floor());
         final tasksInTappedStack = data
             .where((task) =>
                 task.rowId == row.id &&
@@ -417,8 +394,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
         for (final task in tasksInTappedStack) {
           final double barStartX = _totalScale(task.start);
           final double barEndX = _totalScale(task.end);
-          if (pointerXOnTotalContent >= barStartX &&
-              pointerXOnTotalContent <= barEndX) {
+          if (pointerXOnTotalContent >= barStartX && pointerXOnTotalContent <= barEndX) {
             if (enableResize) {
               if (pointerXOnTotalContent < barStartX + handleWidth) {
                 return (task: task, part: TaskPart.startHandle);
@@ -438,15 +414,12 @@ class LegacyGanttViewModel extends ChangeNotifier {
   }
 
   void _handleVerticalPan(DragUpdateDetails details) {
-    final newTranslateY =
-        _initialTranslateY + (details.globalPosition.dy - _initialTouchY);
-    final double contentHeight = visibleRows.fold<double>(
-        0.0, (prev, row) => prev + rowHeight * (rowMaxStackDepth[row.id] ?? 1));
+    final newTranslateY = _initialTranslateY + (details.globalPosition.dy - _initialTouchY);
+    final double contentHeight =
+        visibleRows.fold<double>(0.0, (prev, row) => prev + rowHeight * (rowMaxStackDepth[row.id] ?? 1));
     final double availableHeightForBars = _height - timeAxisHeight;
-    final double maxNegativeTranslateY =
-        max(0.0, contentHeight - availableHeightForBars);
-    final clampedTranslateY =
-        min(0.0, max(-maxNegativeTranslateY, newTranslateY));
+    final double maxNegativeTranslateY = max(0.0, contentHeight - availableHeightForBars);
+    final clampedTranslateY = min(0.0, max(-maxNegativeTranslateY, newTranslateY));
 
     if (_translateY == clampedTranslateY) {
       return;
@@ -455,8 +428,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     setTranslateY(clampedTranslateY);
     _isScrollingInternally = true;
     scrollController?.jumpTo(-clampedTranslateY);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _isScrollingInternally = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _isScrollingInternally = false);
   }
 
   void _handleHorizontalPan(DragUpdateDetails details) {
@@ -472,10 +444,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
         newStart = _originalTaskStart!.add(durationDelta);
         newEnd = _originalTaskEnd!.add(durationDelta);
         if (resizeTooltipDateFormat != null) {
-          final startStr =
-              resizeTooltipDateFormat!(newStart).replaceAll(' ', '\u00A0');
-          final endStr =
-              resizeTooltipDateFormat!(newEnd).replaceAll(' ', '\u00A0');
+          final startStr = resizeTooltipDateFormat!(newStart).replaceAll(' ', '\u00A0');
+          final endStr = resizeTooltipDateFormat!(newEnd).replaceAll(' ', '\u00A0');
           tooltipText = 'Start:\u00A0$startStr\nEnd:\u00A0$endStr';
         } else {
           tooltipText =
@@ -531,9 +501,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     if (totalContentWidth <= 0) {
       return Duration.zero;
     }
-    final totalDomainDurationMs = (_totalDomain.last.millisecondsSinceEpoch -
-            _totalDomain.first.millisecondsSinceEpoch)
-        .toDouble();
+    final totalDomainDurationMs =
+        (_totalDomain.last.millisecondsSinceEpoch - _totalDomain.first.millisecondsSinceEpoch).toDouble();
     final durationMs = (pixels / totalContentWidth) * totalDomainDurationMs;
     return Duration(milliseconds: durationMs.round());
   }

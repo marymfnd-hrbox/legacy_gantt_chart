@@ -56,9 +56,5 @@ class LegacyGanttTaskDependency {
           lag == other.lag;
 
   @override
-  int get hashCode =>
-      predecessorTaskId.hashCode ^
-      successorTaskId.hashCode ^
-      type.hashCode ^
-      lag.hashCode;
+  int get hashCode => predecessorTaskId.hashCode ^ successorTaskId.hashCode ^ type.hashCode ^ lag.hashCode;
 }
