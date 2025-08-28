@@ -4,5 +4,5 @@ lib/GEMINI.md
 lib/src/GEMINI.md
 lib/src/models/GEMINI.md
 lib/src/utils/GEMINI.md
-example/
+example/build/
 build/

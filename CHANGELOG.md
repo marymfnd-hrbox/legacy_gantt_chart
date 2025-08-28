@@ -1,3 +1,7 @@
+## 0.4.5
+
+* **FIX**: Don't ignore the example...
+
 ## 0.4.4
 
 * **FIX**: Properly pubignore the example dir
