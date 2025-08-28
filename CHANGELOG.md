@@ -1,3 +1,7 @@
+## 0.4.4
+
+* **FIX**: Properly pubignore the example dir
+
 ## 0.4.3
 
 * **FIX**: Formatting to dart's standards
