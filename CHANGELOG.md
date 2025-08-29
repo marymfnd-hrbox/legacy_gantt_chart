@@ -1,3 +1,7 @@
+## 1.0.0
+
+* **GENERAL AVAILABILITY**
+
 ## 0.4.7
 
 * **FIX**: Dart formatting fix
