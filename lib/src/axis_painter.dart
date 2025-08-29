@@ -6,14 +6,39 @@ import 'dart:ui' as ui;
 
 import 'models/legacy_gantt_theme.dart';
 
+/// A [CustomPainter] that draws the time axis and vertical grid lines for the Gantt chart.
+///
+/// This painter is versatile and can be used to draw both the main background grid
+/// and the timeline header at the top of the chart. It dynamically adjusts the
+/// density of the grid lines and the format of the labels based on the visible
+/// time duration, providing a clear and readable scale at any zoom level.
 class AxisPainter extends CustomPainter {
+  /// The starting x-coordinate for painting.
   final double x;
+
+  /// The vertical position where the axis line is drawn. For the header, this is
+  /// typically the vertical center. For the background grid, it's the top edge.
   final double y;
+
+  /// The total width of the area to be painted.
   final double width;
+
+  /// The total height of the area to be painted. This is used to draw the vertical
+  /// grid lines across the entire height of the chart content area.
   final double height;
+
+  /// A function that converts a [DateTime] to its corresponding horizontal (x-axis) pixel value.
   final double Function(DateTime) scale;
+
+  /// The total date range of the entire chart, from the earliest start date to the
+  /// latest end date. This is used to generate all possible tick marks.
   final List<DateTime> domain;
+
+  /// The currently visible date range. This is used to determine the appropriate
+  /// interval and format for the tick marks and labels (e.g., days, hours, minutes).
   final List<DateTime> visibleDomain;
+
+  /// The theme data that defines the colors and styles for the grid lines and labels.
   final LegacyGanttTheme theme;
 
   AxisPainter({

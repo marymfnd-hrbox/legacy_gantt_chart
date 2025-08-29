@@ -1,3 +1,7 @@
+## 0.4.6
+
+* **FIX**: Add thorough documentation for all properties
+
 ## 0.4.5
 
 * **FIX**: Don't ignore the example...

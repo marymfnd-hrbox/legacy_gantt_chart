@@ -4,14 +4,45 @@ import 'models/legacy_gantt_task.dart';
 
 enum _DragType { none, leftHandle, rightHandle, window }
 
+/// A widget that provides a timeline overview and allows users to navigate and
+/// zoom the main Gantt chart's visible window.
+///
+/// It displays a "heatmap" of tasks over the total duration of the project
+/// and overlays a draggable and resizable window that represents the currently
+/// visible portion of the main chart.
+///
+/// This widget is typically used in conjunction with a `LegacyGanttController`
+/// to link its state with a [LegacyGanttChartWidget].
 class LegacyGanttTimelineScrubber extends StatefulWidget {
+  /// The absolute start date of the entire dataset. This defines the left edge
+  /// of the scrubber's timeline.
   final DateTime totalStartDate;
+
+  /// The absolute end date of the entire dataset. This defines the right edge
+  /// of the scrubber's timeline.
   final DateTime totalEndDate;
+
+  /// The start date of the currently visible window. This is used to draw the
+  /// draggable selection area on the scrubber.
   final DateTime visibleStartDate;
+
+  /// The end date of the currently visible window.
   final DateTime visibleEndDate;
+
+  /// A callback invoked when the user drags or resizes the selection window.
+  /// It provides the new start and end dates for the visible window.
   final Function(DateTime, DateTime) onWindowChanged;
+
+  /// A list of tasks to be drawn as a "heatmap" on the scrubber's background,
+  /// giving a visual overview of task density over time.
   final List<LegacyGanttTask> tasks;
+
+  /// Optional padding to add before the [totalStartDate], extending the timeline
+  /// to provide extra space for navigation at the beginning.
   final Duration startPadding;
+
+  /// Optional padding to add after the [totalEndDate], extending the timeline
+  /// to provide extra space for navigation at the end.
   final Duration endPadding;
 
   const LegacyGanttTimelineScrubber({
@@ -198,12 +229,25 @@ class _LegacyGanttTimelineScrubberState extends State<LegacyGanttTimelineScrubbe
       );
 }
 
+/// A private [CustomPainter] that handles the visual rendering of the
+/// [LegacyGanttTimelineScrubber].
+///
+/// It is responsible for drawing two main parts:
+/// 1. A background "heatmap" of all tasks to give a sense of density.
+/// 2. A foreground, interactive selection window that represents the visible
+///    date range, complete with drag handles.
 class _ScrubberPainter extends CustomPainter {
+  /// The start of the full timeline, including any padding.
   final DateTime totalStartDate;
+  /// The end of the full timeline, including any padding.
   final DateTime totalEndDate;
+  /// The start of the highlighted selection window.
   final DateTime visibleStartDate;
+  /// The end of the highlighted selection window.
   final DateTime visibleEndDate;
+  /// The tasks to render as a heatmap in the background.
   final List<LegacyGanttTask> tasks;
+  /// The application's [ThemeData] used for styling the scrubber.
   final ThemeData theme;
 
   _ScrubberPainter({

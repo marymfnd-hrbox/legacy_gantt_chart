@@ -8,27 +8,73 @@ import 'models/legacy_gantt_task.dart';
 import 'models/legacy_gantt_dependency.dart';
 import 'models/legacy_gantt_theme.dart';
 
-// Helper painter to draw all bars as a single CustomPaint operation
+/// A [CustomPainter] responsible for drawing all the task bars, dependency lines,
+/// and other visual elements onto the main Gantt chart grid area.
+///
+/// This painter is optimized to handle a large number of tasks and dependencies
+/// by painting them in a single, efficient operation. It handles task stacking,
+/// different task types (summary, highlight, conflict), and interactive states
+/// like dragging and creating dependencies.
 class BarsCollectionPainter extends CustomPainter {
+  /// The complete list of [LegacyGanttTask] objects to be potentially drawn.
   final List<LegacyGanttTask> data;
+
+  /// The list of [LegacyGanttRow]s currently visible in the viewport.
+  /// This is used to determine which tasks to draw and where.
   final List<LegacyGanttRow> visibleRows;
+
+  /// The visible date range, where `domain[0]` is the start date and `domain[1]` is the end date.
   final List<DateTime> domain;
+
+  /// A map from a row ID to the maximum number of overlapping tasks allowed in that row.
   final Map<String, int> rowMaxStackDepth;
+
+  /// A function that converts a [DateTime] to its corresponding horizontal (x-axis) pixel value.
   final double Function(DateTime) scale;
+
+  /// The height of a single row. The total height for a `GanttRow` is `rowHeight * stackDepth`.
   final double rowHeight;
+
+  /// The ID of the task currently being dragged. Used to apply a different style to the dragged task.
   final String? draggedTaskId;
+
+  /// The projected start date of the task being dragged.
   final DateTime? ghostTaskStart;
+
+  /// The projected end date of the task being dragged.
   final DateTime? ghostTaskEnd;
+
+  /// The theme data that defines the colors and styles for the chart elements.
   final LegacyGanttTheme theme;
+
+  /// A list of all dependencies to be drawn as connector lines or backgrounds.
   final List<LegacyGanttTaskDependency> dependencies;
+
+  /// The ID of the row currently being hovered over, used for highlighting empty space for task creation.
   final String? hoveredRowId;
+
+  /// The date currently being hovered over, used for highlighting empty space for task creation.
   final DateTime? hoveredDate;
+
+  /// A flag indicating if a custom `taskBarBuilder` is being used, which affects whether this painter draws the bars.
   final bool hasCustomTaskBuilder;
+
+  /// A flag indicating if a custom `taskContentBuilder` is being used, which affects whether this painter draws the task's inner content.
   final bool hasCustomTaskContentBuilder;
+
+  /// Whether the feature to interactively create dependencies is enabled.
   final bool enableDependencyCreation;
+
+  /// The ID of the task where a new dependency drag was initiated.
   final String? dependencyDragStartTaskId;
+
+  /// If true, the dependency drag started from the task's start handle; otherwise, from the end handle.
   final bool? dependencyDragStartIsFromStart;
+
+  /// The current screen position of the cursor during a dependency drag operation.
   final Offset? dependencyDragCurrentPosition;
+
+  /// The ID of the task being hovered over as a potential target for a new dependency.
   final String? hoveredTaskForDependency;
 
   BarsCollectionPainter({

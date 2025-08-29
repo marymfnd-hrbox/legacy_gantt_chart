@@ -11,30 +11,77 @@ enum PanType { none, vertical, horizontal }
 
 enum TaskPart { body, startHandle, endHandle }
 
+/// A [ChangeNotifier] that manages the state and interaction logic for the
+/// [LegacyGanttChartWidget].
+///
+/// This is an internal class that translates user gestures (pans, taps, hovers)
+/// into state changes, such as dragging tasks, resizing them, or scrolling the
+/// view. It calculates the necessary scales and positions for rendering the
+/// chart elements and notifies its listeners when the state changes, causing the
+/// UI to rebuild.
 class LegacyGanttViewModel extends ChangeNotifier {
-  // Properties from the widget
+  /// The raw list of all tasks to be displayed.
   final List<LegacyGanttTask> data;
+
+  /// The list of dependencies between tasks.
   final List<LegacyGanttTaskDependency> dependencies;
+
+  /// The list of rows currently visible in the viewport.
   final List<LegacyGanttRow> visibleRows;
+
+  /// A map defining the maximum number of overlapping tasks for each row.
   final Map<String, int> rowMaxStackDepth;
+
+  /// The height of a single task lane.
   final double rowHeight;
+
+  /// The height of the time axis header.
   final double? axisHeight;
+
+  /// The start of the visible time range in milliseconds since epoch.
   double? gridMin;
+
+  /// The end of the visible time range in milliseconds since epoch.
   double? gridMax;
+
+  /// The start of the total time range in milliseconds since epoch.
   final double? totalGridMin;
+
+  /// The end of the total time range in milliseconds since epoch.
   final double? totalGridMax;
+
+  /// Whether tasks can be moved by dragging.
   final bool enableDragAndDrop;
+
+  /// Whether tasks can be resized from their start or end handles.
   final bool enableResize;
+
+  /// A callback invoked when a task is successfully moved or resized.
   final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
+
+  /// A callback invoked when a task is tapped.
   final Function(LegacyGanttTask)? onPressTask;
+
+  /// An external scroll controller to sync vertical scrolling with another widget (e.g., a data grid).
   final ScrollController? scrollController;
+
+  /// A callback invoked when an empty space on the chart is clicked.
   final Function(String rowId, DateTime time)? onEmptySpaceClick;
 
+  /// A function to format the date/time shown in the resize/drag tooltip.
   final String Function(DateTime)? resizeTooltipDateFormat;
 
+  /// A builder for creating a completely custom task bar widget.
   final Widget Function(LegacyGanttTask task)? taskBarBuilder;
+
+  /// A callback for when the mouse hovers over a task or empty space.
   final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
 
+  /// Creates an instance of [LegacyGanttViewModel].
+  ///
+  /// This constructor takes all the relevant properties from the
+  /// [LegacyGanttChartWidget] to initialize its state. It also adds a listener
+  /// to the [scrollController] if one is provided, to synchronize vertical scrolling.
   LegacyGanttViewModel({
     required this.data,
     required this.dependencies,
@@ -86,22 +133,50 @@ class LegacyGanttViewModel extends ChangeNotifier {
   String? _hoveredRowId;
   DateTime? _hoveredDate;
 
-  // Publicly exposed state for the View
+  /// The current vertical scroll offset of the chart content.
   double get translateY => _translateY;
+
+  /// The current mouse cursor to display based on the hover position and enabled features.
   MouseCursor get cursor => _cursor;
+
+  /// The task currently being dragged or resized.
   LegacyGanttTask? get draggedTask => _draggedTask;
+
+  /// The projected start time of the task being dragged/resized.
   DateTime? get ghostTaskStart => _ghostTaskStart;
+
+  /// The projected end time of the task being dragged/resized.
   DateTime? get ghostTaskEnd => _ghostTaskEnd;
+
+  /// The full date range of the chart, from `totalGridMin` to `totalGridMax`.
   List<DateTime> get totalDomain => _totalDomain;
+
+  /// The currently visible date range of the chart, from `gridMin` to `gridMax`.
   List<DateTime> get visibleExtent => _visibleExtent;
+
+  /// The function that converts a [DateTime] to a horizontal pixel value across the total width.
   double Function(DateTime) get totalScale => _totalScale;
+
+  /// The calculated height of the time axis header.
   double get timeAxisHeight => axisHeight ?? _height * 0.1;
+
+  /// Whether the resize/drag tooltip should be visible.
   bool get showResizeTooltip => _showResizeTooltip;
+
+  /// The text content for the resize/drag tooltip.
   String get resizeTooltipText => _resizeTooltipText;
+
+  /// The screen position for the resize/drag tooltip.
   Offset get resizeTooltipPosition => _resizeTooltipPosition;
+
+  /// The ID of the row currently being hovered over for task creation.
   String? get hoveredRowId => _hoveredRowId;
+
+  /// The date currently being hovered over for task creation.
   DateTime? get hoveredDate => _hoveredDate;
 
+  /// Called by the widget to inform the view model of its available dimensions.
+  /// This is crucial for calculating the time scale.
   void updateLayout(double width, double height) {
     if (_width != width || _height != height) {
       _width = width;
@@ -110,6 +185,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Manually sets the vertical scroll offset.
   void setTranslateY(double newTranslateY) {
     if (_translateY != newTranslateY) {
       _translateY = newTranslateY;
@@ -117,6 +193,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Updates the visible time range, typically called when using a [LegacyGanttController].
   void updateVisibleRange(double? newGridMin, double? newGridMax) {
     final bool changed = gridMin != newGridMin || gridMax != newGridMax;
     if (changed) {
@@ -184,6 +261,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Gesture handler for the start of a pan gesture. Determines if the pan is
+  /// for vertical scrolling, moving a task, or resizing a task.
   void onPanStart(DragStartDetails details) {
     _panType = PanType.none;
     _initialTranslateY = _translateY;
@@ -214,6 +293,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Gesture handler for an update to a pan gesture. Dispatches to either
+  /// vertical or horizontal pan handling logic.
   void onPanUpdate(DragUpdateDetails details) {
     if (_panType == PanType.none) {
       if (_draggedTask != null && details.delta.dx.abs() > details.delta.dy.abs()) {
@@ -232,6 +313,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Gesture handler for the end of a pan gesture. If a task was being
+  /// modified, it calls the `onTaskUpdate` callback and resets the drag state.
   void onPanEnd(DragEndDetails details) {
     if (_panType == PanType.horizontal && _draggedTask != null && _ghostTaskStart != null && _ghostTaskEnd != null) {
       onTaskUpdate?.call(_draggedTask!, _ghostTaskStart!, _ghostTaskEnd!);
@@ -245,6 +328,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Gesture handler for a tap gesture. Determines if a task or empty space
+  /// was tapped and invokes the appropriate callback.
   void onTapUp(TapUpDetails details) {
     final hit = _getTaskPartAtPosition(details.localPosition);
     if (hit != null) {
@@ -260,8 +345,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
-  /// Converts a pixel offset on the canvas to a row ID and a precise DateTime.
-  /// Returns `(null, null)` if the position is outside the valid row area.
+  /// Mouse hover handler. Updates the cursor, manages tooltips, and detects
+  /// hovering over empty space for task creation.
   void onHover(PointerHoverEvent details) {
     final hit = _getTaskPartAtPosition(details.localPosition);
     final hoveredTask = hit?.task;
@@ -313,6 +398,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Mouse exit handler. Resets hover state and cursor.
   void onHoverExit(PointerExitEvent event) {
     _clearEmptySpaceHover();
     if (_cursor != SystemMouseCursors.basic) {
@@ -333,6 +419,8 @@ class LegacyGanttViewModel extends ChangeNotifier {
     }
   }
 
+  /// Converts a pixel offset on the canvas to a row ID and a precise DateTime.
+  /// Returns `(null, null)` if the position is outside the valid row area.
   (String?, DateTime?) _getRowAndTimeAtPosition(Offset localPosition) {
     if (localPosition.dy < timeAxisHeight) {
       return (null, null);
@@ -367,6 +455,10 @@ class LegacyGanttViewModel extends ChangeNotifier {
     return (rowId, time);
   }
 
+  /// Determines which part of which task is at a given local position.
+  ///
+  /// It checks for the start handle, end handle, or body of a task, respecting
+  /// stacking order.
   ({LegacyGanttTask task, TaskPart part})? _getTaskPartAtPosition(Offset localPosition) {
     if (localPosition.dy < timeAxisHeight) {
       return null;

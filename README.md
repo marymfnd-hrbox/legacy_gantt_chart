@@ -124,6 +124,10 @@ To see a full-featured demo of the `legacy_gantt_chart` in action, you can run t
 
 ---
 
+## API Documentation 
+
+For a complete overview of all available classes, methods, and properties, please see the API reference on pub.dev.
+
 ## Advanced Usage
 
 ### Dynamic Data Loading with `LegacyGanttController`

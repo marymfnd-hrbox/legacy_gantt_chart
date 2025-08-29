@@ -137,6 +137,9 @@ class _GanttViewState extends State<GanttView> {
         SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
       );
 
+  // The root of the application uses a ChangeNotifierProvider to make the
+  // GanttViewModel available to the entire widget tree below it. This allows
+  // any widget to listen to changes in the view model and rebuild accordingly.
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider.value(
         value: _viewModel,

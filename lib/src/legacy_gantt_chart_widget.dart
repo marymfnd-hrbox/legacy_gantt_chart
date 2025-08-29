@@ -10,29 +10,80 @@ import 'legacy_gantt_controller.dart';
 import 'legacy_gantt_view_model.dart';
 import 'bars_collection_painter.dart';
 
+/// The main widget for displaying a Gantt chart.
+///
+/// This widget is responsible for rendering the timeline, task bars, and dependencies.
+/// It handles user interactions such as dragging, resizing, and creating tasks and dependencies.
+///
+/// It can be used with a static list of data or dynamically with a [LegacyGanttController].
 class LegacyGanttChartWidget extends StatefulWidget {
+  /// The list of [LegacyGanttTask] objects to display on the chart.
+  /// This is ignored if a [controller] or [tasksFuture] is provided.
   final List<LegacyGanttTask>? data;
 
   /// A list of dependencies to draw between tasks.
+  /// This is ignored if a [controller] is provided.
   final List<LegacyGanttTaskDependency>? dependencies;
 
   /// A list of tasks to be rendered as background highlights, such as holidays
   /// or weekends. These tasks should have `isTimeRangeHighlight` set to `true`.
   /// This is ignored if a [controller] is provided.
   final List<LegacyGanttTask>? holidays;
+
+  /// The list of [LegacyGanttRow]s that are currently visible in the chart's viewport.
+  /// This is used to determine which rows to render.
   final List<LegacyGanttRow> visibleRows;
+
+  /// A callback function invoked when the user's cursor hovers over a task.
+  ///
+  /// Provides the [LegacyGanttTask] being hovered and the global position of the cursor.
+  /// Useful for showing custom tooltips or hover effects.
   final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
+
+  /// A scroll controller for the vertical scrolling of the Gantt chart.
+  ///
+  /// This should be the same controller used by an accompanying data grid (e.g., `GanttGrid`)
+  /// to ensure that the chart and the grid scroll in sync.
   final ScrollController? scrollController;
+
+  /// The height of the timeline axis header at the top of the chart.
   final double? axisHeight;
+
+  /// A map from a row ID to the maximum number of tasks that can be stacked vertically
+  /// in that row. If the number of overlapping tasks exceeds this value, a
+  /// conflict indicator will be shown.
   final Map<String, int> rowMaxStackDepth;
+
+  /// The height of a single task bar lane within a row. The total height of a
+  /// [LegacyGanttRow] is `rowHeight * stackDepth`.
   final double rowHeight;
+
+  /// The theme data that defines the colors and styles for the chart's elements.
+  /// If not provided, a default theme is derived from the ambient [ThemeData].
   final LegacyGanttTheme? theme;
+
+  /// The start of the visible date range, expressed as milliseconds since the Unix epoch.
+  /// This is ignored if a [controller] is provided.
   final double? gridMin; // Unix timestamp or milliseconds since epoch
+
+  /// The end of the visible date range, expressed as milliseconds since the Unix epoch.
+  /// This is ignored if a [controller] is provided.
   final double? gridMax; // Unix timestamp or milliseconds since epoch
+
+  /// The absolute start of the entire possible date range for the chart.
+  /// This is used by the timeline axis to determine its overall width.
   final double? totalGridMin; // The start of the entire dataset's time range
+
+  /// The absolute end of the entire possible date range for the chart.
   final double? totalGridMax; // The end of the entire dataset's time range
+
+  /// A callback function invoked when a user taps or clicks on a task bar.
   final Function(LegacyGanttTask)? onPressTask;
+
+  /// Enables or disables the ability to drag and drop tasks to change their time or row.
   final bool enableDragAndDrop;
+
+  /// Enables or disables the ability to resize tasks by dragging their start or end handles.
   final bool enableResize;
 
   /// A future that resolves to the list of tasks to display.
@@ -42,13 +93,30 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// A future that resolves to a list of holiday/highlight tasks.
   /// This is ignored if a [controller] is provided.
   final Future<List<LegacyGanttTask>>? holidaysFuture;
+
+  /// A controller to programmatically manage the Gantt chart's state, including
+  /// the visible date range and dynamically loaded data. When a controller is
+  /// provided, properties like `data`, `holidays`, `gridMin`, and `gridMax` are
+  /// ignored as they are managed by the controller.
   final LegacyGanttController? controller;
+
+  /// A builder function to create a completely custom widget for a task bar.
+  ///
+  /// If this is provided, the default task bar painting is skipped, and this widget is
+  /// rendered instead. This gives full control over the appearance and behavior of a task.
+  /// This cannot be used simultaneously with [taskContentBuilder].
   final Widget Function(LegacyGanttTask task)? taskBarBuilder;
 
-  /// A builder to create custom content to be displayed inside a task bar.
-  /// The chart will still draw the bar's background.
+  /// A builder to create custom content *inside* the default task bar.
+  ///
+  /// This is useful for adding custom icons, text, or progress indicators while
+  /// retaining the default bar's shape, color, and drag/resize handles.
   /// This cannot be used simultaneously with [taskBarBuilder].
   final Widget Function(LegacyGanttTask task)? taskContentBuilder;
+
+  /// A callback function that is invoked when a task is updated through dragging or resizing.
+  ///
+  /// Provides the updated [LegacyGanttTask] and its new `start` and `end` times.
   final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
 
   /// A function to format the date/time shown in the tooltip when resizing a task.

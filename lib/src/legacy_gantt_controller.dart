@@ -13,7 +13,17 @@ class LegacyGanttController extends ChangeNotifier {
   List<LegacyGanttTask> _tasks;
   List<LegacyGanttTask> _holidays;
   List<LegacyGanttTaskDependency> _dependencies;
+
+  /// An optional asynchronous function to fetch tasks for a given date range.
+  ///
+  /// When provided, the controller will call this function to load or update
+  /// tasks whenever the visible date range changes.
   final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)? tasksAsync;
+
+  /// An optional asynchronous function to fetch holidays for a given date range.
+  ///
+  /// Similar to [tasksAsync], but used for loading background highlights like
+  /// holidays or weekends.
   final Future<List<LegacyGanttTask>> Function(DateTime start, DateTime end)? holidaysAsync;
   bool _isLoading = false;
   bool _isHolidayLoading = false;
@@ -25,6 +35,9 @@ class LegacyGanttController extends ChangeNotifier {
   DateTime get visibleEndDate => _visibleEndDate;
 
   /// The list of tasks currently managed by the controller.
+  ///
+  /// This list is either set manually via [setTasks] or populated automatically
+  /// by the [tasksAsync] callback.
   List<LegacyGanttTask> get tasks => _tasks;
 
   /// The list of holidays currently managed by the controller.
@@ -45,6 +58,15 @@ class LegacyGanttController extends ChangeNotifier {
   /// Whether the controller is currently fetching tasks or holidays.
   bool get isOverallLoading => _isLoading || _isHolidayLoading;
 
+  /// Creates a controller for a [LegacyGanttChartWidget].
+  ///
+  /// - [initialVisibleStartDate] and [initialVisibleEndDate] are required to
+  ///   define the initial viewport of the chart.
+  /// - [initialTasks], [initialHolidays], and [initialDependencies] can be
+  ///   used to provide initial data for a static chart. These are ignored if
+  ///   the corresponding `...Async` callbacks are provided.
+  /// - [tasksAsync] and [holidaysAsync] are callbacks for dynamically loading
+  ///   data as the user navigates the timeline.
   LegacyGanttController({
     required DateTime initialVisibleStartDate,
     required DateTime initialVisibleEndDate,
@@ -106,6 +128,9 @@ class LegacyGanttController extends ChangeNotifier {
 
   /// Replaces the current list of tasks with a new list and notifies listeners.
   ///
+  /// This should only be used when the controller is *not* managing data
+  /// asynchronously (i.e., when `tasksAsync` is null).
+  ///
   /// Throws a [StateError] if the controller was constructed with a `tasksAsync`
   /// callback, as task management is handled automatically in that case.
   void setTasks(List<LegacyGanttTask> newTasks) {
@@ -118,6 +143,9 @@ class LegacyGanttController extends ChangeNotifier {
 
   /// Replaces the current list of holidays with a new list and notifies listeners.
   ///
+  /// This should only be used when the controller is *not* managing data
+  /// asynchronously (i.e., when `holidaysAsync` is null).
+  ///
   /// Throws a [StateError] if the controller was constructed with a `holidaysAsync`
   /// callback, as holiday management is handled automatically in that case.
   void setHolidays(List<LegacyGanttTask> newHolidays) {
@@ -129,6 +157,8 @@ class LegacyGanttController extends ChangeNotifier {
   }
 
   /// Replaces the current list of dependencies with a new list and notifies listeners.
+  ///
+  /// Dependencies are not typically fetched asynchronously, so this can be called at any time.
   void setDependencies(List<LegacyGanttTaskDependency> newDependencies) {
     // Dependencies are not typically fetched async, so no check is needed here.
     _dependencies = List.from(newDependencies);
@@ -150,6 +180,8 @@ class LegacyGanttController extends ChangeNotifier {
   ///
   /// The UI will be notified of the loading state and again when the data
   /// has been fetched.
+  ///
+  /// If `tasksAsync` was not provided to the controller, this method does nothing.
   Future<void> fetchTasksForVisibleRange() async {
     await _fetchData(
       fetcher: tasksAsync, // The async function to call
@@ -163,6 +195,8 @@ class LegacyGanttController extends ChangeNotifier {
   /// callback.
   ///
   /// The UI will be notified of the loading state and again when the data has been fetched.
+  ///
+  /// If `holidaysAsync` was not provided to the controller, this method does nothing.
   Future<void> fetchHolidaysForVisibleRange() async {
     await _fetchData(
       fetcher: holidaysAsync,
