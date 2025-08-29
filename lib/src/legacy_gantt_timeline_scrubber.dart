@@ -239,14 +239,19 @@ class _LegacyGanttTimelineScrubberState extends State<LegacyGanttTimelineScrubbe
 class _ScrubberPainter extends CustomPainter {
   /// The start of the full timeline, including any padding.
   final DateTime totalStartDate;
+
   /// The end of the full timeline, including any padding.
   final DateTime totalEndDate;
+
   /// The start of the highlighted selection window.
   final DateTime visibleStartDate;
+
   /// The end of the highlighted selection window.
   final DateTime visibleEndDate;
+
   /// The tasks to render as a heatmap in the background.
   final List<LegacyGanttTask> tasks;
+
   /// The application's [ThemeData] used for styling the scrubber.
   final ThemeData theme;
 

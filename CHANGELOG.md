@@ -1,3 +1,7 @@
+## 0.4.7
+
+* **FIX**: Dart formatting fix
+
 ## 0.4.6
 
 * **FIX**: Add thorough documentation for all properties

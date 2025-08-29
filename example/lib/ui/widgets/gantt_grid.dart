@@ -226,7 +226,7 @@ class GanttGrid extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Foreground bar and white text, clipped to the completion percentage
           ClipRect(
             child: Align(
