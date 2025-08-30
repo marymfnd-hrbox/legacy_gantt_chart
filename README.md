@@ -6,12 +6,17 @@
 
 A flexible and performant Gantt chart widget for Flutter. Supports interactive drag-and-drop, resizing, dynamic data loading, and extensive theming.
 
+## About the Name
+
+The name `legacy_gantt_chart` is a tribute to the package's author, Patrick Legacy. It does not imply that the package is outdated or unmaintained. In fact, it is a modern, actively developed, and highly capable solution for building production-ready Flutter applications.
+
 [![Legacy Gantt Chart Example](https://github.com/barneysspeedshop/legacy_gantt_chart/raw/main/assets/example.png)](https://barneysspeedshop.github.io/legacy_gantt_chart/)
 
 ---
 
 ## Features
 
+-   **Robust Architecture:** The accompanying example application showcases a scalable Model-View-ViewModel (MVVM) architecture with `provider` for state management, providing a clear blueprint for real-world use. Please feel free to use the example as a starting point for integrating into your application. 
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
 -   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.
@@ -22,7 +27,7 @@ A flexible and performant Gantt chart widget for Flutter. Supports interactive d
 -   **Customization:**
     -   Extensive theming support via `LegacyGanttTheme`.
     -   Use custom builders (`taskBarBuilder`, `taskContentBuilder`) to render completely unique task widgets.
--   **Timeline Navigation:** Includes a `LegacyGanttTimelineScrubber` widget for an intuitive overview and navigation of the entire timeline.
+-   **Unique Timeline Scrubber:** Navigate vast timelines with ease using the `LegacyGanttTimelineScrubber`. Inspired by professional audio/visual editing software, this powerful widget provides a high-level overview of the entire project, allowing for intuitive zooming and scrolling. This feature, not found in other Gantt libraries on pub.dev, sets this package apart.
 -   **Special Task Types & Visual Cues:** The chart uses specific visual patterns to convey important information at a glance:
     -   **Summary Bars (Angled Pattern):** A summary bar depicts a resource's overall time allocation (e.g., a developer's work week). The angled pattern signifies it's a container for other tasks. Child rows underneath show the specific tasks that consume this allocated time, making it easy to see how the resource's time is being used and whether they have availability.
     -   **Conflict Indicators (Red Angled Pattern):** This pattern is used to raise awareness of contemporaneous activity that exceeds capacity. It typically appears when more tasks are scheduled in a row than the `rowMaxStackDepth` allows, highlighting over-allocation or scheduling issues.
@@ -36,7 +41,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  legacy_gantt_chart: ^0.5.1 # Replace with the latest version
+  legacy_gantt_chart: ^1.0.1 # Replace with the latest version
 ```
 
 Then, you can install the package using the command-line:
@@ -66,13 +71,13 @@ class MinimalGanttChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Define rows for your chart
+    // 1. Define your rows
     final rows = [
       LegacyGanttRow(id: 'row1', name: 'Development'),
       LegacyGanttRow(id: 'row2', name: 'QA'),
     ];
 
-    // 2. Define tasks and assign them to rows
+    // 2. Define your tasks
     final tasks = [
       LegacyGanttTask(
         id: 'task1',
@@ -83,6 +88,13 @@ class MinimalGanttChart extends StatelessWidget {
       ),
       LegacyGanttTask(
         id: 'task2',
+        rowId: 'row1',
+        name: 'Implement Feature B',
+        start: DateTime.now().add(const Duration(days: 3)),
+        end: DateTime.now().add(const Duration(days: 8)),
+      ),
+      LegacyGanttTask(
+        id: 'task3',
         rowId: 'row2',
         name: 'Test Feature A',
         start: DateTime.now().add(const Duration(days: 2)),
@@ -91,18 +103,20 @@ class MinimalGanttChart extends StatelessWidget {
     ];
 
     // 3. Create the widget
-    return LegacyGanttChartWidget(
-      data: tasks,
-      visibleRows: rows,
-      rowMaxStackDepth: const {'row1': 1, 'row2': 1},
-      gridMin: DateTime.now().subtract(const Duration(days: 10)).millisecondsSinceEpoch.toDouble(),
-      gridMax: DateTime.now().add(const Duration(days: 15)).millisecondsSinceEpoch.toDouble(),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Simple Gantt Chart')),
+      body: LegacyGanttChartWidget(
+        data: tasks,
+        visibleRows: rows,
+        rowMaxStackDepth: const {'row1': 2, 'row2': 1}, // Max overlapping tasks per row
+        gridMin: DateTime.now().subtract(const Duration(days: 10)).millisecondsSinceEpoch.toDouble(),
+        gridMax: DateTime.now().add(const Duration(days: 15)).millisecondsSinceEpoch.toDouble(),
+      ),
     );
   }
 }
 ```
 
----
 ## Running the Example
 
 To see a full-featured demo of the `legacy_gantt_chart` in action, you can run the example application included in the repository.
@@ -121,8 +135,6 @@ To see a full-featured demo of the `legacy_gantt_chart` in action, you can run t
     ```shell
     flutter run
     ```
-
----
 
 ## API Documentation 
 
@@ -155,9 +167,18 @@ class _DynamicGanttChartPageState extends State<DynamicGanttChartPage> {
   }
 
   Future<List<LegacyGanttTask>> _fetchTasks(DateTime start, DateTime end) async {
+    print('Fetching tasks from $start to $end...');
     // In a real app, you would make a network request here.
     await Future.delayed(const Duration(seconds: 1));
-    return [ /* ... your fetched tasks ... */ ];
+    return [
+      LegacyGanttTask(
+        id: 'server_task_1',
+        rowId: 'row1',
+        name: 'Database Migration',
+        start: start.add(const Duration(days: 2)),
+        end: start.add(const Duration(days: 5)),
+      ),
+    ];
   }
 
   @override
@@ -187,12 +208,13 @@ Column(
         // ... other properties
       ),
     ),
+    // The Scrubber
     LegacyGanttTimelineScrubber(
       totalStartDate: DateTime(2023, 1, 1),
       totalEndDate: DateTime(2024, 12, 31),
       visibleStartDate: _controller.visibleStartDate,
       visibleEndDate: _controller.visibleEndDate,
-      tasks: _controller.tasks,
+      tasks: _controller.tasks, // Show tasks in the scrubber overview
       onWindowChanged: (newStart, newEnd) {
         _controller.setVisibleRange(newStart, newEnd);
       },
@@ -225,7 +247,22 @@ Use `taskContentBuilder` to replace the content *inside* the task bar, or `taskB
 LegacyGanttChartWidget(
   // ... other properties
   taskContentBuilder: (task) {
-    return Text(task.name ?? '', style: const TextStyle(color: Colors.white));
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Row(
+        children: [
+          const Icon(Icons.star, color: Colors.yellow, size: 14),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              task.name ?? '',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
   },
 )
 ```
@@ -244,13 +281,17 @@ LegacyGanttChartWidget(
 )
 ```
 
+
+## API Documentation
+
+For a complete overview of all available classes, methods, and properties, please see the API reference on pub.dev.
+
 ---
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details on how to get started, including our code style guide.
 
----
 
 ## License
 

@@ -1,3 +1,8 @@
+## 1.0.1
+
+* **DOCS**: Improved README clarity by fixing formatting and better highlighting the unique `LegacyGanttTimelineScrubber` feature.
+* **DOCS**: Added a `CONTRIBUTING.md` file with guidelines for developers, including code style rules. 
+
 ## 1.0.0
 
 * **GENERAL AVAILABILITY**
