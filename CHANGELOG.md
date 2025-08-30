@@ -1,3 +1,9 @@
+## 1.1.0
+
+* **FEAT**: Implemented dynamic viewbox zooming for the `LegacyGanttTimelineScrubber`. The scrubber now intelligently zooms in on the selected date range, providing a clearer and more intuitive navigation experience.
+* **FEAT**: Added visual fade indicators to the edges of the timeline scrubber when zoomed in, making it clear that more of the timeline is available off-screen.
+* **FEAT**: Added a "Reset Zoom" button to the timeline scrubber, allowing users to easily return to the full timeline view.
+
 ## 1.0.1
 
 * **DOCS**: Improved README clarity by fixing formatting and better highlighting the unique `LegacyGanttTimelineScrubber` feature.
