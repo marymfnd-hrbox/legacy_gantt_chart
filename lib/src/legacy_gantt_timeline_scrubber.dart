@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
@@ -252,17 +251,16 @@ class _LegacyGanttTimelineScrubberState extends State<LegacyGanttTimelineScrubbe
           ),
         ),
         if (isZoomed)
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: IconButton(
-              icon: const Icon(Icons.zoom_out_map),
-              iconSize: 20.0,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
-              tooltip: 'Reset Zoom',
-              onPressed: () {
-                widget.onWindowChanged(_effectiveTotalStart, _effectiveTotalEnd);
-              },
-            ),
+          IconButton(
+            padding: const EdgeInsets.only(right: 8.0),
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.zoom_out_map),
+            iconSize: 20.0,
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(180),
+            tooltip: 'Reset Zoom',
+            onPressed: () {
+              widget.onWindowChanged(_effectiveTotalStart, _effectiveTotalEnd);
+            },
           ),
       ],
     );
