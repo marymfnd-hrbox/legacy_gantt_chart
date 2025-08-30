@@ -218,8 +218,7 @@ class _LegacyGanttTimelineScrubberState extends State<LegacyGanttTimelineScrubbe
 
   @override
   Widget build(BuildContext context) {
-    final (displayStart, displayEnd) =
-        _calculateDisplayRange(widget.visibleStartDate, widget.visibleEndDate);
+    final (displayStart, displayEnd) = _calculateDisplayRange(widget.visibleStartDate, widget.visibleEndDate);
 
     final totalDuration = _effectiveTotalEnd.difference(_effectiveTotalStart);
     final isZoomed = displayEnd.difference(displayStart).inMicroseconds < totalDuration.inMicroseconds;
