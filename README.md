@@ -20,7 +20,7 @@ The name `legacy_gantt_chart` is a tribute to the package's author, Patrick Lega
 -   **Scalability:** Highly performant rendering for projects with over 10,000 tasks.
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
--   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.
+-   **Full CRUD Support:** Create, read, update, and delete tasks with intuitive UI interactions and callbacks.
 -   **Task Options Menu:** Right-click or tap a task's option icon to access actions like copy, delete, and dependency management.
 -   **Interactive Dependency Creation:** Users can visually create dependencies by dragging a connector from one task to another.
 -   **Task Dependencies:** Define and visualize relationships between tasks. Supports Finish-to-Start, Start-to-Start, Finish-to-Finish, Start-to-Finish, and Contained dependency types.

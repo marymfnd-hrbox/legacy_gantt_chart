@@ -119,6 +119,9 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// Provides the updated [LegacyGanttTask] and its new `start` and `end` times.
   final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
 
+  /// A callback function that is invoked when a task is deleted.
+  final Function(LegacyGanttTask task)? onTaskDelete;
+
   /// A function to format the date/time shown in the tooltip when resizing a task.
   final String Function(DateTime)? resizeTooltipDateFormat;
 
@@ -160,16 +163,14 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.taskBarBuilder,
     this.taskContentBuilder,
     this.onTaskUpdate,
+    this.onTaskDelete,
     this.resizeTooltipDateFormat,
     this.onEmptySpaceClick,
     this.resizeTooltipBackgroundColor,
     this.resizeTooltipFontColor,
-  })  : assert(controller != null || ((data != null && tasksFuture == null) || (data == null && tasksFuture != null)),
-            'If a controller is not used, exactly one of tasksFuture or data must be provided.'),
-        assert(controller == null || dependencies == null,
-            'Cannot provide both a controller and a dependencies list. Dependencies are managed by the controller.'),
-        assert(taskBarBuilder == null || taskContentBuilder == null,
-            'Cannot provide both taskBarBuilder and taskContentBuilder. taskBarBuilder replaces the entire bar, while taskContentBuilder only replaces its content.'),
+  })  : assert(controller != null || ((data != null && tasksFuture == null) || (data == null && tasksFuture != null))),
+        assert(controller == null || dependencies == null),
+        assert(taskBarBuilder == null || taskContentBuilder == null),
         assert(
             controller == null ||
                 (data == null &&
@@ -177,8 +178,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
                     holidays == null &&
                     holidaysFuture == null &&
                     gridMin == null &&
-                    gridMax == null),
-            'When a controller is provided, data, tasksFuture, holidays, holidaysFuture, gridMin, and gridMax must be null, as they are managed by the controller.');
+                    gridMax == null));
 
   @override
   State<LegacyGanttChartWidget> createState() => _LegacyGanttChartWidgetState();
@@ -200,7 +200,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           final dependencies = controller.dependencies;
           final allItems = [...tasks, ...holidays];
 
-          // Handle initial loading state when there are no tasks yet.
           if (controller.isOverallLoading && allItems.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -211,8 +210,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
             );
           }
 
-          // Use a Stack to overlay a loading indicator on top of the existing chart
-          // when reloading data. This provides a smoother user experience.
           return Stack(
             children: [
               _buildChart(
@@ -225,7 +222,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
               ),
               if (controller.isLoading)
                 Container(
-                  color: effectiveTheme.backgroundColor.withValues(alpha: 0.5),
+                  color: effectiveTheme.backgroundColor.withValues(alpha:0.5),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
             ],
@@ -276,7 +273,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           LegacyGanttTheme effectiveTheme,
           {double? gridMin, double? gridMax}) =>
       ChangeNotifierProvider(
-        // Use a key to ensure the ViewModel is recreated if the core data changes.
         key: ValueKey(
           Object.hash(
             tasks.length,
@@ -294,7 +290,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         create: (_) => LegacyGanttViewModel(
           data: tasks,
           dependencies: dependencies,
-          // Pass all other widget properties to the ViewModel
           visibleRows: widget.visibleRows,
           rowMaxStackDepth: widget.rowMaxStackDepth,
           rowHeight: widget.rowHeight,
@@ -306,34 +301,28 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           enableDragAndDrop: widget.enableDragAndDrop,
           enableResize: widget.enableResize,
           onTaskUpdate: widget.onTaskUpdate,
+          onTaskDelete: widget.onTaskDelete,
           onEmptySpaceClick: widget.onEmptySpaceClick,
           onPressTask: widget.onPressTask,
           onTaskHover: widget.onTaskHover,
           taskBarBuilder: widget.taskBarBuilder,
           resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
           scrollController: widget.scrollController,
-          // taskContentBuilder is handled directly in the widget's build method.
         ),
         child: Consumer<LegacyGanttViewModel>(
           builder: (context, vm, child) {
-            // Update the ViewModel with the latest properties from the widget. This
-            // is the correct way to pass updated values to a long-lived ViewModel
-            // that is not recreated on every build.
             vm.updateVisibleRange(gridMin ?? widget.gridMin, gridMax ?? widget.gridMax);
 
             return LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
                 if (constraints.maxWidth == 0 || constraints.maxHeight == 0) {
-                  return const SizedBox.shrink(); // Avoid calculations if we have no space
+                  return const SizedBox.shrink();
                 }
 
-                // Inform the ViewModel of the available layout space.
                 vm.updateLayout(constraints.maxWidth, constraints.maxHeight);
 
-                // The rest of the UI rebuilds automatically when the VM's state changes.
                 final double totalContentWidth = vm.totalDomain.isEmpty ? 0 : vm.totalScale(vm.totalDomain.last);
 
-                // Calculate the total height of all rows to provide the correct size to the painter.
                 final allRowIds = tasks.map((task) => task.rowId).toSet();
                 if (widget.visibleRows.length > allRowIds.length) {
                   for (var row in widget.visibleRows) {
@@ -358,7 +347,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                       color: effectiveTheme.backgroundColor,
                       child: Stack(
                         children: [
-                          // Layer 1: Background Grid Lines.
                           Positioned.fill(
                             child: CustomPaint(
                               painter: AxisPainter(
@@ -375,7 +363,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                             ),
                           ),
 
-                          // Layer 2: Bars Layer (scrollable).
                           Positioned(
                             top: vm.timeAxisHeight,
                             left: 0,
@@ -405,17 +392,13 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                     ),
                                     size: Size(totalContentWidth, totalContentHeight),
                                   ),
-                                  if (widget.taskBarBuilder != null)
-                                    ..._buildCustomTaskWidgets(vm, tasks, widget.taskBarBuilder!),
-                                  if (widget.taskContentBuilder != null)
-                                    ..._buildCustomTaskWidgets(vm, tasks, widget.taskContentBuilder!),
+                                  ..._buildTaskWidgets(vm, tasks, effectiveTheme),
                                   ..._buildCustomCellWidgets(vm, tasks),
                                 ],
                               ),
                             ),
                           ),
 
-                          // Layer 3: Header Foreground.
                           Positioned(
                             top: 0,
                             left: 0,
@@ -439,7 +422,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                             ),
                           ),
 
-                          // Layer 4: Resize Tooltip.
                           if (vm.showResizeTooltip)
                             Positioned(
                               left: vm.resizeTooltipPosition.dx + 15,
@@ -465,7 +447,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
     return Material(
       elevation: 4.0,
       borderRadius: BorderRadius.circular(4),
-      color: Colors.transparent, // Let Container handle color
+      color: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
         decoration: BoxDecoration(color: tooltipBackgroundColor, borderRadius: BorderRadius.circular(4)),
@@ -477,9 +459,9 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
     );
   }
 
-  List<Widget> _buildCustomTaskWidgets(
-      LegacyGanttViewModel vm, List<LegacyGanttTask> tasks, Widget Function(LegacyGanttTask task) builder) {
-    final List<Widget> customWidgets = [];
+  List<Widget> _buildTaskWidgets(
+      LegacyGanttViewModel vm, List<LegacyGanttTask> tasks, LegacyGanttTheme theme) {
+    final List<Widget> taskWidgets = [];
     double cumulativeRowTop = 0;
 
     final Map<String, List<LegacyGanttTask>> tasksByRow = {};
@@ -503,12 +485,30 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
 
         final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
 
-        customWidgets.add(Positioned(left: startX, top: top, width: width, height: vm.rowHeight, child: builder(task)));
+        Widget taskWidget;
+        if (widget.taskBarBuilder != null) {
+          taskWidget = widget.taskBarBuilder!(task);
+        } else {
+          taskWidget = _DefaultTaskBar(
+            task: task,
+            vm: vm,
+            theme: theme,
+            content: widget.taskContentBuilder != null ? widget.taskContentBuilder!(task) : null,
+          );
+        }
+
+        taskWidgets.add(Positioned(
+          left: startX,
+          top: top,
+          width: width,
+          height: vm.rowHeight,
+          child: taskWidget,
+        ));
       }
       final stackDepth = vm.rowMaxStackDepth[rowData.id] ?? 1;
       cumulativeRowTop += vm.rowHeight * stackDepth;
     }
-    return customWidgets;
+    return taskWidgets;
   }
 
   List<Widget> _buildCustomCellWidgets(LegacyGanttViewModel vm, List<LegacyGanttTask> tasks) {
@@ -518,7 +518,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
     final Map<String, List<LegacyGanttTask>> tasksByRow = {};
     final visibleRowIds = vm.visibleRows.map((r) => r.id).toSet();
     for (final task in tasks) {
-      // Only consider tasks that have a cellBuilder
       if (visibleRowIds.contains(task.rowId) && task.cellBuilder != null) {
         tasksByRow.putIfAbsent(task.rowId, () => []).add(task);
       }
@@ -530,7 +529,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
         final taskStart = task.start;
         final taskEnd = task.end;
 
-        // Iterate through each day the task spans
         var currentDate = DateTime(taskStart.year, taskStart.month, taskStart.day);
         while (currentDate.isBefore(taskEnd)) {
           final segmentStart = taskStart.isAfter(currentDate) ? taskStart : currentDate;
@@ -553,5 +551,75 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
       cumulativeRowTop += vm.rowHeight * stackDepth;
     }
     return customCells;
+  }
+}
+
+class _DefaultTaskBar extends StatefulWidget {
+  final LegacyGanttTask task;
+  final LegacyGanttViewModel vm;
+  final LegacyGanttTheme theme;
+  final Widget? content;
+
+  const _DefaultTaskBar({
+    required this.task,
+    required this.vm,
+    required this.theme,
+    this.content,
+  });
+
+  @override
+  _DefaultTaskBarState createState() => _DefaultTaskBarState();
+}
+
+class _DefaultTaskBarState extends State<_DefaultTaskBar> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
+    final theme = widget.theme;
+    final vm = widget.vm;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        decoration: BoxDecoration(
+          color: task.color ?? theme.barColorPrimary,
+          borderRadius: BorderRadius.circular(4.0),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (widget.content != null)
+              widget.content!
+            else
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    task.name ?? '',
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.taskTextStyle,
+                  ),
+                ),
+              ),
+            if (_isHovered && vm.onTaskDelete != null)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.close, size: 16),
+                  color: theme.taskTextStyle.color,
+                  onPressed: () => vm.deleteTask(task),
+                  splashRadius: 16,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }

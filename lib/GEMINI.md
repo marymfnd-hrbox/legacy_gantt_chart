@@ -6,7 +6,7 @@ A flexible and performant Gantt chart widget for Flutter, designed for easy inte
 
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
--   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.
+-   **Interactive Tasks:** Built-in support for dragging, dropping, resizing, and deleting tasks.
 -   **Task Stacking:** Automatically stacks overlapping tasks within the same row.
 -   **Customization:**
     -   Extensive theming support via `LegacyGanttTheme`.
@@ -167,9 +167,9 @@ Column(
 )
 ```
 
-### Interactive Tasks (Drag & Drop, Resize)
+### Interactive Tasks (Drag & Drop, Resize, Delete)
 
-Enable interactivity and listen for updates using the `onTaskUpdate` callback.
+Enable interactivity and listen for updates using the `onTaskUpdate` and `onTaskDelete` callbacks.
 
 ```dart
 LegacyGanttChartWidget(
@@ -179,6 +179,11 @@ LegacyGanttChartWidget(
   onTaskUpdate: (task, newStart, newEnd) {
     print('Task ${task.id} updated!');
     print('New Start: $newStart, New End: $newEnd');
+    // Here you would update your state and likely call an API
+    // to persist the changes.
+  },
+  onTaskDelete: (task) {
+    print('Task ${task.id} deleted!');
     // Here you would update your state and likely call an API
     // to persist the changes.
   },

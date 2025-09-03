@@ -21,7 +21,7 @@ To maintain code quality and consistency, please adhere to the following style g
     myColor.withOpacity(0.5);
     
     // Correct
-    myColor.withAlpha(128); // Alpha is an integer from 0 to 255
+    myColor.withValues(alpha:0.5); // Alpha is an integer from 0 to 255
     ```
 
 -   **Use Expression Bodies**: For functions or methods that contain only a single return statement, use an expression body (`=>`) instead of a block body (`{ ... }`).

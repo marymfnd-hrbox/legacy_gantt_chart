@@ -14,7 +14,7 @@ enum TaskPart { body, startHandle, endHandle }
 /// A [ChangeNotifier] that manages the state and interaction logic for the
 /// [LegacyGanttChartWidget].
 ///
-/// This is an internal class that translates user gestures (pans, taps, hovers)
+/// This is an internal class that translates user gestures (pans, taps, hovers) 
 /// into state changes, such as dragging tasks, resizing them, or scrolling the
 /// view. It calculates the necessary scales and positions for rendering the
 /// chart elements and notifies its listeners when the state changes, causing the
@@ -59,6 +59,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
   /// A callback invoked when a task is successfully moved or resized.
   final Function(LegacyGanttTask task, DateTime newStart, DateTime newEnd)? onTaskUpdate;
 
+  /// A callback invoked when a task is deleted.
+  final Function(LegacyGanttTask task)? onTaskDelete;
+
   /// A callback invoked when a task is tapped.
   final Function(LegacyGanttTask)? onPressTask;
 
@@ -96,6 +99,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     this.enableDragAndDrop = false,
     this.enableResize = false,
     this.onTaskUpdate,
+    this.onTaskDelete,
     this.onEmptySpaceClick,
     this.onPressTask,
     this.scrollController,
@@ -248,7 +252,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     ];
 
     final double totalDomainDurationMs =
-        (_totalDomain[1].millisecondsSinceEpoch - _totalDomain[0].millisecondsSinceEpoch).toDouble();
+        (_totalDomain.last.millisecondsSinceEpoch - _totalDomain.first.millisecondsSinceEpoch).toDouble();
 
     // The width provided to the ViewModel is the total width of the scrollable area,
     // as calculated by the parent widget (e.g., the example app's `_calculateGanttWidth`).
@@ -600,5 +604,10 @@ class LegacyGanttViewModel extends ChangeNotifier {
         (_totalDomain.last.millisecondsSinceEpoch - _totalDomain.first.millisecondsSinceEpoch).toDouble();
     final durationMs = (pixels / totalContentWidth) * totalDomainDurationMs;
     return Duration(milliseconds: durationMs.round());
+  }
+
+  void deleteTask(LegacyGanttTask task) {
+    onTaskDelete?.call(task);
+    notifyListeners();
   }
 }
