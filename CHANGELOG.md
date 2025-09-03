@@ -1,3 +1,9 @@
+## 1.2.0
+
+* **FIX**: Fix for an issue that caused vertical scrolling to fail
+* **FEAT**: Improve performance when rendering a large number of tasks
+* **FEAT**: Update example to render over 10,000 tasks
+
 ## 1.1.0
 
 * **FEAT**: Implemented dynamic viewbox zooming for the `LegacyGanttTimelineScrubber`. The scrubber now intelligently zooms in on the selected date range, providing a clearer and more intuitive navigation experience.
