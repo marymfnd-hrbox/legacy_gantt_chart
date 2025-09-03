@@ -171,14 +171,13 @@ class LegacyGanttChartWidget extends StatefulWidget {
   })  : assert(controller != null || ((data != null && tasksFuture == null) || (data == null && tasksFuture != null))),
         assert(controller == null || dependencies == null),
         assert(taskBarBuilder == null || taskContentBuilder == null),
-        assert(
-            controller == null ||
-                (data == null &&
-                    tasksFuture == null &&
-                    holidays == null &&
-                    holidaysFuture == null &&
-                    gridMin == null &&
-                    gridMax == null));
+        assert(controller == null ||
+            (data == null &&
+                tasksFuture == null &&
+                holidays == null &&
+                holidaysFuture == null &&
+                gridMin == null &&
+                gridMax == null));
 
   @override
   State<LegacyGanttChartWidget> createState() => _LegacyGanttChartWidgetState();
@@ -222,7 +221,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
               ),
               if (controller.isLoading)
                 Container(
-                  color: effectiveTheme.backgroundColor.withValues(alpha:0.5),
+                  color: effectiveTheme.backgroundColor.withValues(alpha: 0.5),
                   child: const Center(child: CircularProgressIndicator()),
                 ),
             ],
@@ -362,7 +361,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                               ),
                             ),
                           ),
-
                           Positioned(
                             top: vm.timeAxisHeight,
                             left: 0,
@@ -398,7 +396,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                               ),
                             ),
                           ),
-
                           Positioned(
                             top: 0,
                             left: 0,
@@ -421,7 +418,6 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                               ),
                             ),
                           ),
-
                           if (vm.showResizeTooltip)
                             Positioned(
                               left: vm.resizeTooltipPosition.dx + 15,
@@ -459,8 +455,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
     );
   }
 
-  List<Widget> _buildTaskWidgets(
-      LegacyGanttViewModel vm, List<LegacyGanttTask> tasks, LegacyGanttTheme theme) {
+  List<Widget> _buildTaskWidgets(LegacyGanttViewModel vm, List<LegacyGanttTask> tasks, LegacyGanttTheme theme) {
     final List<Widget> taskWidgets = [];
     double cumulativeRowTop = 0;
 

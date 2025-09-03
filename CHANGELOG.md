@@ -1,3 +1,7 @@
+## 1.3.2
+
+* **FIX**: Fix dart formatting
+
 ## 1.3.1
 
 * **DOC**: Update README.md to reflect the full feature set.

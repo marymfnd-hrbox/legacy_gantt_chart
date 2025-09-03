@@ -14,7 +14,7 @@ enum TaskPart { body, startHandle, endHandle }
 /// A [ChangeNotifier] that manages the state and interaction logic for the
 /// [LegacyGanttChartWidget].
 ///
-/// This is an internal class that translates user gestures (pans, taps, hovers) 
+/// This is an internal class that translates user gestures (pans, taps, hovers)
 /// into state changes, such as dragging tasks, resizing them, or scrolling the
 /// view. It calculates the necessary scales and positions for rendering the
 /// chart elements and notifies its listeners when the state changes, causing the
