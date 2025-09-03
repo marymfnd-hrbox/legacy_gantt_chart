@@ -16,29 +16,54 @@ The name `legacy_gantt_chart` is a tribute to the package's author, Patrick Lega
 
 ## Features
 
--   **Core Dependencies:** Built on the robust `provider` package for state management and `intl` for localization.
--   **Example Architecture:** The accompanying example application showcases a scalable Model-View-ViewModel (MVVM) architecture, providing a clear blueprint for real-world use.
+### Architecture & Platform
+-   **Cross-Platform:** Built for Flutter, the chart runs on iOS, Android, Web, Windows, macOS, and Linux from a single codebase.
+-   **Web Support:** When compiled for web, supports all modern browsers including Chrome, Firefox, Safari, and Edge.
 -   **Scalability:** Highly performant rendering for projects with over 10,000 tasks.
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
+-   **State Management:** Managed via the robust `LegacyGanttController`.
+-   **Example Architecture:** The accompanying example application showcases a scalable Model-View-ViewModel (MVVM) architecture, providing a clear blueprint for real-world use.
+-   **Core Dependencies:** Built on the robust `provider` package for state management and `intl` for localization.
+-   **Multi-Chart Support:** As a standard Flutter widget, you can display multiple Gantt charts on a single page.
+
+### Data & Backend
+-   **Backend Agnostic:** Connects to any backend (REST, GraphQL, etc.).
+-   **JSON Data:** Designed to work with data from standard JSON APIs.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
+-   **Real-time Updates:** Push data changes to the controller at any time for live updates.
 -   **Full CRUD Support:** Create, read, update, and delete tasks with intuitive callbacks.
--   **Interactive UI & Touch Support:** Move and resize tasks with drag-and-drop. Works seamlessly with mouse and touch input, with tooltips on hover and drag.
+-   **Custom Data Fields:** Add custom data to your own models and display it using builders.
+-   **Inactive Tasks:** Filter your data source or use custom styling to represent inactive tasks or dependencies.
+
+### Interactivity
+-   **Task Creation:** Create new tasks by clicking on empty chart space.
+-   **Drag & Drop:** Move tasks along the timeline or between rows.
+-   **Task Resizing:** Resize tasks by dragging their start or end handles.
+-   **Touch Support:** All interactions work seamlessly on touch devices.
+-   **Task Tooltips:** Tooltips appear when dragging or resizing tasks.
 -   **Task Options Menu:** Right-click or tap a task's option icon to access actions like copy, delete, and dependency management.
 -   **Interactive Dependency Creation:** Users can visually create dependencies by dragging a connector from one task to another.
+-   **Read-Only Mode:** Easily disable all user interactions for a static, read-only view of the chart.
+
+### Customization & Theming
+-   **Fully Themeable:** Use `LegacyGanttTheme` to customize colors, text styles, and more.
+-   **Multiple Themes:** Create and switch between your own custom theme objects.
+-   **Custom Task Widgets:** Replace the default task bars with your own custom widgets using a `taskBarBuilder`.
+-   **Custom Task Content:** Add custom content like icons or progress bars inside the default task bars using `taskContentBuilder`.
+-   **Individual Task Styling:** Style tasks individually by setting a color in the data model or using logic in a builder.
+-   **Flexible Layout:** The chart widget is decoupled from the data grid. While the example shows a grid on the left for task details, you are free to build your UI however you see fit, or not include a data grid at all. You can also configure the height of the timeline axis and individual task rows.
+-   **Localization:** Built with localization in mind, allowing you to format dates and text for different locales.
+
+### Timeline & Dependencies
+-   **Unique Timeline Scrubber:** Navigate vast timelines with ease using the `LegacyGanttTimelineScrubber`. Inspired by professional audio/visual editing software, this powerful widget provides a high-level overview of the entire project. It features dynamic viewbox zooming, which intelligently frames the selected date range for enhanced precision. Fade indicators at the edges and a convenient "Reset Zoom" button appear when zoomed, ensuring you never lose track of your position or struggle to get back to the full view. This advanced navigation system is unique among Gantt libraries on pub.dev and sets this package apart.
 -   **Task Dependencies:** Define and visualize relationships between tasks. Supports Finish-to-Start, Start-to-Start, Finish-to-Finish, Start-to-Finish, and Contained dependency types.
 -   **Task Stacking:** Automatically stacks overlapping tasks within the same row.
--   **Extensive Customization:**
-    -   **Theming:** Extensive theming support via `LegacyGanttTheme`. Customize everything from bar colors to the timeline grid line colors.
-    -   **Custom Task Widgets:** Use custom builders (`taskBarBuilder`, `taskContentBuilder`) to render completely unique task widgets.
-    -   **Flexible Layout:** The chart widget is decoupled from the data grid. While the example shows a grid on the left for task details, you are free to build your UI however you see fit, or not include a data grid at all. You can also configure the height of the timeline axis and individual task rows.
--   **Unique Timeline Scrubber:** Navigate vast timelines with ease using the `LegacyGanttTimelineScrubber`. Inspired by professional audio/visual editing software, this powerful widget provides a high-level overview of the entire project. It features dynamic viewbox zooming, which intelligently frames the selected date range for enhanced precision. Fade indicators at the edges and a convenient "Reset Zoom" button appear when zoomed, ensuring you never lose track of your position or struggle to get back to the full view. This advanced navigation system is unique among Gantt libraries on pub.dev and sets this package apart.
 -   **Special Task Types & Visual Cues:** The chart uses specific visual patterns to convey important information at a glance:
     -   **Summary Bars (Angled Pattern):** A summary bar depicts a resource's overall time allocation (e.g., a developer's work week). The angled pattern signifies it's a container for other tasks. Child rows underneath show the specific tasks that consume this allocated time, making it easy to see how the resource's time is being used and whether they have availability.
     -   **Conflict Indicators (Red Angled Pattern):** This pattern is used to raise awareness of contemporaneous activity that exceeds capacity. It typically appears when more tasks are scheduled in a row than the `rowMaxStackDepth` allows, highlighting over-allocation or scheduling issues.
     -   **Vertical Markers (Background Highlights):** Simple colored rectangles used to denote special time ranges like weekends, holidays, or periods of unavailability for a specific resource.
--   **Read-Only Mode:** Easily disable all user interactions for a static, read-only view of the chart.
--   **Multi-Chart Support:** As a standard Flutter widget, you can display multiple Gantt charts on a single page.
--   **Localization:** Built with localization in mind, allowing you to format dates and text for different locales.
+-   **Customizable Zoom Levels:** Zoom from a multi-year overview down to the millisecond level.
+-   **Programmatic Validation:** Use callbacks like `onTaskUpdate` to validate user actions before committing them.
 
 ---
 

@@ -1,3 +1,7 @@
+## 1.3.1
+
+* **DOC**: Update README.md to reflect the full feature set.
+
 ## 1.3.0
 
 * **FEAT**: Add onTaskDelete callback to implement full support for CRUD operations.
