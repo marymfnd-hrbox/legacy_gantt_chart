@@ -17,6 +17,7 @@ The name `legacy_gantt_chart` is a tribute to the package's author, Patrick Lega
 ## Features
 
 -   **Robust Architecture:** The accompanying example application showcases a scalable Model-View-ViewModel (MVVM) architecture with `provider` for state management, providing a clear blueprint for real-world use. Please feel free to use the example as a starting point for integrating into your application. 
+-   **Scalability:** Highly performant rendering for projects with over 10,000 tasks.
 -   **Performant Rendering:** Uses `CustomPainter` for efficient rendering of a large number of tasks and grid lines.
 -   **Dynamic Data Loading:** Fetch tasks asynchronously for the visible date range using a `LegacyGanttController`.
 -   **Interactive Tasks:** Built-in support for dragging, dropping, and resizing tasks.

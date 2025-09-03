@@ -103,6 +103,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
     this.resizeTooltipDateFormat,
     this.onTaskHover,
   }) {
+    if (scrollController != null && scrollController!.hasClients) {
+      _translateY = -scrollController!.offset;
+    }
     scrollController?.addListener(_onExternalScroll);
   }
 

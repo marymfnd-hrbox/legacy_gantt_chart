@@ -752,5 +752,6 @@ class BarsCollectionPainter extends CustomPainter {
       oldDelegate.dependencyDragCurrentPosition != dependencyDragCurrentPosition ||
       oldDelegate.hoveredTaskForDependency != hoveredTaskForDependency ||
       oldDelegate.hasCustomTaskBuilder != hasCustomTaskBuilder ||
-      oldDelegate.hasCustomTaskContentBuilder != hasCustomTaskContentBuilder;
+      oldDelegate.hasCustomTaskContentBuilder != hasCustomTaskContentBuilder ||
+      oldDelegate.translateY != translateY;
 }

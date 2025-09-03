@@ -1,3 +1,7 @@
+## 1.2.1
+
+* **FIX**: Fix for an issue that caused the gantt bars to reset when changing theme and when expanding a collapsed row. This fix is scoped to the example, please take note so that your implementation has the correct scrolling behavior.
+
 ## 1.2.0
 
 * **FIX**: Fix for an issue that caused vertical scrolling to fail
