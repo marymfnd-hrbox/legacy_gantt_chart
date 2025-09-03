@@ -25,12 +25,7 @@ class MockApiService {
       for (int j = 0; j < 100; j++) {
         final jobId = 'job-$i-$j';
         jobs.add(GanttJobData(
-            id: jobId,
-            name: 'Job $j',
-            taskName: 'Task $j',
-            status: 'Active',
-            taskColor: '4CAF50',
-            completion: 0.5));
+            id: jobId, name: 'Job $j', taskName: 'Task $j', status: 'Active', taskColor: '4CAF50', completion: 0.5));
 
         final eventStart = startDate.add(Duration(days: (i * 100 + j) % 14, hours: 9));
         final eventEnd = eventStart.add(const Duration(hours: 8));
@@ -58,7 +53,7 @@ class MockApiService {
         children: jobs,
       ));
     }
-    
+
     // Add one more task
     const extraJobId = 'job-extra';
     mockResources.first.children.add(GanttJobData(
@@ -68,7 +63,7 @@ class MockApiService {
         status: 'Active',
         taskColor: '4CAF50',
         completion: 0.5));
-        
+
     final eventStart = startDate.add(const Duration(days: 1, hours: 9));
     final eventEnd = eventStart.add(const Duration(hours: 8));
     const eventId = 'event-$extraJobId';
@@ -86,7 +81,6 @@ class MockApiService {
       'event': eventId,
       'resource': extraJobId,
     });
-
 
     return {
       'success': true,

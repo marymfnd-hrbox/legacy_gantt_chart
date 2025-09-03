@@ -257,7 +257,7 @@ class GanttScheduleService {
         } else {
           stackEndTimes[currentStackIndex] = currentTask.end;
         }
-        
+
         stackedTasks.add(currentTask.copyWith(stackIndex: currentStackIndex));
       }
       rowMaxDepth[rowId] = stackEndTimes.length;
