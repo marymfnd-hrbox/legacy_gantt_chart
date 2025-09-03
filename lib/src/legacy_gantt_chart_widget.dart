@@ -321,9 +321,15 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                 final double totalContentWidth = vm.totalDomain.isEmpty ? 0 : vm.totalScale(vm.totalDomain.last);
 
                 // Calculate the total height of all rows to provide the correct size to the painter.
-                final double totalContentHeight = widget.visibleRows.fold<double>(
+                final allRowIds = tasks.map((task) => task.rowId).toSet();
+                if (widget.visibleRows.length > allRowIds.length) {
+                  for (var row in widget.visibleRows) {
+                    allRowIds.add(row.id);
+                  }
+                }
+                final double totalContentHeight = allRowIds.fold<double>(
                   0.0,
-                  (prev, row) => prev + widget.rowHeight * (widget.rowMaxStackDepth[row.id] ?? 1),
+                  (prev, rowId) => prev + widget.rowHeight * (widget.rowMaxStackDepth[rowId] ?? 1),
                 );
 
                 return MouseRegion(
@@ -363,37 +369,35 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                             width: constraints.maxWidth,
                             height: constraints.maxHeight - vm.timeAxisHeight,
                             child: ClipRect(
-                              child: Transform.translate(
-                                offset: Offset(0, vm.translateY),
-                                child: Stack(
-                                  children: [
-                                    CustomPaint(
-                                      painter: BarsCollectionPainter(
-                                        dependencies: vm.dependencies,
-                                        data: tasks,
-                                        domain: vm.totalDomain,
-                                        visibleRows: widget.visibleRows,
-                                        rowMaxStackDepth: widget.rowMaxStackDepth,
-                                        scale: vm.totalScale,
-                                        rowHeight: widget.rowHeight,
-                                        draggedTaskId: vm.draggedTask?.id,
-                                        ghostTaskStart: vm.ghostTaskStart,
-                                        ghostTaskEnd: vm.ghostTaskEnd,
-                                        theme: effectiveTheme,
-                                        hoveredRowId: vm.hoveredRowId,
-                                        hoveredDate: vm.hoveredDate,
-                                        hasCustomTaskBuilder: widget.taskBarBuilder != null,
-                                        hasCustomTaskContentBuilder: widget.taskContentBuilder != null,
-                                      ),
-                                      size: Size(totalContentWidth, totalContentHeight),
+                              child: Stack(
+                                children: [
+                                  CustomPaint(
+                                    painter: BarsCollectionPainter(
+                                      dependencies: vm.dependencies,
+                                      data: tasks,
+                                      domain: vm.totalDomain,
+                                      visibleRows: widget.visibleRows,
+                                      rowMaxStackDepth: widget.rowMaxStackDepth,
+                                      scale: vm.totalScale,
+                                      rowHeight: widget.rowHeight,
+                                      draggedTaskId: vm.draggedTask?.id,
+                                      ghostTaskStart: vm.ghostTaskStart,
+                                      ghostTaskEnd: vm.ghostTaskEnd,
+                                      theme: effectiveTheme,
+                                      hoveredRowId: vm.hoveredRowId,
+                                      hoveredDate: vm.hoveredDate,
+                                      hasCustomTaskBuilder: widget.taskBarBuilder != null,
+                                      hasCustomTaskContentBuilder: widget.taskContentBuilder != null,
+                                      translateY: vm.translateY,
                                     ),
-                                    if (widget.taskBarBuilder != null)
-                                      ..._buildCustomTaskWidgets(vm, tasks, widget.taskBarBuilder!),
-                                    if (widget.taskContentBuilder != null)
-                                      ..._buildCustomTaskWidgets(vm, tasks, widget.taskContentBuilder!),
-                                    ..._buildCustomCellWidgets(vm, tasks),
-                                  ],
-                                ),
+                                    size: Size(totalContentWidth, totalContentHeight),
+                                  ),
+                                  if (widget.taskBarBuilder != null)
+                                    ..._buildCustomTaskWidgets(vm, tasks, widget.taskBarBuilder!),
+                                  if (widget.taskContentBuilder != null)
+                                    ..._buildCustomTaskWidgets(vm, tasks, widget.taskContentBuilder!),
+                                  ..._buildCustomCellWidgets(vm, tasks),
+                                ],
                               ),
                             ),
                           ),

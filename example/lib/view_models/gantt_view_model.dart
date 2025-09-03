@@ -199,8 +199,26 @@ class GanttViewModel extends ChangeNotifier {
       _rowMaxStackDepth = processedData.rowMaxStackDepth;
       _eventMap = processedData.eventMap;
       _apiResponse = processedData.apiResponse;
-      _totalStartDate = _startDate;
-      _totalEndDate = _startDate.add(Duration(days: _range));
+
+      // Calculate total date range based on all tasks
+      if (_ganttTasks.isNotEmpty) {
+        DateTime minStart = _ganttTasks.first.start;
+        DateTime maxEnd = _ganttTasks.first.end;
+        for (final task in _ganttTasks) {
+          if (task.start.isBefore(minStart)) {
+            minStart = task.start;
+          }
+          if (task.end.isAfter(maxEnd)) {
+            maxEnd = task.end;
+          }
+        }
+        _totalStartDate = minStart;
+        _totalEndDate = maxEnd;
+      } else {
+        _totalStartDate = _startDate;
+        _totalEndDate = _startDate.add(Duration(days: _range));
+      }
+
       _visibleStartDate = effectiveTotalStartDate;
       _visibleEndDate = effectiveTotalEndDate;
 

@@ -65,6 +65,9 @@ class BarsCollectionPainter extends CustomPainter {
   /// Whether the feature to interactively create dependencies is enabled.
   final bool enableDependencyCreation;
 
+  /// The current vertical scroll offset of the chart content.
+  final double translateY;
+
   /// The ID of the task where a new dependency drag was initiated.
   final String? dependencyDragStartTaskId;
 
@@ -94,6 +97,7 @@ class BarsCollectionPainter extends CustomPainter {
     this.hasCustomTaskBuilder = false,
     this.hasCustomTaskContentBuilder = false,
     this.enableDependencyCreation = false,
+    this.translateY = 0.0,
     this.dependencyDragStartTaskId,
     this.dependencyDragStartIsFromStart,
     this.dependencyDragCurrentPosition,
@@ -102,6 +106,8 @@ class BarsCollectionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.translate(0, translateY);
     double cumulativeRowTop = 0;
 
     // Draw dependency backgrounds first, so they appear behind task bars.
@@ -335,6 +341,7 @@ class BarsCollectionPainter extends CustomPainter {
         // Not drawing text on ghost bar for simplicity
       }
     }
+    canvas.restore();
   }
 
   // Reusable helper to draw angled line patterns within a rounded rectangle.

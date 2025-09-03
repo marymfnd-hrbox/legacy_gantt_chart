@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 import '../data/mock_api_service.dart';
@@ -91,6 +90,7 @@ class GanttScheduleService {
 
     // 4. Process resources to build the hierarchical grid data, filtering out rows with no tasks.
     final List<GanttGridData> processedGridData = [];
+    bool isFirstParent = true;
     for (final resource in apiResponse.resourcesData) {
       // Filter children to only include those that have tasks.
       final visibleChildren = resource.children
@@ -125,9 +125,10 @@ class GanttScheduleService {
           isParent: true,
           children: visibleChildren,
           taskName: resource.taskName,
-          isExpanded: true, // Default to expanded
+          isExpanded: isFirstParent, // Default to collapsed
           completion: parentCompletion,
         ));
+        isFirstParent = false;
       }
     }
 
@@ -195,6 +196,9 @@ class GanttScheduleService {
   }
 
   List<LegacyGanttTask> _generateWeekendHighlights(List<LegacyGanttRow> rows, DateTime start, DateTime end) {
+    if (rows.length > 100) {
+      return [];
+    }
     final List<LegacyGanttTask> holidays = [];
     for (var day = start; day.isBefore(end); day = day.add(const Duration(days: 1))) {
       if (day.weekday == DateTime.saturday) {
@@ -237,25 +241,26 @@ class GanttScheduleService {
 
     eventTasksByRow.forEach((rowId, rowTasks) {
       rowTasks.sort((a, b) => a.start.compareTo(b.start));
-      List<LegacyGanttTask> processedRowTasks = [];
+      final List<DateTime> stackEndTimes = [];
       for (var currentTask in rowTasks) {
-        int currentStackIndex = 0;
-        while (true) {
-          bool overlapFound = processedRowTasks.any((placedTask) =>
-              placedTask.stackIndex == currentStackIndex &&
-              currentTask.start.isBefore(placedTask.end) &&
-              currentTask.end.isAfter(placedTask.start));
-          if (!overlapFound) {
-            final newTask = currentTask.copyWith(stackIndex: currentStackIndex);
-            stackedTasks.add(newTask);
-            processedRowTasks.add(newTask);
+        int currentStackIndex = -1;
+        for (int i = 0; i < stackEndTimes.length; i++) {
+          if (stackEndTimes[i].isBefore(currentTask.start) || stackEndTimes[i] == currentTask.start) {
+            currentStackIndex = i;
             break;
-          } else {
-            currentStackIndex++;
           }
         }
+
+        if (currentStackIndex == -1) {
+          currentStackIndex = stackEndTimes.length;
+          stackEndTimes.add(currentTask.end);
+        } else {
+          stackEndTimes[currentStackIndex] = currentTask.end;
+        }
+        
+        stackedTasks.add(currentTask.copyWith(stackIndex: currentStackIndex));
       }
-      rowMaxDepth[rowId] = processedRowTasks.fold<int>(0, (max, task) => math.max(max, task.stackIndex)) + 1;
+      rowMaxDepth[rowId] = stackEndTimes.length;
     });
 
     final Map<String, String> lineItemToContactMap = {
