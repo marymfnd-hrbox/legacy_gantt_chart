@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.20.2
-  legacy_context_menu: ^1.0.0
+  legacy_context_menu: ^2.1.2
   legacy_gantt_chart:
     path: ../
   provider: ^6.1.2

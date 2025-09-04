@@ -1,3 +1,7 @@
+## 1.3.3
+
+* **CHORE**: Update example dependency on legacy_context_menu to ^2.1.2
+
 ## 1.3.2
 
 * **FIX**: Fix dart formatting
