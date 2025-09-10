@@ -43,18 +43,18 @@ class LegacyGanttTheme {
     required this.barColorSecondary,
     required this.textColor,
     required this.backgroundColor,
-    this.gridColor = const Color(0x33888888), // Colors.grey.withValues(alpha:0.2)
-    this.summaryBarColor = const Color(0x33000000), // Colors.black.withValues(alpha:0.2)
-    this.conflictBarColor = const Color(0x80F44336), // Colors.red.withValues(alpha:0.5)
-    this.ghostBarColor = const Color(0xB32196F3), // Colors.blue.withValues(alpha:0.7)
+    this.gridColor = const Color(0x33888888), // Colors.grey.withAlpha(51)
+    this.summaryBarColor = const Color(0x33000000), // Colors.black.withAlpha(51)
+    this.conflictBarColor = const Color(0x80F44336), // Colors.red.withAlpha(128)
+    this.ghostBarColor = const Color(0xB32196F3), // Colors.blue.withAlpha(179)
     TextStyle? axisTextStyle,
     this.taskTextStyle = const TextStyle(fontSize: 12, color: Colors.white),
     this.showRowBorders = false,
     this.rowBorderColor,
     this.dependencyLineColor = const Color(0xFF616161), // Colors.grey[700]
-    this.timeRangeHighlightColor = const Color(0x0D000000), // Colors.black.withValues(alpha:0.05)
-    this.containedDependencyBackgroundColor = const Color(0x1A000000), // Colors.black.withValues(alpha:0.1)
-    this.emptySpaceHighlightColor = const Color(0x0F2196F3), // Colors.blue.withValues(alpha:0.06)
+    this.timeRangeHighlightColor = const Color(0x0D000000), // Colors.black.withAlpha(13)
+    this.containedDependencyBackgroundColor = const Color(0x1A000000), // Colors.black.withAlpha(26)
+    this.emptySpaceHighlightColor = const Color(0x0F2196F3), // Colors.blue.withAlpha(15)
     this.emptySpaceAddIconColor = const Color(0xFF2196F3), // Colors.blue
     this.barHeightRatio = 0.7,
     this.barCornerRadius = const Radius.circular(4.0),
@@ -110,15 +110,15 @@ class LegacyGanttTheme {
         barColorSecondary: theme.colorScheme.secondary,
         textColor: theme.colorScheme.onSurface,
         backgroundColor: theme.colorScheme.surface,
-        gridColor: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-        summaryBarColor: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-        conflictBarColor: Colors.red.withValues(alpha: 0.5),
-        ghostBarColor: theme.colorScheme.primary.withValues(alpha: 0.7),
-        rowBorderColor: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-        dependencyLineColor: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-        timeRangeHighlightColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        containedDependencyBackgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        emptySpaceHighlightColor: theme.colorScheme.primary.withValues(alpha: 0.06),
+        gridColor: theme.colorScheme.onSurface.withAlpha(51),
+        summaryBarColor: theme.colorScheme.onSurface.withAlpha(51),
+        conflictBarColor: Colors.red.withAlpha(128),
+        ghostBarColor: theme.colorScheme.primary.withAlpha(179),
+        rowBorderColor: theme.colorScheme.onSurface.withAlpha(51),
+        dependencyLineColor: theme.colorScheme.onSurface.withAlpha(204),
+        timeRangeHighlightColor: theme.colorScheme.onSurface.withAlpha(13),
+        containedDependencyBackgroundColor: theme.colorScheme.primary.withAlpha(26),
+        emptySpaceHighlightColor: theme.colorScheme.primary.withAlpha(15),
         emptySpaceAddIconColor: theme.colorScheme.primary,
         axisTextStyle: theme.textTheme.bodySmall ?? TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
         taskTextStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onPrimary) ??

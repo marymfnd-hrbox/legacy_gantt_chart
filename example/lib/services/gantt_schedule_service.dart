@@ -49,14 +49,17 @@ class GanttScheduleService {
     // 2. Identify top-level person resource IDs
     final parentResourceIds = apiResponse.resourcesData.map((r) => r.id).toSet();
 
-    // 3. Process assignments to create Gantt tasks FIRST, so we know which rows are active.
+    // 3. Process assignments to create Gantt tasks for child resources (jobs).
+    //    Summary tasks for parent resources will be calculated and created next.
     final List<LegacyGanttTask> fetchedTasks = [];
     for (var assignment in apiResponse.assignmentsData) {
       final event = eventMap[assignment.event];
-      if (event != null && event.utcStartDate != null && event.utcEndDate != null) {
+      final isParentAssignment = parentResourceIds.contains(assignment.resource);
+
+      // Skip assignments for parent resources, as their summary bars will be calculated from their children.
+      if (event != null && event.utcStartDate != null && event.utcEndDate != null && !isParentAssignment) {
         final colorHex = event.referenceData?.taskColor;
         final textColorHex = event.referenceData?.taskTextColor;
-        final isSummary = parentResourceIds.contains(assignment.resource);
 
         fetchedTasks.add(LegacyGanttTask(
           id: assignment.id,
@@ -67,8 +70,32 @@ class GanttScheduleService {
           color: _parseColorHex(colorHex != null ? '#$colorHex' : null, Colors.blue),
           textColor: _parseColorHex(textColorHex != null ? '#$textColorHex' : null, Colors.white),
           originalId: event.id,
-          isSummary: isSummary,
+          isSummary: false, // These are always child tasks
         ));
+      }
+    }
+
+    // Create summary tasks for each parent resource based on the span of its children's tasks.
+    for (final resource in apiResponse.resourcesData) {
+      final childRowIds = resource.children.map((child) => child.id).toSet();
+      final childrenTasks = fetchedTasks.where((task) => childRowIds.contains(task.rowId)).toList();
+
+      if (childrenTasks.isNotEmpty) {
+        DateTime minStart = childrenTasks.first.start;
+        DateTime maxEnd = childrenTasks.first.end;
+
+        for (final task in childrenTasks.skip(1)) {
+          if (task.start.isBefore(minStart)) minStart = task.start;
+          if (task.end.isAfter(maxEnd)) maxEnd = task.end;
+        }
+
+        fetchedTasks.add(LegacyGanttTask(
+            id: 'summary-task-${resource.id}',
+            rowId: resource.id,
+            name: resource.taskName ?? resource.name,
+            start: minStart,
+            end: maxEnd,
+            isSummary: true));
       }
     }
 

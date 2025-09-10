@@ -1,3 +1,8 @@
+## 1.3.4
+
+* **FIX**: Fix for an issue that caused conflict indicators to draw below their respective tasks
+* **FIX**: Fix for an issue that caused tasks to fail to scroll vertically
+
 ## 1.3.3
 
 * **CHORE**: Update example dependency on legacy_context_menu to ^2.1.2

@@ -385,7 +385,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
                                       hoveredRowId: vm.hoveredRowId,
                                       hoveredDate: vm.hoveredDate,
                                       hasCustomTaskBuilder: widget.taskBarBuilder != null,
-                                      hasCustomTaskContentBuilder: widget.taskContentBuilder != null,
+                                      hasCustomTaskContentBuilder: false, // Let the widget layer handle this
                                       translateY: vm.translateY,
                                     ),
                                     size: Size(totalContentWidth, totalContentHeight),
@@ -462,7 +462,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
     final Map<String, List<LegacyGanttTask>> tasksByRow = {};
     final visibleRowIds = vm.visibleRows.map((r) => r.id).toSet();
     for (final task in tasks) {
-      if (visibleRowIds.contains(task.rowId) && !task.isTimeRangeHighlight && !task.isOverlapIndicator) {
+      if (visibleRowIds.contains(task.rowId) && !task.isTimeRangeHighlight) {
         tasksByRow.putIfAbsent(task.rowId, () => []).add(task);
       }
     }
@@ -478,10 +478,12 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           continue;
         }
 
-        final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
+        final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight) + vm.translateY;
 
         Widget taskWidget;
-        if (widget.taskBarBuilder != null) {
+        if (task.isOverlapIndicator) {
+          taskWidget = _OverlapIndicatorBar(theme: theme);
+        } else if (widget.taskBarBuilder != null) {
           taskWidget = widget.taskBarBuilder!(task);
         } else {
           taskWidget = _DefaultTaskBar(
@@ -535,7 +537,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           final width = endX - startX;
 
           if (width > 0) {
-            final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight);
+            final top = cumulativeRowTop + (task.stackIndex * vm.rowHeight) + vm.translateY;
             customCells.add(Positioned(
                 left: startX, top: top, width: width, height: vm.rowHeight, child: task.cellBuilder!(currentDate)));
           }
@@ -617,4 +619,63 @@ class _DefaultTaskBarState extends State<_DefaultTaskBar> {
       ),
     );
   }
+}
+
+/// A widget that uses a [CustomPainter] to draw the conflict/overlap pattern.
+class _OverlapIndicatorBar extends StatelessWidget {
+  final LegacyGanttTheme theme;
+
+  const _OverlapIndicatorBar({required this.theme});
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+        painter: _OverlapPainter(theme: theme),
+        child: Container(),
+      );
+}
+
+/// The actual painter for the conflict/overlap pattern.
+class _OverlapPainter extends CustomPainter {
+  final LegacyGanttTheme theme;
+
+  _OverlapPainter({required this.theme});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final barHeight = size.height * theme.barHeightRatio;
+    final barVerticalCenterOffset = (size.height - barHeight) / 2;
+    final rect = Rect.fromLTWH(0, barVerticalCenterOffset, size.width, barHeight);
+    final rrect = RRect.fromRectAndRadius(rect, theme.barCornerRadius);
+
+    // To ensure the conflict pattern is clear and not blended with underlying bars,
+    // we first "erase" the area by drawing a solid block of the chart's background color.
+    canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
+
+    // Next, draw the semi-transparent red background for the conflict area.
+    final backgroundPaint = Paint()..color = theme.conflictBarColor.withValues(alpha: 0.4);
+    canvas.drawRRect(rrect, backgroundPaint);
+
+    // Then, draw the angled lines on top of that new background.
+    _drawAngledPattern(canvas, rrect, theme.conflictBarColor, 1.0);
+  }
+
+  void _drawAngledPattern(Canvas canvas, RRect rrect, Color color, double strokeWidth) {
+    final patternPaint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    canvas.save();
+    canvas.clipRRect(rrect);
+
+    const double lineSpacing = 8.0;
+    for (double i = -rrect.height; i < rrect.width; i += lineSpacing) {
+      canvas.drawLine(
+          Offset(rrect.left + i, rrect.top), Offset(rrect.left + i + rrect.height, rrect.bottom), patternPaint);
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _OverlapPainter oldDelegate) => oldDelegate.theme != theme;
 }

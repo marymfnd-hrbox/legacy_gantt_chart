@@ -149,7 +149,7 @@ class BarsCollectionPainter extends CustomPainter {
         canvas.drawRect(rect, paint);
       }
 
-      // 2. Draw regular event bars
+      // 2. Draw regular event bars (without text or handles)
       if (!hasCustomTaskBuilder) {
         for (final task in tasksInThisRow.where((t) => !t.isTimeRangeHighlight && !t.isOverlapIndicator)) {
           // If a cell builder is provided for this task, the widget will handle rendering it.
@@ -206,8 +206,7 @@ class BarsCollectionPainter extends CustomPainter {
               );
 
               final barPaint = Paint()
-                ..color = (segment.color ?? task.color ?? theme.barColorPrimary)
-                    .withValues(alpha: isBeingDragged ? 0.3 : 1.0);
+                ..color = (segment.color ?? task.color ?? theme.barColorPrimary).withAlpha(isBeingDragged ? 77 : 255);
               canvas.drawRRect(segmentRRect, barPaint);
             }
           } else {
@@ -215,7 +214,7 @@ class BarsCollectionPainter extends CustomPainter {
             // We can reuse the start/end coordinates calculated earlier.
             // Draw the bar
             final barPaint = Paint()
-              ..color = (task.color ?? theme.barColorPrimary).withValues(alpha: isBeingDragged ? 0.3 : 1.0);
+              ..color = (task.color ?? theme.barColorPrimary).withAlpha(isBeingDragged ? 77 : 255);
             canvas.drawRRect(barRRect, barPaint);
 
             // Draw summary pattern if needed
@@ -223,65 +222,73 @@ class BarsCollectionPainter extends CustomPainter {
               _drawSummaryPattern(canvas, barRRect);
             }
           }
+        }
+      }
+
+      // 3. Draw conflict indicators on top of the bars
+      if (!hasCustomTaskBuilder) {
+        for (final task in tasksInThisRow.where((t) => t.isOverlapIndicator)) {
+          final double barStartX = scale(task.start);
+          final double barEndX = scale(task.end);
+
+          if (barEndX < 0 || barStartX > size.width) continue;
+
+          final double barTop = cumulativeRowTop + (task.stackIndex * rowHeight);
+          final double barHeight = rowHeight * theme.barHeightRatio;
+          final double barVerticalCenterOffset = (rowHeight - barHeight) / 2;
+
+          final RRect barRRect = RRect.fromRectAndRadius(
+            Rect.fromLTWH(barStartX, barTop + barVerticalCenterOffset, barEndX - barStartX, barHeight),
+            theme.barCornerRadius,
+          );
+
+          _drawConflictIndicator(canvas, barRRect);
+        }
+      }
+
+      // 4. Draw text and dependency handles on top of everything
+      if (!hasCustomTaskBuilder) {
+        for (final task in tasksInThisRow.where((t) => !t.isTimeRangeHighlight && !t.isOverlapIndicator)) {
+          final double taskStartX = scale(task.start);
+          final double taskEndX = scale(task.end);
+          if (taskEndX < 0 || taskStartX > size.width || taskEndX <= taskStartX) {
+            continue;
+          }
+
+          final isBeingDragged = task.id == draggedTaskId;
+          final double barTop = cumulativeRowTop + (task.stackIndex * rowHeight);
+          final double barHeight = rowHeight * theme.barHeightRatio;
+          final double barVerticalCenterOffset = (rowHeight - barHeight) / 2;
+          final RRect barRRect = RRect.fromRectAndRadius(
+            Rect.fromLTWH(taskStartX, barTop + barVerticalCenterOffset, taskEndX - taskStartX, barHeight),
+            theme.barCornerRadius,
+          );
 
           // --- Draw dependency handles ---
           if (enableDependencyCreation) {
             _drawDependencyHandles(canvas, barRRect, task, isBeingDragged);
           }
 
-          // --- Draw Text for the entire task ---
+          // --- Draw Text ---
           if (task.name != null && task.name!.isNotEmpty && !hasCustomTaskBuilder && !hasCustomTaskContentBuilder) {
-            // We can reuse the start/end coordinates calculated earlier.
             final double overallWidth = max(0, taskEndX - taskStartX);
-
-            final textSpan = TextSpan(
-              text: task.name,
-              style: theme.taskTextStyle,
-            );
+            final textSpan = TextSpan(text: task.name, style: theme.taskTextStyle);
             final textPainter = TextPainter(
-              text: textSpan,
-              textAlign: TextAlign.left,
-              textDirection: TextDirection.ltr,
-              maxLines: 1,
-              ellipsis: '...',
-            );
+                text: textSpan,
+                textAlign: TextAlign.left,
+                textDirection: TextDirection.ltr,
+                maxLines: 1,
+                ellipsis: '...');
             textPainter.layout(minWidth: 0, maxWidth: max(0, overallWidth - 8)); // 4px padding on each side
 
-            final textOffset = Offset(
-              taskStartX + 4,
-              barTop + (rowHeight - textPainter.height) / 2,
-            );
+            final textOffset = Offset(taskStartX + 4, barTop + (rowHeight - textPainter.height) / 2);
 
-            // Clip text to the bar's overall rectangle to prevent overflow.
             canvas.save();
             canvas.clipRect(Rect.fromLTWH(taskStartX, barTop, overallWidth, rowHeight));
             textPainter.paint(canvas, textOffset);
             canvas.restore();
           }
         }
-      }
-
-      // 3. Draw overlap indicators on top (foreground)
-      for (final task in tasksInThisRow.where((t) => t.isOverlapIndicator)) {
-        final double barStartX = scale(task.start);
-        final double barEndX = scale(task.end);
-
-        // Performance optimization: only draw if the bar is visible on screen.
-        if (barEndX < 0 || barStartX > size.width) {
-          continue;
-        }
-
-        final double barWidth = max(0, barEndX - barStartX);
-
-        final double barHeight = rowHeight * theme.barHeightRatio; // Same height as the event bar
-        final double barTop = cumulativeRowTop + (task.stackIndex * rowHeight) + (rowHeight - barHeight) / 2;
-
-        final RRect barRRect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(barStartX, barTop, barWidth, barHeight),
-          theme.barCornerRadius,
-        );
-
-        _drawOverlapPattern(canvas, barRRect);
       }
 
       // Draw row border line
@@ -336,7 +343,7 @@ class BarsCollectionPainter extends CustomPainter {
         );
 
         // Draw the ghost bar
-        final barPaint = Paint()..color = (originalTask.color ?? theme.ghostBarColor).withValues(alpha: 0.7);
+        final barPaint = Paint()..color = (originalTask.color ?? theme.ghostBarColor).withAlpha(179);
         canvas.drawRRect(barRRect, barPaint);
         // Not drawing text on ghost bar for simplicity
       }
@@ -366,31 +373,28 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawOverlapPattern(Canvas canvas, RRect rrect) {
-    // To ensure the conflict pattern is clear and not blended with underlying bars,
-    // we first "erase" the area by drawing a solid block of the chart's background color. This,
-    // ensures that the semi-transparent conflict color is blended with a consistent
-    // background, not the color of the task bar underneath.
-    canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
-
-    // Next, draw the semi-transparent red background for the conflict area.
-    final backgroundPaint = Paint()..color = theme.conflictBarColor.withValues(alpha: 0.4);
-    canvas.drawRRect(rrect, backgroundPaint);
-
-    // Then, draw the angled lines on top of that new background.
-    // A thin stroke width is crucial to keep the pattern precise, as noted in documentation.
-    _drawAngledPattern(canvas, rrect, theme.conflictBarColor, 1.0);
-  }
-
   void _drawSummaryPattern(Canvas canvas, RRect rrect) {
     // A thick stroke can make the pattern look muddy. 1.5 is a good balance.
     _drawAngledPattern(canvas, rrect, theme.summaryBarColor, 1.5);
   }
 
+  void _drawConflictIndicator(Canvas canvas, RRect rrect) {
+    // To ensure the conflict pattern is clear and not blended with underlying bars,
+    // we first "erase" the area by drawing a solid block of the chart's background color.
+    canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
+
+    // Next, draw the semi-transparent red background for the conflict area.
+    final backgroundPaint = Paint()..color = theme.conflictBarColor;
+    canvas.drawRRect(rrect, backgroundPaint);
+
+    // Then, draw the angled lines on top of that new background.
+    _drawAngledPattern(canvas, rrect, theme.conflictBarColor, 1.0);
+  }
+
   void _drawDependencyHandles(Canvas canvas, RRect rrect, LegacyGanttTask task, bool isBeingDragged) {
     if (isBeingDragged || task.isSummary) return;
 
-    final handlePaint = Paint()..color = theme.dependencyLineColor.withValues(alpha: 0.8);
+    final handlePaint = Paint()..color = theme.dependencyLineColor.withAlpha(204);
     const handleRadius = 4.0;
 
     // Left handle
