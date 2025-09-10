@@ -45,6 +45,7 @@ pubspec.lock
 /example/android/app/release/
 /example/android/app/profile/
 /example/android/key.properties
+/example/android/gradle.properties
 /example/android/local.properties
 /android/app/src/main/assets/flutter_assets/
 /android/app/build/
@@ -56,6 +57,7 @@ pubspec.lock
 /android/app/release/
 /android/app/profile/
 /android/key.properties
+/android/gradle.properties
 /android/local.properties
 
 # iOS
@@ -67,6 +69,7 @@ pubspec.lock
 /example/ios/Flutter/Debug.xcconfig
 /example/ios/Flutter/Release.xcconfig
 /example/ios/Flutter/ephemeral/
+/example/ios/Flutter/AppFrameworkInfo.plist
 /example/ios/Flutter/.podspec
 /example/ios/Runner/GeneratedPluginRegistrant.*
 /example/ios/Runner.xcworkspace/
@@ -84,6 +87,7 @@ pubspec.lock
 /ios/Flutter/Debug.xcconfig
 /ios/Flutter/Release.xcconfig
 /ios/Flutter/ephemeral/
+/ios/Flutter/AppFrameworkInfo.plist
 /ios/Flutter/.podspec
 /ios/Runner/GeneratedPluginRegistrant.*
 /ios/Runner.xcworkspace/
@@ -108,6 +112,7 @@ pubspec.lock
 /example/macos/Flutter/Debug.xcconfig
 /example/macos/Flutter/Release.xcconfig
 /example/macos/Flutter/.podspec
+/example/macos/Runner/Configs/
 /example/macos/Pods/
 /example/macos/Runner.xcworkspace/
 /example/macos/Runner.xcodeproj/project.xcworkspace/
@@ -120,6 +125,7 @@ pubspec.lock
 /macos/Flutter/Debug.xcconfig
 /macos/Flutter/Release.xcconfig
 /macos/Flutter/.podspec
+/macos/Runner/Configs/
 /macos/Pods/
 /macos/Runner.xcworkspace/
 /macos/Runner.xcodeproj/project.xcworkspace/
@@ -139,5 +145,7 @@ pubspec.lock
 # Web
 /example/web/build/
 /example/web/.dart_tool/
+/example/web/lib/
 /web/build/
 /web/.dart_tool/
+/web/lib/
