@@ -93,3 +93,51 @@ pubspec.lock
 /ios/.symlinks/
 /ios/DerivedData/
 *.hmap
+
+# Linux
+/example/linux/flutter/ephemeral/
+/example/linux/build/
+/example/linux/.symlinks/
+/linux/flutter/ephemeral/
+/linux/build/
+/linux/.symlinks/
+
+# macOS
+/example/macos/Flutter/ephemeral/
+/example/macos/Flutter/Generated.xcconfig
+/example/macos/Flutter/Debug.xcconfig
+/example/macos/Flutter/Release.xcconfig
+/example/macos/Flutter/.podspec
+/example/macos/Pods/
+/example/macos/Runner.xcworkspace/
+/example/macos/Runner.xcodeproj/project.xcworkspace/
+/example/macos/Runner.xcodeproj/xcuserdata/
+/example/macos/build/
+/example/macos/.symlinks/
+/example/macos/DerivedData/
+/macos/Flutter/ephemeral/
+/macos/Flutter/Generated.xcconfig
+/macos/Flutter/Debug.xcconfig
+/macos/Flutter/Release.xcconfig
+/macos/Flutter/.podspec
+/macos/Pods/
+/macos/Runner.xcworkspace/
+/macos/Runner.xcodeproj/project.xcworkspace/
+/macos/Runner.xcodeproj/xcuserdata/
+/macos/build/
+/macos/.symlinks/
+/macos/DerivedData/
+
+# Windows
+/example/windows/flutter/ephemeral/
+/example/windows/build/
+/example/windows/.symlinks/
+/windows/flutter/ephemeral/
+/windows/build/
+/windows/.symlinks/
+
+# Web
+/example/web/build/
+/example/web/.dart_tool/
+/web/build/
+/web/.dart_tool/
