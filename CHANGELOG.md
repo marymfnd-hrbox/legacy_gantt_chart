@@ -1,3 +1,7 @@
+## 1.4.0
+
+* **FEATURE**: Surface conflict indicators in timeline scrubber
+
 ## 1.3.5
 
 * **FIX EXAMPLE**: Fix for an issue that caused the date selector to fail to impact the viewable date range

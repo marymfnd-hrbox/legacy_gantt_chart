@@ -28,13 +28,20 @@ class GanttScheduleService {
   Future<ProcessedScheduleData> fetchAndProcessSchedule({
     required DateTime startDate,
     required int range,
+    required int personCount,
+    required int jobCount,
   }) async {
     final formattedStartDate = _formatDateToISO(startDate);
     final formattedEndDate = _formatDateToISO(startDate.add(Duration(days: range)));
 
     final apiResponseJson = await _apiService.get(
       'yeah',
-      params: {'startDateIso': formattedStartDate, 'endDateIso': formattedEndDate},
+      params: {
+        'startDateIso': formattedStartDate,
+        'endDateIso': formattedEndDate,
+        'personCount': personCount,
+        'jobCount': jobCount
+      },
     );
 
     final apiResponse = GanttResponse.fromJson(apiResponseJson);

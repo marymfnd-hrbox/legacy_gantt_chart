@@ -14,20 +14,22 @@ class MockApiService {
       rangeDays = endDate.difference(startDate).inDays;
     }
 
+    final int personCount = params?['personCount'] as int? ?? 10;
+    final int jobCount = params?['jobCount'] as int? ?? 16;
+
     final List<GanttResourceData> mockResources = [];
     final List<Map<String, dynamic>> mockEvents = [];
     final List<Map<String, dynamic>> mockAssignments = [];
     final List<Map<String, dynamic>> mockResourceTimeRanges = [];
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < personCount; i++) {
       final personId = 'person-$i';
       final List<GanttJobData> jobs = [];
-      for (int j = 0; j < 100; j++) {
+      for (int j = 0; j < jobCount; j++) {
         final jobId = 'job-$i-$j';
         jobs.add(GanttJobData(
             id: jobId, name: 'Job $j', taskName: 'Task $j', status: 'Active', taskColor: '4CAF50', completion: 0.5));
-
-        final eventStart = startDate.add(Duration(days: (i * 100 + j) % rangeDays, hours: 9));
+        final eventStart = startDate.add(Duration(days: (i * jobCount + j) % rangeDays, hours: 9));
         final eventEnd = eventStart.add(const Duration(hours: 8));
         final eventId = 'event-$jobId';
 

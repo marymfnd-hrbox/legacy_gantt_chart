@@ -216,6 +216,48 @@ class _GanttViewState extends State<GanttView> {
                       ],
                     ),
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    color: Theme.of(context).cardColor,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Persons: '),
+                              DropdownButton<int>(
+                                value: vm.personCount,
+                                onChanged: (value) {
+                                  if (value != null) vm.setPersonCount(value);
+                                },
+                                items: List.generate(100, (i) => i + 1)
+                                    .map((count) => DropdownMenuItem(value: count, child: Text(count.toString())))
+                                    .toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Jobs: '),
+                              DropdownButton<int>(
+                                value: vm.jobCount,
+                                onChanged: (value) {
+                                  if (value != null) vm.setJobCount(value);
+                                },
+                                items: List.generate(100, (i) => i + 1)
+                                    .map((count) => DropdownMenuItem(value: count, child: Text(count.toString())))
+                                    .toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   DashboardHeader(
                     selectedDate: vm.startDate,
                     selectedRange: vm.range,

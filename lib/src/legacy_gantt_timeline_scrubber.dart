@@ -304,7 +304,12 @@ class _ScrubberPainter extends CustomPainter {
     for (final task in nonHighlightTasks) {
       final startX = dateToX(task.start);
       final endX = dateToX(task.end);
-      taskPaint.color = task.color ?? theme.colorScheme.primary.withAlpha(128);
+      if (task.isOverlapIndicator) {
+        // Use a red color for conflicts, consistent with the main chart's theme.
+        taskPaint.color = Colors.red.withAlpha(128);
+      } else {
+        taskPaint.color = task.color ?? theme.colorScheme.primary.withAlpha(128);
+      }
       canvas.drawRect(Rect.fromLTRB(startX, size.height * 0.25, endX, size.height * 0.75), taskPaint);
     }
 

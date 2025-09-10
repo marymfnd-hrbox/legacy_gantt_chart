@@ -28,6 +28,8 @@ class GanttViewModel extends ChangeNotifier {
   final TimeOfDay _defaultStartTime = const TimeOfDay(hour: 9, minute: 0);
   final TimeOfDay _defaultEndTime = const TimeOfDay(hour: 17, minute: 0);
   int _range = 14; // Default range for data fetching
+  int _personCount = 10;
+  int _jobCount = 10;
 
   // Date range state for the Gantt chart view and scrubber
   DateTime? _totalStartDate;
@@ -66,6 +68,8 @@ class GanttViewModel extends ChangeNotifier {
   TimeOfDay get defaultStartTime => _defaultStartTime;
   TimeOfDay get defaultEndTime => _defaultEndTime;
   int get range => _range;
+  int get personCount => _personCount;
+  int get jobCount => _jobCount;
   DateTime? get totalStartDate => _totalStartDate;
   DateTime? get totalEndDate => _totalEndDate;
   DateTime? get visibleStartDate => _visibleStartDate;
@@ -134,6 +138,20 @@ class GanttViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPersonCount(int value) {
+    if (_personCount == value) return;
+    _personCount = value;
+    fetchScheduleData();
+    notifyListeners();
+  }
+
+  void setJobCount(int value) {
+    if (_jobCount == value) return;
+    _jobCount = value;
+    fetchScheduleData();
+    notifyListeners();
+  }
+
   Future<void> fetchScheduleData() async {
     _ganttTasks = [];
     _dependencies = [];
@@ -149,6 +167,8 @@ class GanttViewModel extends ChangeNotifier {
       final processedData = await _scheduleService.fetchAndProcessSchedule(
         startDate: _startDate,
         range: _range,
+        personCount: _personCount,
+        jobCount: _jobCount,
       );
 
       // --- Create sample dependencies for demonstration ---
