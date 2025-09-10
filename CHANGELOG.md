@@ -1,3 +1,7 @@
+## 1.3.5
+
+* **FIX EXAMPLE**: Fix for an issue that caused the date selector to fail to impact the viewable date range
+
 ## 1.3.4
 
 * **FIX**: Fix for an issue that caused conflict indicators to draw below their respective tasks

@@ -5,13 +5,13 @@ class MockApiService {
   Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? params}) async {
     // Determine the date range for mock data generation
     DateTime startDate = DateTime.now();
-    // int rangeDays = 14; // Removed: Unused local variable
+    int rangeDays = 14;
     if (params?['startDateIso'] != null) {
       startDate = DateTime.parse(params!['startDateIso'] as String);
     }
     if (params?['endDateIso'] != null) {
-      // final endDate = DateTime.parse(params!['endDateIso'] as String); // Removed: Unused local variable
-      // rangeDays = endDate.difference(startDate).inDays; // Removed: Unused local variable
+      final endDate = DateTime.parse(params!['endDateIso'] as String);
+      rangeDays = endDate.difference(startDate).inDays;
     }
 
     final List<GanttResourceData> mockResources = [];
@@ -27,7 +27,7 @@ class MockApiService {
         jobs.add(GanttJobData(
             id: jobId, name: 'Job $j', taskName: 'Task $j', status: 'Active', taskColor: '4CAF50', completion: 0.5));
 
-        final eventStart = startDate.add(Duration(days: (i * 100 + j) % 14, hours: 9));
+        final eventStart = startDate.add(Duration(days: (i * 100 + j) % rangeDays, hours: 9));
         final eventEnd = eventStart.add(const Duration(hours: 8));
         final eventId = 'event-$jobId';
 
