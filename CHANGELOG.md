@@ -1,3 +1,7 @@
+## 1.4.1
+
+* **ADJUSTMENT**: Adjust example to use 16 jobs per person by default.
+
 ## 1.4.0
 
 * **FEATURE**: Surface conflict indicators in timeline scrubber

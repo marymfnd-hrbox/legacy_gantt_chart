@@ -29,7 +29,7 @@ class GanttViewModel extends ChangeNotifier {
   final TimeOfDay _defaultEndTime = const TimeOfDay(hour: 17, minute: 0);
   int _range = 14; // Default range for data fetching
   int _personCount = 10;
-  int _jobCount = 10;
+  int _jobCount = 16;
 
   // Date range state for the Gantt chart view and scrubber
   DateTime? _totalStartDate;
