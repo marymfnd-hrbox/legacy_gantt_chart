@@ -649,9 +649,11 @@ class GanttViewModel extends ChangeNotifier {
 
       final hasDependency =
           nextDependencies.any((d) => d.predecessorTaskId == parentId && d.type == DependencyType.contained);
-      if (!hasDependency) {
-        final successorForContainedDemo =
-            nextTasks.firstWhere((t) => !t.isSummary && !t.isTimeRangeHighlight, orElse: () => nextTasks.first);
+      if (!hasDependency && nextTasks.isNotEmpty) {
+        final successorForContainedDemo = nextTasks.firstWhere(
+          (t) => !t.isSummary && !t.isTimeRangeHighlight,
+          orElse: () => nextTasks.first,
+        );
         final newDependency = LegacyGanttTaskDependency(
           predecessorTaskId: parentId,
           successorTaskId: successorForContainedDemo.id,

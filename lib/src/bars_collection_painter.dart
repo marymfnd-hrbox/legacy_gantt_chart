@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import 'models/legacy_gantt_row.dart';
 import 'models/legacy_gantt_task.dart';
 import 'models/legacy_gantt_dependency.dart';
@@ -206,7 +205,8 @@ class BarsCollectionPainter extends CustomPainter {
               );
 
               final barPaint = Paint()
-                ..color = (segment.color ?? task.color ?? theme.barColorPrimary).withAlpha(isBeingDragged ? 77 : 255);
+                ..color = (segment.color ?? task.color ?? theme.barColorPrimary)
+                    .withValues(alpha: isBeingDragged ? 0.3 : 1.0);
               canvas.drawRRect(segmentRRect, barPaint);
             }
           } else {
@@ -214,7 +214,7 @@ class BarsCollectionPainter extends CustomPainter {
             // We can reuse the start/end coordinates calculated earlier.
             // Draw the bar
             final barPaint = Paint()
-              ..color = (task.color ?? theme.barColorPrimary).withAlpha(isBeingDragged ? 77 : 255);
+              ..color = (task.color ?? theme.barColorPrimary).withValues(alpha: isBeingDragged ? 0.3 : 1.0);
             canvas.drawRRect(barRRect, barPaint);
 
             // Draw summary pattern if needed
@@ -343,7 +343,7 @@ class BarsCollectionPainter extends CustomPainter {
         );
 
         // Draw the ghost bar
-        final barPaint = Paint()..color = (originalTask.color ?? theme.ghostBarColor).withAlpha(179);
+        final barPaint = Paint()..color = (originalTask.color ?? theme.ghostBarColor).withValues(alpha: 0.7);
         canvas.drawRRect(barRRect, barPaint);
         // Not drawing text on ghost bar for simplicity
       }
@@ -384,7 +384,7 @@ class BarsCollectionPainter extends CustomPainter {
     canvas.drawRRect(rrect, Paint()..color = theme.backgroundColor);
 
     // Next, draw the semi-transparent red background for the conflict area.
-    final backgroundPaint = Paint()..color = theme.conflictBarColor;
+    final backgroundPaint = Paint()..color = theme.conflictBarColor.withValues(alpha: 0.4);
     canvas.drawRRect(rrect, backgroundPaint);
 
     // Then, draw the angled lines on top of that new background.
@@ -394,7 +394,7 @@ class BarsCollectionPainter extends CustomPainter {
   void _drawDependencyHandles(Canvas canvas, RRect rrect, LegacyGanttTask task, bool isBeingDragged) {
     if (isBeingDragged || task.isSummary) return;
 
-    final handlePaint = Paint()..color = theme.dependencyLineColor.withAlpha(204);
+    final handlePaint = Paint()..color = theme.dependencyLineColor.withValues(alpha: 0.8);
     const handleRadius = 4.0;
 
     // Left handle

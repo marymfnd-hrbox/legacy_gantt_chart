@@ -3,7 +3,7 @@ import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:legacy_context_menu/legacy_context_menu.dart';
-
+import 'package:legacy_timeline_scrubber/legacy_timeline_scrubber.dart' as scrubber;
 import 'ui/widgets/gantt_grid.dart';
 import 'ui/widgets/dashboard_header.dart';
 import 'view_models/gantt_view_model.dart';
@@ -520,13 +520,29 @@ class _GanttViewState extends State<GanttView> {
                                       height: 40,
                                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                                       color: Theme.of(context).cardColor,
-                                      child: LegacyGanttTimelineScrubber(
+                                      child: scrubber.LegacyGanttTimelineScrubber(
                                         totalStartDate: vm.totalStartDate!,
                                         totalEndDate: vm.totalEndDate!,
                                         visibleStartDate: vm.visibleStartDate!,
                                         visibleEndDate: vm.visibleEndDate!,
                                         onWindowChanged: vm.onScrubberWindowChanged,
-                                        tasks: vm.ganttTasks,
+                                        visibleRows: vm.visibleGanttRows.map((row) => row.id).toList(),
+                                        rowMaxStackDepth: vm.rowMaxStackDepth,
+                                        rowHeight: 27.0,
+                                        tasks: vm.ganttTasks
+                                            .map((t) => scrubber.LegacyGanttTask(
+                                                  id: t.id,
+                                                  rowId: t.rowId,
+                                                  stackIndex: t.stackIndex,
+                                                  start: t.start,
+                                                  end: t.end,
+                                                  name: t.name,
+                                                  color: t.color,
+                                                  isOverlapIndicator: t.isOverlapIndicator,
+                                                  isTimeRangeHighlight: t.isTimeRangeHighlight,
+                                                  isSummary: t.isSummary,
+                                                ))
+                                            .toList(),
                                         startPadding: const Duration(days: 7),
                                         endPadding: const Duration(days: 7),
                                       ),
@@ -602,10 +618,7 @@ class _DependencyManagerDialog extends StatelessWidget {
 }
 
 extension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return '${this[0].toUpperCase()}${substring(1)}';
-  }
+  String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
 
 /// A stateful widget for the "Create Task" dialog.

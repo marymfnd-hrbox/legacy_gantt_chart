@@ -1,3 +1,7 @@
+## 2.0.0
+
+* **BREAKING**: Extract legacy_timeline_scrubber into its own package
+
 ## 1.4.1
 
 * **ADJUSTMENT**: Adjust example to use 16 jobs per person by default.

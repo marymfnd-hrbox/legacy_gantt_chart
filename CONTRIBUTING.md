@@ -14,14 +14,15 @@ If you want to contribute code, please feel free to fork the repository and subm
 
 To maintain code quality and consistency, please adhere to the following style guidelines. These are enforced to prevent common linter warnings.
 
--   **Avoid `withOpacity`**: The `withOpacity` method on `Color` is deprecated and can lead to precision loss. Always use `withAlpha()` instead.
+-   **Avoid `withOpacity` and `withAlpha`**: These methods can lead to precision loss or are inconsistent with our project's style. Always use `withValues(alpha:)` with a double value from 0.0 to 1.0 instead.
     
     ```dart
     // Incorrect
-    myColor.withOpacity(0.5);
+    myColor.withOpacity(0.5); // Deprecated in this project
+    myColor.withAlpha(128);
     
     // Correct
-    myColor.withValues(alpha:0.5); // Alpha is an integer from 0 to 255
+    myColor.withValues(alpha: 0.5); // Alpha is a double from 0.0 to 1.0
     ```
 
 -   **Use Expression Bodies**: For functions or methods that contain only a single return statement, use an expression body (`=>`) instead of a block body (`{ ... }`).
