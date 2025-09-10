@@ -35,6 +35,17 @@ pubspec.lock
 /coverage/
 
 # Android
+/example/android/app/src/main/assets/flutter_assets/
+/example/android/app/build/
+/example/android/build/
+/example/android/.gradle/
+/example/android/app/build/
+/example/android/app/intermediates/
+/example/android/app/outputs/
+/example/android/app/release/
+/example/android/app/profile/
+/example/android/key.properties
+/example/android/local.properties
 /android/app/src/main/assets/flutter_assets/
 /android/app/build/
 /android/build/
@@ -48,6 +59,23 @@ pubspec.lock
 /android/local.properties
 
 # iOS
+/example/ios/Pods/
+/example/ios/Flutter/App.framework
+/example/ios/Flutter/engine
+/example/ios/Flutter/flutter_assets
+/example/ios/Flutter/Generated.xcconfig
+/example/ios/Flutter/Debug.xcconfig
+/example/ios/Flutter/Release.xcconfig
+/example/ios/Flutter/ephemeral/
+/example/ios/Flutter/.podspec
+/example/ios/Runner/GeneratedPluginRegistrant.*
+/example/ios/Runner.xcworkspace/
+/example/ios/Runner.xcodeproj/project.xcworkspace/
+/example/ios/Runner.xcodeproj/xcuserdata/
+/example/ios/build/
+/example/ios/.symlinks/
+/example/ios/DerivedData/
+/example*.hmap
 /ios/Pods/
 /ios/Flutter/App.framework
 /ios/Flutter/engine
