@@ -253,7 +253,8 @@ class GanttScheduleService {
   }
 
   (List<LegacyGanttTask>, Map<String, int>) publicCalculateTaskStacking(
-      List<LegacyGanttTask> tasks, GanttResponse apiResponse, {bool showConflicts = true}) {
+      List<LegacyGanttTask> tasks, GanttResponse apiResponse,
+      {bool showConflicts = true}) {
     final Map<String, List<LegacyGanttTask>> eventTasksByRow = {};
     final List<LegacyGanttTask> nonStackableTasks = [];
     final List<LegacyGanttTask> actualEventTasks = [];

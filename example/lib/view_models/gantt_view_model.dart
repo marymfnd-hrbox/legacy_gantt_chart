@@ -145,7 +145,8 @@ class GanttViewModel extends ChangeNotifier {
     _showConflicts = value;
     // Recalculate tasks with the new conflict visibility setting.
     // This is more robust than just changing the stack depth.
-    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(_ganttTasks, _apiResponse!, showConflicts: _showConflicts);
+    final (recalculatedTasks, newMaxDepth) =
+        _scheduleService.publicCalculateTaskStacking(_ganttTasks, _apiResponse!, showConflicts: _showConflicts);
     _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
   }
 
@@ -500,7 +501,8 @@ class GanttViewModel extends ChangeNotifier {
     final index = newTasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       newTasks[index] = newTasks[index].copyWith(start: newStart, end: newEnd);
-      final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
+      final (recalculatedTasks, newMaxDepth) =
+          _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
       _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
     }
   }
@@ -689,7 +691,8 @@ class GanttViewModel extends ChangeNotifier {
           .toList();
     }
 
-    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(nextTasks, _apiResponse!, showConflicts: _showConflicts);
+    final (recalculatedTasks, newMaxDepth) =
+        _scheduleService.publicCalculateTaskStacking(nextTasks, _apiResponse!, showConflicts: _showConflicts);
     _dependencies = nextDependencies;
     _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
   }
@@ -697,7 +700,8 @@ class GanttViewModel extends ChangeNotifier {
   void _addNewTask(LegacyGanttTask newTask) {
     final newTasks = [..._ganttTasks, newTask];
     if (_apiResponse != null) {
-      final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
+      final (recalculatedTasks, newMaxDepth) =
+          _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
       _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
     }
   }
@@ -736,7 +740,8 @@ class GanttViewModel extends ChangeNotifier {
 
     final newTasks = [..._ganttTasks, newTask];
     // Recalculate stacking with the new task.
-    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
+    final (recalculatedTasks, newMaxDepth) =
+        _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
     _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
   }
 
@@ -749,7 +754,8 @@ class GanttViewModel extends ChangeNotifier {
         _dependencies.where((d) => d.predecessorTaskId != task.id && d.successorTaskId != task.id).toList();
 
     // After removing the task, recalculate stacking with the new list.
-    final (recalculatedTasks, newMaxDepth) = _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
+    final (recalculatedTasks, newMaxDepth) =
+        _scheduleService.publicCalculateTaskStacking(newTasks, _apiResponse!, showConflicts: _showConflicts);
     _dependencies = newDependencies;
     _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
   }
