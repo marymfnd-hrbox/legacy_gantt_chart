@@ -1,6 +1,8 @@
 ## 2.1.0
 
 * **EXAMPLE FEATURE**: Add support for "showConflicts" in the Example application
+* **EXAMPLE FEATURE**: Move control panel to left side in collapsible panel
+* **FEATURE**: Add support for adjusting the drag handle size
 
 ## 2.0.0
 
