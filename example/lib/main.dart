@@ -137,6 +137,80 @@ class _GanttViewState extends State<GanttView> {
         SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
       );
 
+  void _showTaskContextMenu(BuildContext context, LegacyGanttTask task, Offset tapPosition) {
+    final menuItems = _buildTaskContextMenuItems(context, task);
+    showContextMenu(
+      context: context,
+      menuItems: menuItems,
+      tapPosition: tapPosition,
+    );
+  }
+
+  List<ContextMenuItem> _buildTaskContextMenuItems(BuildContext context, LegacyGanttTask task) {
+    final dependencies = _viewModel.getDependenciesForTask(task);
+    final availableTasks = _viewModel.getValidDependencyTasks(task);
+    final hasDependencies = dependencies.isNotEmpty;
+
+    return <ContextMenuItem>[
+      ContextMenuItem(
+        caption: 'Copy',
+        onTap: () => _handleCopyTask(task),
+      ),
+      ContextMenuItem(
+        caption: 'Delete',
+        onTap: () => _handleDeleteTask(task),
+      ),
+      if (_viewModel.dependencyCreationEnabled) ContextMenuItem.divider,
+      if (_viewModel.dependencyCreationEnabled)
+        ContextMenuItem(
+          caption: 'Add Predecessor',
+          submenuBuilder: (context) async {
+            if (availableTasks.isEmpty) {
+              return [const ContextMenuItem(caption: 'No valid tasks')];
+            }
+            return availableTasks
+                .map((otherTask) => ContextMenuItem(
+                      caption: otherTask.name ?? 'Unnamed Task',
+                      onTap: () {
+                        _viewModel.addDependency(otherTask.id, task.id);
+                        _showSnackbar('Added dependency for ${task.name}');
+                      },
+                    ))
+                .toList();
+          },
+        ),
+      if (_viewModel.dependencyCreationEnabled)
+        ContextMenuItem(
+          caption: 'Add Successor',
+          submenuBuilder: (context) async {
+            if (availableTasks.isEmpty) {
+              return [const ContextMenuItem(caption: 'No valid tasks')];
+            }
+            return availableTasks
+                .map((otherTask) => ContextMenuItem(
+                      caption: otherTask.name ?? 'Unnamed Task',
+                      onTap: () {
+                        _viewModel.addDependency(task.id, otherTask.id);
+                        _showSnackbar('Added dependency for ${task.name}');
+                      },
+                    ))
+                .toList();
+          },
+        ),
+      if (_viewModel.dependencyCreationEnabled && hasDependencies) ContextMenuItem.divider,
+      if (_viewModel.dependencyCreationEnabled && hasDependencies)
+        ContextMenuItem(
+          caption: 'Remove Dependency...',
+          onTap: () => _showDependencyRemover(context, task),
+        ),
+      if (_viewModel.dependencyCreationEnabled && hasDependencies)
+        ContextMenuItem(
+          caption: 'Clear All Dependencies',
+          onTap: () => _handleClearDependencies(task),
+        ),
+    ];
+  }
+
   // The root of the application uses a ChangeNotifierProvider to make the
   // GanttViewModel available to the entire widget tree below it. This allows
   // any widget to listen to changes in the view model and rebuild accordingly.
@@ -210,6 +284,16 @@ class _GanttViewState extends State<GanttView> {
                             Switch(
                               value: vm.dependencyCreationEnabled,
                               onChanged: vm.setDependencyCreationEnabled,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Show Conflicts'),
+                            Switch(
+                              value: vm.showConflicts,
+                              onChanged: vm.setShowConflicts,
                             ),
                           ],
                         ),
@@ -365,79 +449,9 @@ class _GanttViewState extends State<GanttView> {
                                                         ? Colors.white
                                                         : Colors.black;
                                                 final textStyle = ganttTheme.taskTextStyle.copyWith(color: textColor);
-
-                                                // Define menu items for the context menu
-                                                final dependencies = vm.getDependenciesForTask(task);
-                                                final availableTasks = vm.getValidDependencyTasks(task);
-                                                final hasDependencies = dependencies.isNotEmpty;
-
-                                                final menuItems = <ContextMenuItem>[
-                                                  ContextMenuItem(
-                                                    caption: 'Copy',
-                                                    onTap: () => _handleCopyTask(task),
-                                                  ),
-                                                  ContextMenuItem(
-                                                    caption: 'Delete',
-                                                    onTap: () => _handleDeleteTask(task),
-                                                  ),
-                                                  if (vm.dependencyCreationEnabled) ContextMenuItem.divider,
-                                                  if (vm.dependencyCreationEnabled)
-                                                    ContextMenuItem(
-                                                      caption: 'Add Predecessor',
-                                                      submenuBuilder: (context) async {
-                                                        if (availableTasks.isEmpty) {
-                                                          return [const ContextMenuItem(caption: 'No valid tasks')];
-                                                        }
-                                                        return availableTasks
-                                                            .map((otherTask) => ContextMenuItem(
-                                                                  caption: otherTask.name ?? 'Unnamed Task',
-                                                                  onTap: () {
-                                                                    _viewModel.addDependency(otherTask.id, task.id);
-                                                                    _showSnackbar('Added dependency for ${task.name}');
-                                                                  },
-                                                                ))
-                                                            .toList();
-                                                      },
-                                                    ),
-                                                  if (vm.dependencyCreationEnabled)
-                                                    ContextMenuItem(
-                                                      caption: 'Add Successor',
-                                                      submenuBuilder: (context) async {
-                                                        if (availableTasks.isEmpty) {
-                                                          return [const ContextMenuItem(caption: 'No valid tasks')];
-                                                        }
-                                                        return availableTasks
-                                                            .map((otherTask) => ContextMenuItem(
-                                                                  caption: otherTask.name ?? 'Unnamed Task',
-                                                                  onTap: () {
-                                                                    _viewModel.addDependency(task.id, otherTask.id);
-                                                                    _showSnackbar('Added dependency for ${task.name}');
-                                                                  },
-                                                                ))
-                                                            .toList();
-                                                      },
-                                                    ),
-                                                  if (vm.dependencyCreationEnabled && hasDependencies)
-                                                    ContextMenuItem.divider,
-                                                  if (vm.dependencyCreationEnabled && hasDependencies)
-                                                    ContextMenuItem(
-                                                      caption: 'Remove Dependency...',
-                                                      onTap: () => _showDependencyRemover(context, task),
-                                                    ),
-                                                  if (vm.dependencyCreationEnabled && hasDependencies)
-                                                    ContextMenuItem(
-                                                      caption: 'Clear All Dependencies',
-                                                      onTap: () => _handleClearDependencies(task),
-                                                    ),
-                                                ];
-
                                                 return GestureDetector(
                                                   onSecondaryTapUp: (details) {
-                                                    showContextMenu(
-                                                      context: context,
-                                                      menuItems: menuItems,
-                                                      tapPosition: details.globalPosition,
-                                                    );
+                                                    _showTaskContextMenu(context, task, details.globalPosition);
                                                   },
                                                   child: LayoutBuilder(builder: (context, constraints) {
                                                     // Define minimum widths for content visibility.
@@ -492,10 +506,7 @@ class _GanttViewState extends State<GanttView> {
                                                                       button.localToGlobal(Offset.zero);
                                                                   final tapPosition =
                                                                       offset.translate(button.size.width, 0);
-                                                                  showContextMenu(
-                                                                      context: context,
-                                                                      menuItems: menuItems,
-                                                                      tapPosition: tapPosition);
+                                                                  _showTaskContextMenu(context, task, tapPosition);
                                                                 },
                                                               ),
                                                             ),

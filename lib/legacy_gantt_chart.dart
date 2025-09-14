@@ -1,5 +1,5 @@
 /// A Flutter package for displaying Gantt charts.
-library legacy_gantt_chart;
+library;
 
 export 'src/legacy_gantt_chart_widget.dart';
 export 'src/models/legacy_gantt_task.dart';

@@ -253,7 +253,7 @@ class GanttScheduleService {
   }
 
   (List<LegacyGanttTask>, Map<String, int>) publicCalculateTaskStacking(
-      List<LegacyGanttTask> tasks, GanttResponse apiResponse) {
+      List<LegacyGanttTask> tasks, GanttResponse apiResponse, {bool showConflicts = true}) {
     final Map<String, List<LegacyGanttTask>> eventTasksByRow = {};
     final List<LegacyGanttTask> nonStackableTasks = [];
     final List<LegacyGanttTask> actualEventTasks = [];
@@ -303,16 +303,21 @@ class GanttScheduleService {
     };
     final parentResourceIds = apiResponse.resourcesData.map((r) => r.id).toSet();
 
-    final conflictDetector = LegacyGanttConflictDetector();
-    final conflictIndicators = conflictDetector.run<String>(
-      tasks: stackedTasks,
-      taskGrouper: (task) {
-        final resourceId = task.rowId;
-        return lineItemToContactMap[resourceId] ?? (parentResourceIds.contains(resourceId) ? resourceId : null);
-      },
-    );
+    List<LegacyGanttTask> conflictIndicators = [];
+    if (showConflicts) {
+      final conflictDetector = LegacyGanttConflictDetector();
+      conflictIndicators = conflictDetector.run<String>(
+        tasks: stackedTasks,
+        taskGrouper: (task) {
+          final resourceId = task.rowId;
+          return lineItemToContactMap[resourceId] ?? (parentResourceIds.contains(resourceId) ? resourceId : null);
+        },
+      );
+    }
 
-    final finalTasks = [...stackedTasks, ...conflictIndicators, ...nonStackableTasks];
+    final finalTasks = [...stackedTasks, ...nonStackableTasks];
+    if (showConflicts) finalTasks.addAll(conflictIndicators);
+
     return (finalTasks, rowMaxDepth);
   }
 }

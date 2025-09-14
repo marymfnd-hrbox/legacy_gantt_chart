@@ -1,3 +1,7 @@
+## 2.1.0
+
+* **EXAMPLE FEATURE**: Add support for "showConflicts" in the Example application
+
 ## 2.0.0
 
 * **BREAKING**: Extract legacy_timeline_scrubber into its own package
