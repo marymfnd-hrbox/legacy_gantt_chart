@@ -1,8 +1,17 @@
-# Exclude files that are not needed in the final published package.
-
+# Internal AI-related documentation
 lib/GEMINI.md
 lib/src/GEMINI.md
 lib/src/models/GEMINI.md
 lib/src/utils/GEMINI.md
-example/build/
 build/
+
+# Redundant license file
+LICENSE.md
+
+# Development tool options
+devtools_options.yaml
+example/devtools_options.yaml
+
+# Example app tests
+example/test/
+example/build/
