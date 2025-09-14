@@ -138,6 +138,9 @@ class LegacyGanttChartWidget extends StatefulWidget {
   /// tooltip's background color.
   final Color? resizeTooltipFontColor;
 
+  /// The width of the resize handles at the start and end of a task bar.
+  final double resizeHandleWidth;
+
   const LegacyGanttChartWidget({
     super.key, // Use super.key
     this.data,
@@ -168,6 +171,7 @@ class LegacyGanttChartWidget extends StatefulWidget {
     this.onEmptySpaceClick,
     this.resizeTooltipBackgroundColor,
     this.resizeTooltipFontColor,
+    this.resizeHandleWidth = 10.0,
   })  : assert(controller != null || ((data != null && tasksFuture == null) || (data == null && tasksFuture != null))),
         assert(controller == null || dependencies == null),
         assert(taskBarBuilder == null || taskContentBuilder == null),
@@ -307,6 +311,7 @@ class _LegacyGanttChartWidgetState extends State<LegacyGanttChartWidget> {
           taskBarBuilder: widget.taskBarBuilder,
           resizeTooltipDateFormat: widget.resizeTooltipDateFormat,
           scrollController: widget.scrollController,
+          resizeHandleWidth: widget.resizeHandleWidth,
         ),
         child: Consumer<LegacyGanttViewModel>(
           builder: (context, vm, child) {

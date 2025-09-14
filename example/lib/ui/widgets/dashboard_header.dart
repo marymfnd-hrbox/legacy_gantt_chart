@@ -15,7 +15,6 @@ class DashboardHeader extends StatelessWidget {
     required this.onRangeChange,
   });
 
-  static const double _filterRowPadding = 6.0;
   static const double _datePickerContainerPaddingVertical = 8.0;
   static const double _datePickerContainerPaddingHorizontal = 10.0;
   static const double _datePickerIconSize = 16.0;
@@ -28,72 +27,74 @@ class DashboardHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final iconColor = Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black;
 
-    return Container(
-      padding: const EdgeInsets.all(_filterRowPadding),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => onSelectDate(context),
+    return Column(
+      // padding: const EdgeInsets.all(_filterRowPadding),
+      // decoration: BoxDecoration(
+      //   color: Theme.of(context).cardColor,
+      //   border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+      // ),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onSelectDate(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: _datePickerContainerPaddingHorizontal, vertical: _datePickerContainerPaddingVertical),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_month, size: _datePickerIconSize, color: iconColor),
+                      const SizedBox(width: _datePickerIconSpacing),
+                      Expanded(
+                        child: Text(
+                          DateFormat('MM/dd/yyyy').format(selectedDate),
+                          style: textTheme.bodyLarge?.copyWith(fontSize: _datePickerTextFontSize),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: _dropdownSpacing),
+            Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: _datePickerContainerPaddingHorizontal, vertical: _datePickerContainerPaddingVertical),
+                height: 37,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(5),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_month, size: _datePickerIconSize, color: iconColor),
-                    const SizedBox(width: _datePickerIconSpacing),
-                    Expanded(
-                      child: Text(
-                        DateFormat('MM/dd/yyyy').format(selectedDate),
-                        style: textTheme.bodyLarge?.copyWith(fontSize: _datePickerTextFontSize),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
+                padding: const EdgeInsets.symmetric(horizontal: _datePickerContainerPaddingHorizontal),
+                child: DropdownButtonFormField<int>(
+                  alignment: Alignment.center,
+                  isDense: true,
+                  initialValue: selectedRange,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 7, child: Text('7 days')),
+                    DropdownMenuItem(value: 14, child: Text('14 days')),
+                    DropdownMenuItem(value: 30, child: Text('30 days')),
                   ],
+                  onChanged: onRangeChange,
+                  style: textTheme.bodyLarge?.copyWith(fontSize: _datePickerTextFontSize),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: _dropdownSpacing),
-          Expanded(
-            child: Container(
-              height: 37,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(5),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: _datePickerContainerPaddingHorizontal),
-              child: DropdownButtonFormField<int>(
-                alignment: Alignment.center,
-                isDense: true,
-                initialValue: selectedRange,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                items: const [
-                  DropdownMenuItem(value: 7, child: Text('7 days')),
-                  DropdownMenuItem(value: 14, child: Text('14 days')),
-                  DropdownMenuItem(value: 30, child: Text('30 days')),
-                ],
-                onChanged: onRangeChange,
-                style: textTheme.bodyLarge?.copyWith(fontSize: _datePickerTextFontSize),
-              ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

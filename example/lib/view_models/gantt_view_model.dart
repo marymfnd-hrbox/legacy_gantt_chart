@@ -24,6 +24,7 @@ class GanttViewModel extends ChangeNotifier {
   bool _resizeEnabled = true;
   bool _createTasksEnabled = true;
   bool _dependencyCreationEnabled = true;
+  double _resizeHandleWidth = 10.0;
   DateTime _startDate = DateTime.now();
   final TimeOfDay _defaultStartTime = const TimeOfDay(hour: 9, minute: 0);
   final TimeOfDay _defaultEndTime = const TimeOfDay(hour: 17, minute: 0);
@@ -56,6 +57,7 @@ class GanttViewModel extends ChangeNotifier {
   GanttResponse? _apiResponse;
 
   double? _gridWidth;
+  double? _controlPanelWidth = 300.0;
 
   // Getters for the UI
   List<LegacyGanttTask> get ganttTasks => _ganttTasks;
@@ -67,6 +69,7 @@ class GanttViewModel extends ChangeNotifier {
   bool get createTasksEnabled => _createTasksEnabled;
   bool get dependencyCreationEnabled => _dependencyCreationEnabled;
   bool get showConflicts => _showConflicts;
+  double get resizeHandleWidth => _resizeHandleWidth;
   DateTime get startDate => _startDate;
   TimeOfDay get defaultStartTime => _defaultStartTime;
   TimeOfDay get defaultEndTime => _defaultEndTime;
@@ -83,6 +86,7 @@ class GanttViewModel extends ChangeNotifier {
   ScrollController get scrollController => _scrollController;
   ScrollController get ganttHorizontalScrollController => _ganttHorizontalScrollController;
   double? get gridWidth => _gridWidth;
+  double? get controlPanelWidth => _controlPanelWidth;
 
   List<GanttGridData> get visibleGridData => _gridData;
 
@@ -113,6 +117,12 @@ class GanttViewModel extends ChangeNotifier {
 
   void setGridWidth(double? value) {
     _gridWidth = value;
+    notifyListeners();
+  }
+
+  void setControlPanelWidth(double? value) {
+    if (_controlPanelWidth == value) return;
+    _controlPanelWidth = value;
     notifyListeners();
   }
 
@@ -148,6 +158,12 @@ class GanttViewModel extends ChangeNotifier {
     final (recalculatedTasks, newMaxDepth) =
         _scheduleService.publicCalculateTaskStacking(_ganttTasks, _apiResponse!, showConflicts: _showConflicts);
     _updateTasksAndStacking(recalculatedTasks, newMaxDepth);
+  }
+
+  void setResizeHandleWidth(double value) {
+    if (_resizeHandleWidth == value) return;
+    _resizeHandleWidth = value;
+    notifyListeners();
   }
 
   void setPersonCount(int value) {

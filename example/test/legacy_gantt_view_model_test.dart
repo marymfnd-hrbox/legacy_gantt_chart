@@ -42,6 +42,7 @@ void main() {
         totalGridMax: DateTime(2023, 1, 31).millisecondsSinceEpoch.toDouble(),
         enableDragAndDrop: true,
         enableResize: true,
+        resizeHandleWidth: 10.0,
       );
       viewModel.updateLayout(1000, 600); // Provide layout dimensions
     });

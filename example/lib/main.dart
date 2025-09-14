@@ -39,6 +39,7 @@ class GanttView extends StatefulWidget {
 
 class _GanttViewState extends State<GanttView> {
   late final GanttViewModel _viewModel;
+  bool _isPanelVisible = true;
 
   @override
   void initState() {
@@ -211,6 +212,135 @@ class _GanttViewState extends State<GanttView> {
     ];
   }
 
+  Widget _buildControlPanel(BuildContext context, GanttViewModel vm, bool isDarkMode) => Container(
+        width: vm.controlPanelWidth ?? 350,
+        color: Theme.of(context).cardColor,
+        child: ListView(
+          padding: const EdgeInsets.all(12.0),
+          children: [
+            Text('Controls', style: Theme.of(context).textTheme.titleLarge),
+            const Divider(height: 24),
+            DashboardHeader(
+              selectedDate: vm.startDate,
+              selectedRange: vm.range,
+              onSelectDate: vm.onSelectDate,
+              onRangeChange: vm.onRangeChange,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Expanded(child: Text('Persons:')),
+                DropdownButton<int>(
+                  value: vm.personCount,
+                  onChanged: (value) {
+                    if (value != null) vm.setPersonCount(value);
+                  },
+                  items: List.generate(100, (i) => i + 1)
+                      .map((count) => DropdownMenuItem(value: count, child: Text(count.toString())))
+                      .toList(),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Expanded(child: Text('Jobs:')),
+                DropdownButton<int>(
+                  value: vm.jobCount,
+                  onChanged: (value) {
+                    if (value != null) vm.setJobCount(value);
+                  },
+                  items: List.generate(100, (i) => i + 1)
+                      .map((count) => DropdownMenuItem(value: count, child: Text(count.toString())))
+                      .toList(),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Text('Theme', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            SegmentedButton<ThemePreset>(
+              style: SegmentedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              ),
+              segments: const [
+                ButtonSegment(value: ThemePreset.standard, icon: Icon(Icons.palette)),
+                ButtonSegment(value: ThemePreset.forest, icon: Icon(Icons.park)),
+                ButtonSegment(value: ThemePreset.midnight, icon: Icon(Icons.nightlight_round)),
+              ],
+              selected: {vm.selectedTheme},
+              onSelectionChanged: (newSelection) => vm.setSelectedTheme(newSelection.first),
+            ),
+            const Divider(height: 24),
+            Text('Features', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Drag & Drop'),
+                Switch(
+                  value: vm.dragAndDropEnabled,
+                  onChanged: vm.setDragAndDropEnabled,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Resize'),
+                Switch(
+                  value: vm.resizeEnabled,
+                  onChanged: vm.setResizeEnabled,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Create Tasks'),
+                Switch(
+                  value: vm.createTasksEnabled,
+                  onChanged: vm.setCreateTasksEnabled,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Create Dependencies'),
+                Switch(
+                  value: vm.dependencyCreationEnabled,
+                  onChanged: vm.setDependencyCreationEnabled,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Show Conflicts'),
+                Switch(
+                  value: vm.showConflicts,
+                  onChanged: vm.setShowConflicts,
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Text('Drag Handle Options', style: Theme.of(context).textTheme.titleMedium),
+            Row(
+              children: [
+                const Expanded(child: Text('Resize Handle Width:')),
+                DropdownButton<double>(
+                  value: vm.resizeHandleWidth,
+                  onChanged: (value) => vm.setResizeHandleWidth(value!),
+                  items: [1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 15.0, 20.0]
+                      .map((size) => DropdownMenuItem(value: size, child: Text(size.toStringAsFixed(0))))
+                      .toList(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
   // The root of the application uses a ChangeNotifierProvider to make the
   // GanttViewModel available to the entire widget tree below it. This allows
   // any widget to listen to changes in the view model and rebuild accordingly.
@@ -218,136 +348,41 @@ class _GanttViewState extends State<GanttView> {
   Widget build(BuildContext context) => ChangeNotifierProvider.value(
         value: _viewModel,
         child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Legacy Gantt Chart Example'),
+            leading: IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'Toggle Controls',
+              onPressed: () => setState(() => _isPanelVisible = !_isPanelVisible),
+            ),
+          ),
           body: Consumer<GanttViewModel>(
             builder: (context, vm, child) {
               final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
               final ganttTheme = _buildGanttTheme();
 
-              return Column(
+              return Row(
                 children: [
-                  // --- UI Controls for Example Customization ---
-                  Container(
-                    padding: const EdgeInsets.all(8.0),
-                    color: Theme.of(context).cardColor,
-                    child: Wrap(
-                      spacing: 16.0,
-                      runSpacing: 8.0,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        SegmentedButton<ThemePreset>(
-                          segments: const [
-                            ButtonSegment(
-                                value: ThemePreset.standard, label: Text('Standard'), icon: Icon(Icons.palette)),
-                            ButtonSegment(value: ThemePreset.forest, label: Text('Forest'), icon: Icon(Icons.park)),
-                            ButtonSegment(
-                                value: ThemePreset.midnight,
-                                label: Text('Midnight'),
-                                icon: Icon(Icons.nightlight_round)),
-                          ],
-                          selected: {vm.selectedTheme},
-                          onSelectionChanged: (newSelection) => vm.setSelectedTheme(newSelection.first),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Drag & Drop'),
-                            Switch(
-                              value: vm.dragAndDropEnabled,
-                              onChanged: vm.setDragAndDropEnabled,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Resize'),
-                            Switch(
-                              value: vm.resizeEnabled,
-                              onChanged: vm.setResizeEnabled,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Create Tasks'),
-                            Switch(
-                              value: vm.createTasksEnabled,
-                              onChanged: vm.setCreateTasksEnabled,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Create Dependencies'),
-                            Switch(
-                              value: vm.dependencyCreationEnabled,
-                              onChanged: vm.setDependencyCreationEnabled,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Show Conflicts'),
-                            Switch(
-                              value: vm.showConflicts,
-                              onChanged: vm.setShowConflicts,
-                            ),
-                          ],
-                        ),
-                      ],
+                  if (_isPanelVisible)
+                    SizedBox(
+                      width: vm.controlPanelWidth ?? 350,
+                      child: _buildControlPanel(context, vm, isDarkMode),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                    color: Theme.of(context).cardColor,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Persons: '),
-                              DropdownButton<int>(
-                                value: vm.personCount,
-                                onChanged: (value) {
-                                  if (value != null) vm.setPersonCount(value);
-                                },
-                                items: List.generate(100, (i) => i + 1)
-                                    .map((count) => DropdownMenuItem(value: count, child: Text(count.toString())))
-                                    .toList(),
-                              ),
-                            ],
-                          ),
+                  if (_isPanelVisible)
+                    GestureDetector(
+                      onHorizontalDragUpdate: (details) {
+                        final newWidth = (vm.controlPanelWidth ?? 350) + details.delta.dx;
+                        vm.setControlPanelWidth(newWidth.clamp(150.0, 400.0));
+                      },
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        child: VerticalDivider(
+                          width: 8,
+                          thickness: 8,
+                          color: Theme.of(context).dividerColor,
                         ),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Jobs: '),
-                              DropdownButton<int>(
-                                value: vm.jobCount,
-                                onChanged: (value) {
-                                  if (value != null) vm.setJobCount(value);
-                                },
-                                items: List.generate(100, (i) => i + 1)
-                                    .map((count) => DropdownMenuItem(value: count, child: Text(count.toString())))
-                                    .toList(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  DashboardHeader(
-                    selectedDate: vm.startDate,
-                    selectedRange: vm.range,
-                    onSelectDate: vm.onSelectDate,
-                    onRangeChange: vm.onRangeChange,
-                  ),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
@@ -385,7 +420,7 @@ class _GanttViewState extends State<GanttView> {
                                 cursor: SystemMouseCursors.resizeLeftRight,
                                 child: VerticalDivider(
                                   width: 8,
-                                  thickness: 1,
+                                  thickness: 8,
                                   color: Theme.of(context).dividerColor,
                                 ),
                               ),
@@ -434,6 +469,7 @@ class _GanttViewState extends State<GanttView> {
                                               resizeTooltipDateFormat: (date) =>
                                                   DateFormat('MMM d, h:mm a').format(date.toLocal()),
                                               resizeTooltipBackgroundColor: Colors.purple,
+                                              resizeHandleWidth: vm.resizeHandleWidth,
                                               resizeTooltipFontColor: Colors.white,
                                               onTaskHover: (task, globalPosition) =>
                                                   vm.onTaskHover(task, context, globalPosition),

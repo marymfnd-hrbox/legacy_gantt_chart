@@ -80,6 +80,9 @@ class LegacyGanttViewModel extends ChangeNotifier {
   /// A callback for when the mouse hovers over a task or empty space.
   final Function(LegacyGanttTask?, Offset globalPosition)? onTaskHover;
 
+  /// The width of the resize handles at the start and end of a task bar.
+  final double resizeHandleWidth;
+
   /// Creates an instance of [LegacyGanttViewModel].
   ///
   /// This constructor takes all the relevant properties from the
@@ -106,6 +109,7 @@ class LegacyGanttViewModel extends ChangeNotifier {
     this.taskBarBuilder,
     this.resizeTooltipDateFormat,
     this.onTaskHover,
+    this.resizeHandleWidth = 10.0,
   }) {
     if (scrollController != null && scrollController!.hasClients) {
       _translateY = -scrollController!.offset;
@@ -489,16 +493,15 @@ class LegacyGanttViewModel extends ChangeNotifier {
                 !task.isOverlapIndicator)
             .toList()
             .reversed;
-        const double handleWidth = 10.0;
         for (final task in tasksInTappedStack) {
           final double barStartX = _totalScale(task.start);
           final double barEndX = _totalScale(task.end);
           if (pointerXOnTotalContent >= barStartX && pointerXOnTotalContent <= barEndX) {
             if (enableResize) {
-              if (pointerXOnTotalContent < barStartX + handleWidth) {
+              if (pointerXOnTotalContent < barStartX + resizeHandleWidth) {
                 return (task: task, part: TaskPart.startHandle);
               }
-              if (pointerXOnTotalContent > barEndX - handleWidth) {
+              if (pointerXOnTotalContent > barEndX - resizeHandleWidth) {
                 return (task: task, part: TaskPart.endHandle);
               }
             }
