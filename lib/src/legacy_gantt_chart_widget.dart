@@ -1,6 +1,6 @@
 // packages/gantt_chart/lib/src/gantt_chart_widget.dart
 import 'package:flutter/material.dart';
-import 'package:legacy_gantt_chart/src/models/legacy_gantt_dependency.dart';
+import 'package:legacy_gantt_chart_monthly/legacy_gantt_chart.dart';
 import 'package:provider/provider.dart';
 import 'models/legacy_gantt_task.dart';
 import 'models/legacy_gantt_theme.dart';

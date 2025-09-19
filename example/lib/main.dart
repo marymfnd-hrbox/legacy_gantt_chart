@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:legacy_gantt_chart/legacy_gantt_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:legacy_timeline_scrubber/legacy_timeline_scrubber.dart';
 import 'package:provider/provider.dart';
-import 'package:legacy_context_menu/legacy_context_menu.dart';
 import 'package:legacy_timeline_scrubber/legacy_timeline_scrubber.dart' as scrubber;
 import 'ui/widgets/gantt_grid.dart';
 import 'ui/widgets/dashboard_header.dart';
